@@ -4,18 +4,18 @@
 
 ```
 feature/* ──┐
-            ├──→ develop ──→ main
+            ├──→ dev ──→ main
 bug/*    ───┘
 ```
 
-- `develop` and `main` are protected — **never push directly**
+- `dev` and `main` are protected — **never push directly**
 - All work lives in a `feature/<name>` or `bug/<name>` branch
-- `develop` → `main` is a release-only operation performed by the user
+- `dev` → `main` is a release-only operation performed by the user
 
 ## Starting Work
 
 ```bash
-git checkout develop
+git checkout dev
 git pull
 git checkout -b feature/<short-kebab-description>
 # or
@@ -38,7 +38,7 @@ Example: `feat: add BookIdentifierService abstract interface`
 
 ```bash
 git push -u origin feature/<name>
-gh pr create --draft --base develop \
+gh pr create --draft --base dev \
   --title "feat: <description>" \
   --body "$(cat <<'EOF'
 ## Summary
@@ -56,4 +56,4 @@ EOF
 - Never use `--no-verify` or `--force` on protected branches
 - Delete the branch after the PR merges
 - Claude opens draft PRs — the user reviews, approves, and merges
-- Squash merge into `develop`; merge commit into `main`
+- Squash merge into `dev`; merge commit into `main`

@@ -11,9 +11,9 @@ Monorepo: `backend/` · `frontend/` · `.github/` · `docs/`
 - [Testing](docs/claude/testing.md)
 
 ## Hard Rules (no exceptions)
-1. NEVER push to `develop` or `main` directly.
-2. ALL work goes in `feature/<name>` or `bug/<name>` — branch from `develop`.
-3. After pushing: open a GitHub draft PR targeting `develop`.
+1. NEVER push to `dev` or `main` directly.
+2. ALL work goes in `feature/<name>` or `bug/<name>` — branch from `dev`.
+3. After pushing: open a GitHub draft PR targeting `dev`.
 4. Run tests before marking any task done.
 5. No hardcoded colours — always use `useTheme()`.
 6. `SecureStore` only for tokens — never `AsyncStorage`.
