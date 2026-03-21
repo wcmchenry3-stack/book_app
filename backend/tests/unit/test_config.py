@@ -1,6 +1,5 @@
 """Unit tests for settings config."""
 
-import pytest
 from app.core.config import Settings
 
 

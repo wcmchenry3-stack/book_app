@@ -6,9 +6,8 @@ from datetime import datetime, timezone
 import pytest
 from pydantic import ValidationError
 
-from app.schemas.book import EditionRead, BookRead, EnrichedBook
-from app.schemas.user_book import UserBookUpdate, BookStatus
-from app.schemas.auth import UserRead
+from app.schemas.book import EditionRead, EnrichedBook
+from app.schemas.user_book import UserBookUpdate
 
 
 def _now() -> datetime:

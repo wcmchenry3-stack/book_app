@@ -76,7 +76,7 @@ class UserBook(Base):
         nullable=False,
     )
 
-    book: Mapped["Book"] = relationship(
+    book: Mapped["Book"] = relationship(  # noqa: F821
         "Book", back_populates="user_books"
-    )  # noqa: F821
+    )
     edition: Mapped["Edition | None"] = relationship("Edition")  # noqa: F821
