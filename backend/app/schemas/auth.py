@@ -9,8 +9,7 @@ from pydantic import BaseModel
 class GoogleAuthRequest(BaseModel):
     """Body for POST /auth/google."""
 
-    code: str
-    redirect_uri: str
+    id_token: str
 
 
 class TokenResponse(BaseModel):

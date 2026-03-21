@@ -1,0 +1,104 @@
+import uuid
+
+import jwt
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth.dependencies import get_current_user
+from app.auth.google import verify_google_id_token
+from app.auth.jwt import create_access_token, create_refresh_token, decode_token
+from app.core.config import settings
+from app.core.database import get_db
+from app.models.user import User
+from app.schemas.auth import GoogleAuthRequest, RefreshRequest, TokenResponse, UserRead
+
+router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+@router.post("/google", response_model=TokenResponse)
+async def google_auth(
+    body: GoogleAuthRequest, db: AsyncSession = Depends(get_db)
+) -> TokenResponse:
+    try:
+        claims = await verify_google_id_token(body.id_token)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Google token"
+        )
+
+    email: str = claims.get("email", "")
+    if not claims.get("email_verified"):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Google email not verified"
+        )
+
+    if settings.allowed_emails_list and email not in settings.allowed_emails_list:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Email not authorized"
+        )
+
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+    if user is None:
+        user = User(
+            email=email,
+            google_id=claims.get("sub", ""),
+            display_name=claims.get("name"),
+            avatar_url=claims.get("picture"),
+        )
+        db.add(user)
+    else:
+        user.display_name = claims.get("name")
+        user.avatar_url = claims.get("picture")
+
+    await db.commit()
+    await db.refresh(user)
+
+    access_token = create_access_token(str(user.id), user.email)
+    refresh_token = create_refresh_token(str(user.id))
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        expires_in=settings.jwt_expiry_hours * 3600,
+    )
+
+
+@router.post("/refresh", response_model=TokenResponse)
+async def refresh(
+    body: RefreshRequest, db: AsyncSession = Depends(get_db)
+) -> TokenResponse:
+    try:
+        payload = decode_token(body.refresh_token)
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token expired"
+        )
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+        )
+
+    if payload.get("type") != "refresh":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type"
+        )
+
+    user = await db.get(User, uuid.UUID(payload["sub"]))
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
+        )
+
+    access_token = create_access_token(str(user.id), user.email)
+    new_refresh = create_refresh_token(str(user.id))
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=new_refresh,
+        expires_in=settings.jwt_expiry_hours * 3600,
+    )
+
+
+@router.get("/me", response_model=UserRead)
+async def get_me(current_user: User = Depends(get_current_user)) -> User:
+    return current_user
