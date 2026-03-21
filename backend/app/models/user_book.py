@@ -1,7 +1,15 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -44,10 +52,18 @@ class UserBook(Base):
         nullable=True,
     )
     status: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    wishlisted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    purchased_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    wishlisted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    purchased_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    finished_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     notes: Mapped[str | None] = mapped_column(String, nullable=True)
     rating: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -60,5 +76,7 @@ class UserBook(Base):
         nullable=False,
     )
 
-    book: Mapped["Book"] = relationship("Book", back_populates="user_books")  # noqa: F821
+    book: Mapped["Book"] = relationship(
+        "Book", back_populates="user_books"
+    )  # noqa: F821
     edition: Mapped["Edition | None"] = relationship("Edition")  # noqa: F821

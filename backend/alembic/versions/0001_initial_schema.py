@@ -19,13 +19,28 @@ def upgrade() -> None:
     # --- users ---
     op.create_table(
         "users",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column(
+            "id",
+            postgresql.UUID(as_uuid=True),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
         sa.Column("email", sa.String(), nullable=False),
         sa.Column("google_id", sa.String(), nullable=False),
         sa.Column("display_name", sa.String(), nullable=True),
         sa.Column("avatar_url", sa.String(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.UniqueConstraint("email", name="uq_users_email"),
         sa.UniqueConstraint("google_id", name="uq_users_google_id"),
     )
@@ -33,7 +48,12 @@ def upgrade() -> None:
     # --- books ---
     op.create_table(
         "books",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
+        sa.Column(
+            "id",
+            postgresql.UUID(as_uuid=True),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
         sa.Column("open_library_work_id", sa.String(), nullable=True),
         sa.Column("google_books_id", sa.String(), nullable=True),
         sa.Column("title", sa.String(), nullable=False),
@@ -42,17 +62,39 @@ def upgrade() -> None:
         sa.Column("cover_url", sa.String(), nullable=True),
         sa.Column("subjects", postgresql.ARRAY(sa.String()), nullable=True),
         sa.Column("language", sa.String(), nullable=False, server_default="en"),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.UniqueConstraint("open_library_work_id", name="uq_books_open_library_work_id"),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.UniqueConstraint(
+            "open_library_work_id", name="uq_books_open_library_work_id"
+        ),
     )
     op.create_index("idx_books_open_library_work_id", "books", ["open_library_work_id"])
 
     # --- editions ---
     op.create_table(
         "editions",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("book_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("books.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "id",
+            postgresql.UUID(as_uuid=True),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
+        sa.Column(
+            "book_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("books.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
         sa.Column("isbn_13", sa.String(), nullable=True),
         sa.Column("isbn_10", sa.String(), nullable=True),
         sa.Column("publisher", sa.String(), nullable=True),
@@ -60,7 +102,12 @@ def upgrade() -> None:
         sa.Column("format", sa.String(), nullable=True),
         sa.Column("page_count", sa.Integer(), nullable=True),
         sa.Column("open_library_edition_id", sa.String(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.UniqueConstraint("isbn_13", name="uq_editions_isbn_13"),
         sa.CheckConstraint(
             "format IN ('hardcover', 'paperback', 'ebook', 'audiobook', 'unknown')",
@@ -72,10 +119,30 @@ def upgrade() -> None:
     # --- user_books ---
     op.create_table(
         "user_books",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("user_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("book_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("books.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("edition_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("editions.id"), nullable=True),
+        sa.Column(
+            "id",
+            postgresql.UUID(as_uuid=True),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
+        sa.Column(
+            "user_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("users.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "book_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("books.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "edition_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("editions.id"),
+            nullable=True,
+        ),
         sa.Column("status", sa.String(), nullable=False),
         sa.Column("wishlisted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("purchased_at", sa.DateTime(timezone=True), nullable=True),
@@ -83,8 +150,18 @@ def upgrade() -> None:
         sa.Column("finished_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("notes", sa.String(), nullable=True),
         sa.Column("rating", sa.Integer(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.UniqueConstraint("user_id", "book_id", name="uq_user_books_user_book"),
         sa.CheckConstraint(
             "status IN ('wishlisted', 'purchased', 'reading', 'read')",
