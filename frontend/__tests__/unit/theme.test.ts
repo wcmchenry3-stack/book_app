@@ -16,7 +16,7 @@ describe('Theme system', () => {
   });
 
   it('all color keys present in both themes', () => {
-    const keys = Object.keys(tokens.colors) as Array<keyof typeof tokens.colors>;
+    const keys = Object.keys(tokens.colors) as (keyof typeof tokens.colors)[];
     for (const key of keys) {
       expect(lightTheme.colors[key]).toBeDefined();
       expect(darkTheme.colors[key]).toBeDefined();
