@@ -9,5 +9,5 @@ authlib==1.6.9
 PyJWT[cryptography]==2.10.1
 httpx==0.28.1
 slowapi==0.1.9
-python-multipart==0.0.20
+python-multipart==0.0.22
 starlette==0.47.2
