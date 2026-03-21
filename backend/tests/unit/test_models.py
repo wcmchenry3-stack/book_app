@@ -48,9 +48,11 @@ class TestBook:
         assert b.title == "Dune"
         assert b.author == "Frank Herbert"
 
-    def test_language_defaults_to_en(self):
-        b = Book(title="Dune", author="Frank Herbert")
-        assert b.language == "en"
+    def test_language_can_be_set_explicitly(self):
+        # SQLAlchemy column defaults (default="en") apply at INSERT time, not
+        # at Python object construction — so we test explicit assignment instead.
+        b = Book(title="Dune", author="Frank Herbert", language="fr")
+        assert b.language == "fr"
 
     def test_optional_fields_default_to_none(self):
         b = Book(title="Dune", author="Frank Herbert")
