@@ -1,12 +1,5 @@
 import { useRef, useState } from 'react';
-import {
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 
 import { BookCandidatePicker, EnrichedBook } from '../../components/BookCandidatePicker';
@@ -115,26 +108,47 @@ export default function ScanScreen() {
   }
 
   const modeToggle = (
-    <View style={[styles.modeToggle, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+    <View
+      style={[
+        styles.modeToggle,
+        { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+      ]}
+    >
       <Pressable
-        style={[styles.modeTab, inputMode === 'camera' && { backgroundColor: theme.colors.primary }]}
+        style={[
+          styles.modeTab,
+          inputMode === 'camera' && { backgroundColor: theme.colors.primary },
+        ]}
         onPress={() => setInputMode('camera')}
         accessibilityRole="button"
         accessibilityLabel="Camera scan mode"
         accessibilityState={{ selected: inputMode === 'camera' }}
       >
-        <Text style={[styles.modeTabText, { color: inputMode === 'camera' ? '#fff' : theme.colors.text }]}>
+        <Text
+          style={[
+            styles.modeTabText,
+            { color: inputMode === 'camera' ? '#fff' : theme.colors.text },
+          ]}
+        >
           Camera
         </Text>
       </Pressable>
       <Pressable
-        style={[styles.modeTab, inputMode === 'search' && { backgroundColor: theme.colors.primary }]}
+        style={[
+          styles.modeTab,
+          inputMode === 'search' && { backgroundColor: theme.colors.primary },
+        ]}
         onPress={() => setInputMode('search')}
         accessibilityRole="button"
         accessibilityLabel="Text search mode"
         accessibilityState={{ selected: inputMode === 'search' }}
       >
-        <Text style={[styles.modeTabText, { color: inputMode === 'search' ? '#fff' : theme.colors.text }]}>
+        <Text
+          style={[
+            styles.modeTabText,
+            { color: inputMode === 'search' ? '#fff' : theme.colors.text },
+          ]}
+        >
           Search
         </Text>
       </Pressable>

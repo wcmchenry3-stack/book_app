@@ -125,10 +125,9 @@ describe('api response interceptor — 401 handling', () => {
     // the refresh POST and token storage happened first.
     await runResponseErrorInterceptor(make401Error()).catch(() => {});
 
-    expect(mockAxiosPost).toHaveBeenCalledWith(
-      expect.stringContaining('/auth/refresh'),
-      { refresh_token: 'old-refresh' }
-    );
+    expect(mockAxiosPost).toHaveBeenCalledWith(expect.stringContaining('/auth/refresh'), {
+      refresh_token: 'old-refresh',
+    });
   });
 
   it('stores new tokens after successful refresh', async () => {
