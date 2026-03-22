@@ -18,5 +18,4 @@ services:
 
 databases:
   - name: bookshelf-db
-    plan: basic
     region: oregon
