@@ -87,44 +87,44 @@ describe('BookCandidatePicker', () => {
   });
 
   it('calls onSelect with the correct book when tapped', () => {
-    const { getByA11yLabel } = render(
+    const { getByLabelText } = render(
       <BookCandidatePicker visible={true} candidates={BOOKS} onSelect={onSelect} onDismiss={onDismiss} />
     );
-    fireEvent.press(getByA11yLabel('Select Dune by Frank Herbert'));
+    fireEvent.press(getByLabelText('Select Dune by Frank Herbert'));
     expect(onSelect).toHaveBeenCalledWith(BOOKS[0]);
   });
 
   it('calls onDismiss when Cancel is pressed', () => {
-    const { getByA11yLabel } = render(
+    const { getByLabelText } = render(
       <BookCandidatePicker visible={true} candidates={BOOKS} onSelect={onSelect} onDismiss={onDismiss} />
     );
-    fireEvent.press(getByA11yLabel('Close picker'));
+    fireEvent.press(getByLabelText('Close picker'));
     expect(onDismiss).toHaveBeenCalled();
   });
 
   it('calls onDismiss when None of these is pressed', () => {
-    const { getByA11yLabel } = render(
+    const { getByLabelText } = render(
       <BookCandidatePicker visible={true} candidates={BOOKS} onSelect={onSelect} onDismiss={onDismiss} />
     );
-    fireEvent.press(getByA11yLabel('None of these books match'));
+    fireEvent.press(getByLabelText('None of these books match'));
     expect(onDismiss).toHaveBeenCalled();
   });
 
   it('renders cover placeholder when cover_url is absent', () => {
-    const { getAllByA11yLabel } = render(
+    const { getAllByLabelText } = render(
       <BookCandidatePicker visible={true} candidates={BOOKS} onSelect={onSelect} onDismiss={onDismiss} />
     );
     // Both books have no cover_url — expect placeholder views
-    expect(getAllByA11yLabel('No cover available').length).toBe(2);
+    expect(getAllByLabelText('No cover available').length).toBe(2);
   });
 
   it('renders cover image when cover_url is present', () => {
     const withCover: EnrichedBook[] = [
       { ...BOOKS[0], cover_url: 'https://example.com/cover.jpg' },
     ];
-    const { getByA11yLabel } = render(
+    const { getByLabelText } = render(
       <BookCandidatePicker visible={true} candidates={withCover} onSelect={onSelect} onDismiss={onDismiss} />
     );
-    expect(getByA11yLabel('Cover of Dune')).toBeTruthy();
+    expect(getByLabelText('Cover of Dune')).toBeTruthy();
   });
 });

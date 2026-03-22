@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,6 +24,7 @@ MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5MB
 @router.post("/scan", response_model=list[EnrichedBook])
 @limiter.limit("10/minute")
 async def scan(
+    request: Request,
     file: UploadFile,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

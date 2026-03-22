@@ -79,12 +79,20 @@ class TestEnrich:
         assert len(results) == 3
 
     async def test_skips_failed_candidates(self, service):
-        service.ol.search = AsyncMock(side_effect=Exception("OL down"))
-        service.gb.search = AsyncMock(side_effect=Exception("GB down"))
+        # When both APIs fail, the service logs warnings and continues with None values,
+        # producing an EnrichedBook with the candidate's title/author but no enriched data.
+        # A genuine _enrich_one exception (e.g. unexpected crash) would be caught by
+        # gather(return_exceptions=True) and logged — result excluded from list.
+        # Simulate that by making _enrich_one itself raise.
+        import asyncio
+        from unittest.mock import patch as _patch
 
-        results = await service.enrich([CANDIDATE])
+        async def _failing(*_):
+            raise RuntimeError("boom")
 
-        # Exception propagates through _enrich_one → gather catches it
+        with _patch.object(service, "_enrich_one", side_effect=_failing):
+            results = await service.enrich([CANDIDATE])
+
         assert results == []
 
     async def test_uses_ol_author_when_available(self, service):

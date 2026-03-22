@@ -33,8 +33,11 @@ def client():
     from app.auth.dependencies import get_current_user
     from app.core.database import get_db
 
+    async def _fake_db():
+        yield AsyncMock()
+
     app.dependency_overrides[get_current_user] = lambda: FAKE_USER
-    app.dependency_overrides[get_db] = AsyncMock
+    app.dependency_overrides[get_db] = _fake_db
 
     yield TestClient(app)
 

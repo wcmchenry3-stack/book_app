@@ -55,15 +55,8 @@ class TestCheck:
         assert result[0].already_in_library is False
 
     async def test_marks_true_when_google_books_id_matches(self, service):
-        # First query (OL) returns None, second (GB) returns a row
-        scalar_none = MagicMock()
-        scalar_none.scalar_one_or_none.return_value = None
-        scalar_found = MagicMock()
-        scalar_found.scalar_one_or_none.return_value = MagicMock()
-
-        db = AsyncMock()
-        db.execute = AsyncMock(side_effect=[scalar_none, scalar_found])
-
+        # ol_id=None so OL query is skipped; only the GB query runs → found=True
+        db = _mock_db(found=True)
         candidates = [make_candidate(ol_id=None, gb_id="gb_dune_001")]
         result = await service.check(db, USER_ID, candidates)
 
