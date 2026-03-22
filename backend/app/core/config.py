@@ -28,8 +28,10 @@ class Settings(BaseSettings):
 
     @property
     def async_database_url(self) -> str:
-        # Render injects postgres:// but asyncpg requires postgresql+asyncpg://
-        return self.database_url.replace("postgres://", "postgresql+asyncpg://", 1)
+        # Normalize any postgres:// or postgresql:// scheme to postgresql+asyncpg://
+        import re
+
+        return re.sub(r"^postgres(ql)?://", "postgresql+asyncpg://", self.database_url)
 
     @property
     def allowed_emails_list(self) -> list[str]:
