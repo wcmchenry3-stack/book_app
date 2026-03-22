@@ -19,15 +19,8 @@ npx expo start
 - Import: `import { useTheme } from '../hooks/useTheme'`
 - Use `theme.colors.*`, `theme.spacing.*`, `theme.typography.*`, `theme.radius.*`
 
-### Accessibility (WCAG 2.2 AA — required on every interactive element)
-```tsx
-<Pressable
-  accessibilityLabel="descriptive label (not just 'button')"
-  accessibilityRole="button"
-  accessibilityHint="what happens when activated (if non-obvious)"
-  style={{ minWidth: 44, minHeight: 44 }}  // WCAG 2.5.8
->
-```
+### Accessibility
+See [~/.claude/standards/accessibility.md](~/.claude/standards/accessibility.md). WCAG 2.2 AA required on every interactive element. React Native: `accessibilityLabel`, `accessibilityRole`, `accessibilityHint` (if non-obvious), `minWidth/minHeight: 44` on all `Pressable`.
 
 ### Token Storage
 - Tokens and preferences: `expo-secure-store` only

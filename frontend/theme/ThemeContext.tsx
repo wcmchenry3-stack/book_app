@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
 
+import * as storage from '../lib/storage';
 import { lightTheme, type Theme } from './light';
 import { darkTheme } from './dark';
 
@@ -27,7 +27,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Load persisted preference on mount
   useEffect(() => {
-    SecureStore.getItemAsync(THEME_STORE_KEY).then((stored) => {
+    storage.getItem(THEME_STORE_KEY).then((stored) => {
       if (stored === 'light' || stored === 'dark') {
         setMode(stored);
       }
@@ -37,7 +37,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const toggleTheme = useCallback(() => {
     setMode((prev) => {
       const next: ThemeMode = prev === 'light' ? 'dark' : 'light';
-      SecureStore.setItemAsync(THEME_STORE_KEY, next);
+      storage.setItem(THEME_STORE_KEY, next);
       return next;
     });
   }, []);

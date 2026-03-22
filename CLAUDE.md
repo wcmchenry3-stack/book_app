@@ -1,4 +1,5 @@
 # Bookshelf — Claude Instructions
+<!-- Global standards: ~/.claude/CLAUDE.md and ~/.claude/standards/ -->
 
 ## Stack
 Expo (React Native + Web) · FastAPI · PostgreSQL · Render · GitHub Actions
