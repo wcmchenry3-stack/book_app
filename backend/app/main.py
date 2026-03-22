@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -9,6 +11,10 @@ from app.api.books import router as books_router
 from app.api.scan import router as scan_router
 from app.api.user_books import router as user_books_router
 from app.core.config import settings
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s"
+)
 
 limiter = Limiter(key_func=get_remote_address)
 

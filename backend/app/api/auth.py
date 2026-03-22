@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 import jwt
@@ -13,6 +14,7 @@ from app.core.database import get_db
 from app.models.user import User
 from app.schemas.auth import GoogleAuthRequest, RefreshRequest, TokenResponse, UserRead
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
@@ -20,20 +22,34 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 async def google_auth(
     body: GoogleAuthRequest, db: AsyncSession = Depends(get_db)
 ) -> TokenResponse:
+    logger.info("POST /auth/google — verifying Google ID token")
     try:
         claims = await verify_google_id_token(body.id_token)
-    except Exception:
+        logger.info(
+            "Google token verified — email=%s verified=%s",
+            claims.get("email"),
+            claims.get("email_verified"),
+        )
+    except Exception as exc:
+        logger.error("Google token verification failed: %s", exc, exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Google token"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid Google token: {exc}",
         )
 
     email: str = claims.get("email", "")
     if not claims.get("email_verified"):
+        logger.warning("Email not verified for %s", email)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Google email not verified"
         )
 
     if settings.allowed_emails_list and email not in settings.allowed_emails_list:
+        logger.warning(
+            "Email not in allowlist: %s (allowed: %s)",
+            email,
+            settings.allowed_emails_list,
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Email not authorized"
         )
@@ -41,6 +57,7 @@ async def google_auth(
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
     if user is None:
+        logger.info("Creating new user for %s", email)
         user = User(
             email=email,
             google_id=claims.get("sub", ""),
@@ -49,6 +66,7 @@ async def google_auth(
         )
         db.add(user)
     else:
+        logger.info("Existing user found for %s (id=%s)", email, user.id)
         user.display_name = claims.get("name")
         user.avatar_url = claims.get("picture")
 
@@ -57,6 +75,7 @@ async def google_auth(
 
     access_token = create_access_token(str(user.id), user.email)
     refresh_token = create_refresh_token(str(user.id))
+    logger.info("Auth successful for %s", email)
     return TokenResponse(
         access_token=access_token,
         refresh_token=refresh_token,
