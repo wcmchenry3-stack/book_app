@@ -1,59 +1,7 @@
 # Git Workflow
 
-## Branch Strategy
+See [~/.claude/standards/git.md](~/.claude/standards/git.md) for the full workflow, branching strategy, conventional commits, and PR process.
 
-```
-feature/* ──┐
-            ├──→ dev ──→ main
-bug/*    ───┘
-```
-
-- `dev` and `main` are protected — **never push directly**
-- All work lives in a `feature/<name>` or `bug/<name>` branch
-- `dev` → `main` is a release-only operation performed by the user
-
-## Starting Work
-
-```bash
-git checkout dev
-git pull
-git checkout -b feature/<short-kebab-description>
-# or
-git checkout -b bug/<short-kebab-description>
-```
-
-## Commit Style
-
-Conventional commits:
-- `feat:` — new feature or behaviour
-- `fix:` — bug fix
-- `chore:` — tooling, deps, config (no production code change)
-- `test:` — adding or updating tests
-- `docs:` — documentation only
-- `refactor:` — code change that is neither a fix nor a feature
-
-Example: `feat: add BookIdentifierService abstract interface`
-
-## After Finishing Work
-
-```bash
-git push -u origin feature/<name>
-gh pr create --draft --base dev \
-  --title "feat: <description>" \
-  --body "$(cat <<'EOF'
-## Summary
-- <bullet points>
-
-## Test plan
-- [ ] <what to verify>
-
-🤖 Generated with Claude Code
-EOF
-)"
-```
-
-## Rules
-- Never use `--no-verify` or `--force` on protected branches
-- Delete the branch after the PR merges
-- Claude opens draft PRs — the user reviews, approves, and merges
-- Squash merge into `dev`; merge commit into `main`
+## book_app specific
+- Squash merge into `dev`; merge commit into `main` for releases
+- Draft PRs only — Claude opens them; user reviews and merges
