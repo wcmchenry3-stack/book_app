@@ -44,6 +44,10 @@
     "preset": "jest-expo",
     "collectCoverageFrom": [
       "theme/**/*.{ts,tsx}",
+      "components/**/*.{ts,tsx}",
+      "contexts/**/*.{ts,tsx}",
+      "app/(tabs)/wishlist.tsx",
+      "app/(tabs)/my-books.tsx",
       "!theme/index.ts"
     ],
     "transformIgnorePatterns": [

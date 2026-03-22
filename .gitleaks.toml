@@ -1,0 +1,10 @@
+[allowlist]
+  description = "Allowlist for test fixtures and CI placeholders"
+  regexes = [
+    # Fake DB URL used in conftest.py for unit tests (no real credentials)
+    '''postgresql\+asyncpg://test:test@localhost/test''',
+  ]
+  paths = [
+    # Test configuration files
+    '''backend/tests/conftest\.py''',
+  ]
