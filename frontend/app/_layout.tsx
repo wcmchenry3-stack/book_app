@@ -1,15 +1,19 @@
 import { Stack } from 'expo-router';
-import { ThemeProvider } from '../theme';
+
 import { ThemeToggleButton } from '../components/ThemeToggleButton';
+import { AuthProvider } from '../contexts/AuthContext';
+import { ThemeProvider } from '../theme';
 
 export default function RootLayout() {
   return (
     <ThemeProvider>
-      <Stack
-        screenOptions={{
-          headerRight: () => <ThemeToggleButton />,
-        }}
-      />
+      <AuthProvider>
+        <Stack
+          screenOptions={{
+            headerRight: () => <ThemeToggleButton />,
+          }}
+        />
+      </AuthProvider>
     </ThemeProvider>
   );
 }

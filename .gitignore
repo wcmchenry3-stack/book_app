@@ -55,3 +55,7 @@ secrets/
 
 # Render
 .render-buildpacks.json
+
+# Local Claude Code files
+.claude/
+bookshelf-project-plan.md
