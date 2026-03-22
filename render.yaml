@@ -16,6 +16,17 @@ services:
       - key: ENVIRONMENT
         value: production
 
+  - type: web
+    name: bookshelf-web
+    env: static
+    region: oregon
+    buildCommand: npm install && npx expo export --platform web
+    staticPublishPath: dist
+    rootDir: frontend
+    envVars:
+      - key: EXPO_PUBLIC_API_URL
+        value: https://bookshelf-api.onrender.com
+
 databases:
   - name: bookshelf-db
     plan: basic-256mb

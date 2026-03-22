@@ -1,8 +1,8 @@
 import React, { createContext, useCallback, useEffect, useState } from 'react';
 import { useRouter, useSegments } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, api } from '../lib/api';
+import * as storage from '../lib/storage';
 
 interface AuthContextValue {
   isAuthenticated: boolean;
@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Check for stored token on mount
   useEffect(() => {
-    SecureStore.getItemAsync(ACCESS_TOKEN_KEY).then((token) => {
+    storage.getItem(ACCESS_TOKEN_KEY).then((token) => {
       setIsAuthenticated(!!token);
       setIsLoading(false);
     });
@@ -45,14 +45,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (idToken: string) => {
     const { data } = await api.post('/auth/google', { id_token: idToken });
-    await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, data.access_token);
-    await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, data.refresh_token);
+    await storage.setItem(ACCESS_TOKEN_KEY, data.access_token);
+    await storage.setItem(REFRESH_TOKEN_KEY, data.refresh_token);
     setIsAuthenticated(true);
   }, []);
 
   const logout = useCallback(async () => {
-    await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
-    await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
+    await storage.deleteItem(ACCESS_TOKEN_KEY);
+    await storage.deleteItem(REFRESH_TOKEN_KEY);
     setIsAuthenticated(false);
   }, []);
 
