@@ -126,3 +126,79 @@ class TestDecodeToken:
     def test_raises_on_garbage_input(self):
         with pytest.raises(jwt.InvalidTokenError):
             decode_token("not.a.token")
+
+
+# ─── Security: algorithm attacks ──────────────────────────────────────────────
+
+
+class TestAlgorithmSecurity:
+    """Verify decode_token rejects tokens using unexpected algorithms."""
+
+    def test_rejects_alg_none(self, rsa_key_pair):
+        """'alg: none' unsigned tokens must never be accepted."""
+        private_pem, _ = rsa_key_pair
+        payload = {
+            "sub": "attacker",
+            "type": "access",
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "iat": datetime.now(timezone.utc),
+        }
+        # PyJWT refuses to encode with alg=none; craft the token manually.
+        import base64
+        import json
+
+        header = base64.urlsafe_b64encode(
+            json.dumps({"alg": "none", "typ": "JWT"}).encode()
+        ).rstrip(b"=")
+        body = base64.urlsafe_b64encode(
+            json.dumps(
+                {
+                    **payload,
+                    "exp": int(payload["exp"].timestamp()),
+                    "iat": int(payload["iat"].timestamp()),
+                }
+            ).encode()
+        ).rstrip(b"=")
+        none_token = f"{header.decode()}.{body.decode()}."
+
+        with pytest.raises(jwt.InvalidTokenError):
+            decode_token(none_token)
+
+    def test_rejects_hs256_token(self):
+        """
+        Algorithm confusion: decode_token must reject any HS256-signed token
+        because it only accepts RS256. An attacker can't forge a valid RS256
+        token, but they could try submitting an HS256 one.
+        """
+        payload = {
+            "sub": "attacker",
+            "type": "access",
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "iat": datetime.now(timezone.utc),
+        }
+        hs256_token = jwt.encode(payload, "any-hmac-secret", algorithm="HS256")
+
+        with pytest.raises(jwt.InvalidTokenError):
+            decode_token(hs256_token)
+
+    def test_rejects_token_signed_with_different_private_key(self):
+        """Token signed with a different RSA key must not verify."""
+        from cryptography.hazmat.primitives.asymmetric import rsa as _rsa
+
+        other_key = _rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        other_private_pem = other_key.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.PKCS8,
+            serialization.NoEncryption(),
+        ).decode()
+
+        payload = {
+            "sub": "user",
+            "type": "access",
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "iat": datetime.now(timezone.utc),
+        }
+        foreign_token = jwt.encode(payload, other_private_pem, algorithm="RS256")
+
+        with pytest.raises(jwt.InvalidTokenError):
+            decode_token(foreign_token)
