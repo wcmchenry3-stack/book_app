@@ -37,7 +37,9 @@ jest.mock('expo-auth-session/providers/google', () => ({
   useIdTokenAuthRequest: jest.fn(),
 }));
 
-function setupGoogleAuth(opts: { request?: object | null; response?: object | null } = {}) {
+function setupGoogleAuth(
+  opts: { request?: object | null; response?: object | null } = {}
+) {
   const { useIdTokenAuthRequest } = require('expo-auth-session/providers/google');
   // Use 'in' check so callers can explicitly pass null to simulate no request yet
   const requestValue = 'request' in opts ? opts.request : { clientId: 'test' };
@@ -95,7 +97,9 @@ describe('LoginScreen', () => {
     });
     mockLogin.mockResolvedValue(undefined);
     render(<LoginScreen />);
-    await waitFor(() => expect(mockLogin).toHaveBeenCalledWith('google-id-token-abc'));
+    await waitFor(() =>
+      expect(mockLogin).toHaveBeenCalledWith('google-id-token-abc')
+    );
   });
 
   it('does not call login when response type is not success', async () => {
