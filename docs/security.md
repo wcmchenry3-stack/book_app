@@ -1,5 +1,7 @@
 # Security
 
+See [~/.claude/standards/security.md](~/.claude/standards/security.md) for universal security standards.
+
 ## Controls
 
 | Concern | Solution |

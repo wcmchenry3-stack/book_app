@@ -5,76 +5,15 @@ on:
     branches: [main]
 
 jobs:
+  ci:
+    uses: wcmchenry3-stack/book_app/.github/workflows/ci.yml@main
+    secrets: inherit
+
   deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      # --- Backend CI ---
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install backend dependencies
-        run: pip install -r backend/requirements-dev.txt
-
-      - name: Check formatting (black)
-        run: black --check backend/
-
-      - name: Lint (ruff)
-        run: ruff check backend/
-
-      - name: Dependency CVE scan
-        run: pip-audit -r backend/requirements.txt
-
-      - name: Run backend tests
-        run: pytest backend/tests/ --cov=app --cov-fail-under=80
-        env:
-          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
-          JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}
-          JWT_PUBLIC_KEY: ${{ secrets.JWT_PUBLIC_KEY }}
-          ALLOWED_EMAILS: test@example.com
-
-      # --- Frontend CI ---
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install frontend dependencies
-        run: cd frontend && npm install
-
-      - name: Lint (ESLint + a11y)
-        run: cd frontend && npx eslint .
-
-      - name: Check formatting (Prettier)
-        run: cd frontend && npx prettier --check .
-
-      - name: Run frontend tests
-        run: cd frontend && npx jest --coverage --coverageThreshold='{"global":{"lines":80}}'
-
-      # --- Deploy ---
-      - name: Trigger Render deploy
-        env:
-          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
-        run: |
-          if [ -n "$DEPLOY_HOOK" ]; then
-            curl -X POST "$DEPLOY_HOOK"
-          else
-            echo "RENDER_DEPLOY_HOOK not set — skipping deploy trigger"
-          fi
-
-      - name: Wait for deploy to complete
-        env:
-          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
-        run: |
-          if [ -n "$DEPLOY_HOOK" ]; then
-            sleep 60
-          fi
-
-      # --- Post-deploy security scan ---
-      - name: OWASP ZAP baseline scan
-        if: ${{ secrets.STAGING_URL != '' }}
-        uses: zaproxy/action-baseline@v0.10.0
-        with:
-          target: ${{ secrets.STAGING_URL }}
-          fail_action: false
+    needs: ci
+    uses: wcmchenry3-stack/.github/.github/workflows/called-deploy-render.yml@main
+    with:
+      service-name: 'bookshelf-api'
+      service-id: 'srv-d6vkel7fte5s73du7fc0'
+      zap-target-url: 'https://bookshelf-api-rxp3.onrender.com'
+    secrets: inherit

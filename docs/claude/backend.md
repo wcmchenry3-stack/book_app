@@ -16,14 +16,7 @@ uvicorn app.main:app --reload
 
 ## Key Patterns
 
-### Config
-All config loaded via `pydantic-settings` in `app/core/config.py`.
-Never hardcode env values — always use `settings.<key>`.
-
-### Database
-- Async session via `get_db()` dependency (`app/core/database.py`)
-- Always use `async with` — never call `.commit()` manually outside a transaction
-- SQLAlchemy ORM throughout — no raw SQL, ever
+See [~/.claude/standards/code-style.md](~/.claude/standards/code-style.md) for universal Python conventions (pydantic-settings config, ORM-only, Pydantic schemas on all routes).
 
 ### Routes
 - All routes (Phase 3+) require `get_current_user` FastAPI dependency

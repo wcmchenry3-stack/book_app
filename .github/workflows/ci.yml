@@ -3,66 +3,54 @@ name: CI
 on:
   pull_request:
     branches: [dev, main]
+  push:
+    branches: [dev, main]
 
 jobs:
+  gate-main-source:
+    uses: wcmchenry3-stack/.github/.github/workflows/called-gate-main-source.yml@main
+    secrets: inherit
+
   secret-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    uses: wcmchenry3-stack/.github/.github/workflows/called-secret-scan.yml@main
+    secrets: inherit
 
-      - name: Secret detection (gitleaks)
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  lint-python:
+    uses: wcmchenry3-stack/.github/.github/workflows/called-lint-python.yml@main
+    with:
+      working-directory: backend
+    secrets: inherit
 
-  backend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+  lint-frontend:
+    uses: wcmchenry3-stack/.github/.github/workflows/called-lint-frontend.yml@main
+    with:
+      working-directory: frontend
+      run-a11y: true
+    secrets: inherit
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+  test-python:
+    uses: wcmchenry3-stack/.github/.github/workflows/called-test-python.yml@main
+    with:
+      working-directory: backend
+      coverage-threshold: 80
+    secrets: inherit
 
-      - name: Install dependencies
-        run: pip install -r backend/requirements-dev.txt
+  test-frontend:
+    uses: wcmchenry3-stack/.github/.github/workflows/called-test-frontend.yml@main
+    with:
+      working-directory: frontend
+      coverage-threshold: 80
+    secrets: inherit
 
-      - name: Check formatting (black)
-        run: black --check backend/
+  cve-python:
+    uses: wcmchenry3-stack/.github/.github/workflows/called-cve-python.yml@main
+    with:
+      working-directory: backend
+    secrets: inherit
 
-      - name: Lint (ruff)
-        run: ruff check backend/
-
-      - name: Dependency CVE scan (pip-audit)
-        run: pip-audit -r backend/requirements.txt
-
-      - name: Run tests with coverage
-        run: pytest backend/tests/ --cov=app --cov-fail-under=80
-        env:
-          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
-          JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}
-          JWT_PUBLIC_KEY: ${{ secrets.JWT_PUBLIC_KEY }}
-          ALLOWED_EMAILS: test@example.com
-
-  frontend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: cd frontend && npm install
-
-      - name: Lint (ESLint + a11y)
-        run: cd frontend && npx eslint .
-
-      - name: Check formatting (Prettier)
-        run: cd frontend && npx prettier --check .
-
-      - name: Run tests with coverage
-        run: cd frontend && npx jest --coverage --coverageThreshold='{"global":{"lines":80}}'
+  cve-frontend:
+    uses: wcmchenry3-stack/.github/.github/workflows/called-cve-frontend.yml@main
+    with:
+      working-directory: frontend
+      audit-level: critical
+    secrets: inherit
