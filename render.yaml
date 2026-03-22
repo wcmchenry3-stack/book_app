@@ -25,7 +25,7 @@ services:
     rootDir: frontend
     envVars:
       - key: EXPO_PUBLIC_API_URL
-        value: https://bookshelf-api.onrender.com
+        value: https://bookshelf-api-rxp3.onrender.com
 
 databases:
   - name: bookshelf-db
