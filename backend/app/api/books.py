@@ -1,0 +1,54 @@
+"""Book search endpoint — free-text query returning enriched candidates."""
+
+from fastapi import APIRouter, HTTPException, Query
+
+from app.schemas.book import EnrichedBook
+from app.services.book_identifier import BookCandidate
+from app.services.enrichment import EnrichmentService
+from app.services.google_books import GoogleBooksService
+
+router = APIRouter(prefix="/books", tags=["books"])
+
+_gb = GoogleBooksService()
+_enrichment = EnrichmentService()
+
+
+def _volume_to_candidate(volume: dict) -> BookCandidate:
+    info = volume.get("volumeInfo", {})
+    title = info.get("title", "Unknown")
+    authors = info.get("authors", [])
+    author = authors[0] if authors else "Unknown"
+
+    isbn_13 = isbn_10 = None
+    for id_entry in info.get("industryIdentifiers", []):
+        if id_entry.get("type") == "ISBN_13":
+            isbn_13 = id_entry.get("identifier")
+        elif id_entry.get("type") == "ISBN_10":
+            isbn_10 = id_entry.get("identifier")
+
+    return BookCandidate(
+        title=title,
+        author=author,
+        confidence=0.9,
+        isbn_13=isbn_13,
+        isbn_10=isbn_10,
+    )
+
+
+@router.get("/search", response_model=list[EnrichedBook])
+async def search_books(
+    q: str = Query(
+        ..., min_length=2, description="Free-text query, e.g. 'John Adams McCullough'"
+    ),
+) -> list[EnrichedBook]:
+    """Search for books by free text. Returns up to 3 enriched candidates."""
+    try:
+        volumes = await _gb.search_query(q, limit=3)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail="Book search unavailable") from exc
+
+    if not volumes:
+        return []
+
+    candidates = [_volume_to_candidate(v) for v in volumes]
+    return await _enrichment.enrich(candidates)

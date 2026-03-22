@@ -68,7 +68,7 @@ export default function MyBooksScreen() {
     try {
       const params = tab !== 'all' ? { status: tab } : {};
       const { data } = await api.get<UserBook[]>('/user-books', { params });
-      setBooks(data);
+      setBooks(data.filter((b) => b.book != null));
     } catch {
       Alert.alert('Error', 'Could not load books.');
     } finally {

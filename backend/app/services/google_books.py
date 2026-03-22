@@ -26,6 +26,19 @@ class GoogleBooksService:
         items = data.get("items", [])
         return items[0] if items else None
 
+    async def search_query(self, query: str, limit: int = 3) -> list[dict]:
+        """Free-text search. Returns up to `limit` volume dicts."""
+        params = {"q": query, "maxResults": limit}
+        if settings.google_books_api_key:
+            params["key"] = settings.google_books_api_key
+
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(GOOGLE_BOOKS_URL, params=params)
+            resp.raise_for_status()
+            data = resp.json()
+
+        return data.get("items", [])[:limit]
+
     async def search_by_isbn(self, isbn: str) -> dict | None:
         """Look up by ISBN. Returns volume dict or None."""
         params = {"q": f"isbn:{isbn}", "maxResults": 1}
