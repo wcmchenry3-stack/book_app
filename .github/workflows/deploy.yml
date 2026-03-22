@@ -54,13 +54,26 @@ jobs:
 
       # --- Deploy ---
       - name: Trigger Render deploy
-        run: curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$DEPLOY_HOOK" ]; then
+            curl -X POST "$DEPLOY_HOOK"
+          else
+            echo "RENDER_DEPLOY_HOOK not set — skipping deploy trigger"
+          fi
 
       - name: Wait for deploy to complete
-        run: sleep 60
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$DEPLOY_HOOK" ]; then
+            sleep 60
+          fi
 
       # --- Post-deploy security scan ---
       - name: OWASP ZAP baseline scan
+        if: ${{ secrets.STAGING_URL != '' }}
         uses: zaproxy/action-baseline@v0.10.0
         with:
           target: ${{ secrets.STAGING_URL }}
