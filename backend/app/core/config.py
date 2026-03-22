@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     rate_limit_scan: str = "10/minute"
 
     @property
+    def async_database_url(self) -> str:
+        # Render injects postgres:// but asyncpg requires postgresql+asyncpg://
+        return self.database_url.replace("postgres://", "postgresql+asyncpg://", 1)
+
+    @property
     def allowed_emails_list(self) -> list[str]:
         return [e.strip() for e in self.allowed_emails.split(",") if e.strip()]
 
