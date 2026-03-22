@@ -5,6 +5,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from app.api.auth import router as auth_router
+from app.api.books import router as books_router
 from app.api.scan import router as scan_router
 from app.api.user_books import router as user_books_router
 from app.core.config import settings
@@ -30,6 +31,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+app.include_router(books_router)
 app.include_router(scan_router)
 app.include_router(user_books_router)
 

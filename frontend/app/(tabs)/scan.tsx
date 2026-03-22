@@ -1,5 +1,12 @@
 import { useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 
 import { BookCandidatePicker, EnrichedBook } from '../../components/BookCandidatePicker';
@@ -7,13 +14,14 @@ import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { useTheme } from '../../hooks/useTheme';
 import { api } from '../../lib/api';
 
-type ScreenState = 'camera' | 'loading' | 'picker';
+type ScreenState = 'camera' | 'search' | 'loading' | 'picker';
 
 export default function ScanScreen() {
   const { theme } = useTheme();
   const [permission, requestPermission] = useCameraPermissions();
   const [screenState, setScreenState] = useState<ScreenState>('camera');
   const [candidates, setCandidates] = useState<EnrichedBook[]>([]);
+  const [query, setQuery] = useState('');
   const cameraRef = useRef<CameraView>(null);
 
   async function handleCapture() {
@@ -56,6 +64,28 @@ export default function ScanScreen() {
     }
   }
 
+  async function handleSearch() {
+    const q = query.trim();
+    if (!q) return;
+    setScreenState('loading');
+
+    try {
+      const response = await api.get<EnrichedBook[]>('/books/search', { params: { q } });
+
+      if (!response.data || response.data.length === 0) {
+        setScreenState('search');
+        Alert.alert('No results', 'No books found. Try a different title or author.');
+        return;
+      }
+
+      setCandidates(response.data);
+      setScreenState('picker');
+    } catch {
+      setScreenState('search');
+      Alert.alert('Search failed', 'Something went wrong. Please try again.');
+    }
+  }
+
   async function handleSelect(book: EnrichedBook) {
     setCandidates([]);
     setScreenState('loading');
@@ -74,6 +104,84 @@ export default function ScanScreen() {
     setScreenState('camera');
   }
 
+  if (screenState === 'loading') {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <LoadingSpinner message="Identifying book…" />
+      </View>
+    );
+  }
+
+  const modeToggle = (
+    <View style={[styles.modeToggle, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+      <Pressable
+        style={[styles.modeTab, screenState === 'camera' && { backgroundColor: theme.colors.primary }]}
+        onPress={() => setScreenState('camera')}
+        accessibilityRole="button"
+        accessibilityLabel="Camera scan mode"
+        accessibilityState={{ selected: screenState === 'camera' }}
+      >
+        <Text style={[styles.modeTabText, { color: screenState === 'camera' ? '#fff' : theme.colors.text }]}>
+          Camera
+        </Text>
+      </Pressable>
+      <Pressable
+        style={[styles.modeTab, screenState === 'search' && { backgroundColor: theme.colors.primary }]}
+        onPress={() => setScreenState('search')}
+        accessibilityRole="button"
+        accessibilityLabel="Text search mode"
+        accessibilityState={{ selected: screenState === 'search' }}
+      >
+        <Text style={[styles.modeTabText, { color: screenState === 'search' ? '#fff' : theme.colors.text }]}>
+          Search
+        </Text>
+      </Pressable>
+    </View>
+  );
+
+  if (screenState === 'search') {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        {modeToggle}
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={[
+              styles.searchInput,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                color: theme.colors.text,
+                fontSize: theme.typography.fontSizeBase,
+              },
+            ]}
+            value={query}
+            onChangeText={setQuery}
+            placeholder="e.g. John Adams by McCullough"
+            placeholderTextColor={theme.colors.textSecondary}
+            onSubmitEditing={handleSearch}
+            returnKeyType="search"
+            accessibilityLabel="Book title or author search"
+          />
+          <Pressable
+            style={[styles.searchButton, { backgroundColor: theme.colors.primary }]}
+            onPress={handleSearch}
+            accessibilityRole="button"
+            accessibilityLabel="Search for book"
+          >
+            <Text style={styles.searchButtonText}>Search</Text>
+          </Pressable>
+        </View>
+
+        <BookCandidatePicker
+          visible={screenState === 'picker'}
+          candidates={candidates}
+          onSelect={handleSelect}
+          onDismiss={handleDismiss}
+        />
+      </View>
+    );
+  }
+
   if (!permission) {
     return <View style={[styles.container, { backgroundColor: theme.colors.background }]} />;
   }
@@ -81,6 +189,7 @@ export default function ScanScreen() {
   if (!permission.granted) {
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        {modeToggle}
         <Text
           style={[
             styles.permissionText,
@@ -103,18 +212,11 @@ export default function ScanScreen() {
     );
   }
 
-  if (screenState === 'loading') {
-    return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <LoadingSpinner message="Identifying book…" />
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <CameraView ref={cameraRef} style={styles.camera} facing="back">
         <View style={styles.overlay}>
+          {modeToggle}
           <View style={[styles.frame, { borderColor: theme.colors.primary }]} />
           <Pressable
             style={[styles.captureButton, { backgroundColor: theme.colors.primary }]}
@@ -143,9 +245,27 @@ const styles = StyleSheet.create({
   camera: { flex: 1, width: '100%' },
   overlay: {
     flex: 1,
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 60,
+  },
+  modeToggle: {
+    flexDirection: 'row',
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: 'hidden',
+    margin: 16,
+  },
+  modeTab: {
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  modeTabText: {
+    fontWeight: '600',
+    fontSize: 14,
   },
   frame: {
     width: 240,
@@ -164,6 +284,30 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
+  },
+  searchContainer: {
+    width: '100%',
+    paddingHorizontal: 24,
+    gap: 12,
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    minHeight: 44,
+  },
+  searchButton: {
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  searchButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
   },
   permissionText: {
     textAlign: 'center',
