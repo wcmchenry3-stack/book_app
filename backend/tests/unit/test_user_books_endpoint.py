@@ -222,6 +222,134 @@ class TestDeleteUserBook:
         assert resp.status_code == 204
 
 
+# ─── PATCH /user-books/{id} — success cases ───────────────────────────────────
+
+
+class TestUpdateUserBookSuccess:
+    def test_returns_200_when_status_updated(self, client):
+        ub = _make_user_book(status="wishlisted")
+
+        async def _fake_db_with_ub():
+            db = AsyncMock()
+            # first execute (fetch), second execute (re-fetch after commit)
+            db.execute = AsyncMock(
+                side_effect=[_scalar_result(ub), _scalar_one_result(ub)]
+            )
+            db.commit = AsyncMock()
+            db.refresh = AsyncMock()
+            yield db
+
+        from app.core.database import get_db
+
+        app.dependency_overrides[get_db] = _fake_db_with_ub
+        resp = client.patch(f"/user-books/{USER_BOOK_ID}", json={"status": "purchased"})
+        assert resp.status_code == 200
+
+    def test_sets_purchased_at_when_advancing_to_purchased(self, client):
+        ub = _make_user_book(status="wishlisted", purchased_at=None)
+
+        async def _fake_db_with_ub():
+            db = AsyncMock()
+            db.execute = AsyncMock(
+                side_effect=[_scalar_result(ub), _scalar_one_result(ub)]
+            )
+            db.commit = AsyncMock()
+            db.refresh = AsyncMock()
+            yield db
+
+        from app.core.database import get_db
+
+        app.dependency_overrides[get_db] = _fake_db_with_ub
+        client.patch(f"/user-books/{USER_BOOK_ID}", json={"status": "purchased"})
+        assert ub.purchased_at is not None
+
+    def test_sets_started_at_when_advancing_to_reading(self, client):
+        ub = _make_user_book(status="purchased", started_at=None)
+
+        async def _fake_db_with_ub():
+            db = AsyncMock()
+            db.execute = AsyncMock(
+                side_effect=[_scalar_result(ub), _scalar_one_result(ub)]
+            )
+            db.commit = AsyncMock()
+            db.refresh = AsyncMock()
+            yield db
+
+        from app.core.database import get_db
+
+        app.dependency_overrides[get_db] = _fake_db_with_ub
+        client.patch(f"/user-books/{USER_BOOK_ID}", json={"status": "reading"})
+        assert ub.started_at is not None
+
+    def test_sets_finished_at_when_advancing_to_read(self, client):
+        ub = _make_user_book(status="reading", finished_at=None)
+
+        async def _fake_db_with_ub():
+            db = AsyncMock()
+            db.execute = AsyncMock(
+                side_effect=[_scalar_result(ub), _scalar_one_result(ub)]
+            )
+            db.commit = AsyncMock()
+            db.refresh = AsyncMock()
+            yield db
+
+        from app.core.database import get_db
+
+        app.dependency_overrides[get_db] = _fake_db_with_ub
+        client.patch(f"/user-books/{USER_BOOK_ID}", json={"status": "read"})
+        assert ub.finished_at is not None
+
+    def test_updates_notes(self, client):
+        ub = _make_user_book()
+
+        async def _fake_db_with_ub():
+            db = AsyncMock()
+            db.execute = AsyncMock(
+                side_effect=[_scalar_result(ub), _scalar_one_result(ub)]
+            )
+            db.commit = AsyncMock()
+            db.refresh = AsyncMock()
+            yield db
+
+        from app.core.database import get_db
+
+        app.dependency_overrides[get_db] = _fake_db_with_ub
+        resp = client.patch(f"/user-books/{USER_BOOK_ID}", json={"notes": "loved it"})
+        assert resp.status_code == 200
+        assert ub.notes == "loved it"
+
+    def test_updates_rating(self, client):
+        ub = _make_user_book()
+
+        async def _fake_db_with_ub():
+            db = AsyncMock()
+            db.execute = AsyncMock(
+                side_effect=[_scalar_result(ub), _scalar_one_result(ub)]
+            )
+            db.commit = AsyncMock()
+            db.refresh = AsyncMock()
+            yield db
+
+        from app.core.database import get_db
+
+        app.dependency_overrides[get_db] = _fake_db_with_ub
+        resp = client.patch(f"/user-books/{USER_BOOK_ID}", json={"rating": 5})
+        assert resp.status_code == 200
+        assert ub.rating == 5
+
+    def test_returns_422_for_rating_below_1(self, client):
+        resp = client.patch(f"/user-books/{USER_BOOK_ID}", json={"rating": 0})
+        assert resp.status_code == 422
+
+    def test_returns_422_for_rating_above_5(self, client):
+        resp = client.patch(f"/user-books/{USER_BOOK_ID}", json={"rating": 6})
+        assert resp.status_code == 422
+
+    def test_returns_422_for_invalid_status(self, client):
+        resp = client.patch(f"/user-books/{USER_BOOK_ID}", json={"status": "loaned"})
+        assert resp.status_code == 422
+
+
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 
@@ -234,4 +362,10 @@ def _none_result():
 def _scalar_result(value):
     r = MagicMock()
     r.scalar_one_or_none.return_value = value
+    return r
+
+
+def _scalar_one_result(value):
+    r = MagicMock()
+    r.scalar_one.return_value = value
     return r
