@@ -14,12 +14,14 @@ import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { useTheme } from '../../hooks/useTheme';
 import { api } from '../../lib/api';
 
-type ScreenState = 'camera' | 'search' | 'loading' | 'picker';
+type InputMode = 'camera' | 'search';
+type ScreenState = 'idle' | 'loading' | 'picker';
 
 export default function ScanScreen() {
   const { theme } = useTheme();
   const [permission, requestPermission] = useCameraPermissions();
-  const [screenState, setScreenState] = useState<ScreenState>('camera');
+  const [inputMode, setInputMode] = useState<InputMode>('camera');
+  const [screenState, setScreenState] = useState<ScreenState>('idle');
   const [candidates, setCandidates] = useState<EnrichedBook[]>([]);
   const [query, setQuery] = useState('');
   const cameraRef = useRef<CameraView>(null);
@@ -35,7 +37,7 @@ export default function ScanScreen() {
       });
 
       if (!photo?.uri) {
-        setScreenState('camera');
+        setScreenState('idle');
         return;
       }
 
@@ -51,7 +53,7 @@ export default function ScanScreen() {
       });
 
       if (!response.data || response.data.length === 0) {
-        setScreenState('camera');
+        setScreenState('idle');
         Alert.alert('No books found', 'Point the camera at a book cover and try again.');
         return;
       }
@@ -59,7 +61,7 @@ export default function ScanScreen() {
       setCandidates(response.data);
       setScreenState('picker');
     } catch {
-      setScreenState('camera');
+      setScreenState('idle');
       Alert.alert('Scan failed', 'Something went wrong. Please try again.');
     }
   }
@@ -73,7 +75,7 @@ export default function ScanScreen() {
       const response = await api.get<EnrichedBook[]>('/books/search', { params: { q } });
 
       if (!response.data || response.data.length === 0) {
-        setScreenState('search');
+        setScreenState('idle');
         Alert.alert('No results', 'No books found. Try a different title or author.');
         return;
       }
@@ -81,7 +83,7 @@ export default function ScanScreen() {
       setCandidates(response.data);
       setScreenState('picker');
     } catch {
-      setScreenState('search');
+      setScreenState('idle');
       Alert.alert('Search failed', 'Something went wrong. Please try again.');
     }
   }
@@ -91,17 +93,17 @@ export default function ScanScreen() {
     setScreenState('loading');
     try {
       await api.post('/wishlist', book);
-      setScreenState('camera');
+      setScreenState('idle');
       Alert.alert('Added to wishlist', `"${book.title}" has been added to your wishlist.`);
     } catch {
-      setScreenState('camera');
+      setScreenState('idle');
       Alert.alert('Could not save', 'Failed to add book to wishlist. Please try again.');
     }
   }
 
   function handleDismiss() {
     setCandidates([]);
-    setScreenState('camera');
+    setScreenState('idle');
   }
 
   if (screenState === 'loading') {
@@ -115,31 +117,31 @@ export default function ScanScreen() {
   const modeToggle = (
     <View style={[styles.modeToggle, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
       <Pressable
-        style={[styles.modeTab, screenState === 'camera' && { backgroundColor: theme.colors.primary }]}
-        onPress={() => setScreenState('camera')}
+        style={[styles.modeTab, inputMode === 'camera' && { backgroundColor: theme.colors.primary }]}
+        onPress={() => setInputMode('camera')}
         accessibilityRole="button"
         accessibilityLabel="Camera scan mode"
-        accessibilityState={{ selected: screenState === 'camera' }}
+        accessibilityState={{ selected: inputMode === 'camera' }}
       >
-        <Text style={[styles.modeTabText, { color: screenState === 'camera' ? '#fff' : theme.colors.text }]}>
+        <Text style={[styles.modeTabText, { color: inputMode === 'camera' ? '#fff' : theme.colors.text }]}>
           Camera
         </Text>
       </Pressable>
       <Pressable
-        style={[styles.modeTab, screenState === 'search' && { backgroundColor: theme.colors.primary }]}
-        onPress={() => setScreenState('search')}
+        style={[styles.modeTab, inputMode === 'search' && { backgroundColor: theme.colors.primary }]}
+        onPress={() => setInputMode('search')}
         accessibilityRole="button"
         accessibilityLabel="Text search mode"
-        accessibilityState={{ selected: screenState === 'search' }}
+        accessibilityState={{ selected: inputMode === 'search' }}
       >
-        <Text style={[styles.modeTabText, { color: screenState === 'search' ? '#fff' : theme.colors.text }]}>
+        <Text style={[styles.modeTabText, { color: inputMode === 'search' ? '#fff' : theme.colors.text }]}>
           Search
         </Text>
       </Pressable>
     </View>
   );
 
-  if (screenState === 'search') {
+  if (inputMode === 'search') {
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         {modeToggle}
@@ -182,8 +184,13 @@ export default function ScanScreen() {
     );
   }
 
+  // Camera mode
   if (!permission) {
-    return <View style={[styles.container, { backgroundColor: theme.colors.background }]} />;
+    return (
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        {modeToggle}
+      </View>
+    );
   }
 
   if (!permission.granted) {
