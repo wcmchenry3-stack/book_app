@@ -184,6 +184,60 @@ class TestUpdateUserBook:
         assert resp.status_code == 404
 
 
+# ─── PATCH /user-books/{id} — ownership ───────────────────────────────────────
+
+
+class TestUpdateUserBookOwnership:
+    """The endpoint filters by user_id, so another user's book is invisible."""
+
+    def test_returns_404_when_book_belongs_to_different_user(self):
+        """
+        A user attempting to PATCH a user_book they don't own gets 404.
+        The query is scoped to current_user.id, so the record is simply
+        not found — ownership is enforced implicitly by the DB query.
+        """
+        OTHER_USER = User(
+            id=uuid.UUID("99999999-9999-9999-9999-999999999999"),
+            email="other@example.com",
+        )
+
+        async def _fake_db_empty():
+            db = AsyncMock()
+            db.execute = AsyncMock(return_value=_none_result())
+            yield db
+
+        from app.auth.dependencies import get_current_user
+        from app.core.database import get_db
+
+        app.dependency_overrides[get_current_user] = lambda: OTHER_USER
+        app.dependency_overrides[get_db] = _fake_db_empty
+        resp = TestClient(app).patch(
+            f"/user-books/{USER_BOOK_ID}", json={"status": "purchased"}
+        )
+        app.dependency_overrides.clear()
+        assert resp.status_code == 404
+
+    def test_returns_404_when_deleting_book_belonging_to_different_user(self):
+        OTHER_USER = User(
+            id=uuid.UUID("99999999-9999-9999-9999-999999999999"),
+            email="other@example.com",
+        )
+
+        async def _fake_db_empty():
+            db = AsyncMock()
+            db.execute = AsyncMock(return_value=_none_result())
+            yield db
+
+        from app.auth.dependencies import get_current_user
+        from app.core.database import get_db
+
+        app.dependency_overrides[get_current_user] = lambda: OTHER_USER
+        app.dependency_overrides[get_db] = _fake_db_empty
+        resp = TestClient(app).delete(f"/user-books/{USER_BOOK_ID}")
+        app.dependency_overrides.clear()
+        assert resp.status_code == 404
+
+
 # ─── DELETE /user-books/{id} ──────────────────────────────────────────────────
 
 
