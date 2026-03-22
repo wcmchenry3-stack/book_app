@@ -76,7 +76,10 @@ export default function ScanScreen() {
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <Text
-          style={[styles.permissionText, { color: theme.colors.text, fontSize: theme.typography.fontSizeBase }]}
+          style={[
+            styles.permissionText,
+            { color: theme.colors.text, fontSize: theme.typography.fontSizeBase },
+          ]}
         >
           Camera access is required to scan books.
         </Text>

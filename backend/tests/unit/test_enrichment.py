@@ -84,7 +84,6 @@ class TestEnrich:
         # A genuine _enrich_one exception (e.g. unexpected crash) would be caught by
         # gather(return_exceptions=True) and logged — result excluded from list.
         # Simulate that by making _enrich_one itself raise.
-        import asyncio
         from unittest.mock import patch as _patch
 
         async def _failing(*_):

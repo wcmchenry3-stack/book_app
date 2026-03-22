@@ -1,12 +1,4 @@
-import {
-  Image,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '../hooks/useTheme';
 
@@ -97,26 +89,39 @@ export function BookCandidatePicker({ visible, candidates, onSelect, onDismiss }
                 />
               ) : (
                 <View
-                  style={[styles.cover, styles.coverPlaceholder, { backgroundColor: theme.colors.border }]}
+                  style={[
+                    styles.cover,
+                    styles.coverPlaceholder,
+                    { backgroundColor: theme.colors.border },
+                  ]}
                   accessibilityLabel="No cover available"
                 />
               )}
 
               <View style={styles.info}>
                 <Text
-                  style={[styles.bookTitle, { color: theme.colors.text, fontSize: theme.typography.fontSizeBase }]}
+                  style={[
+                    styles.bookTitle,
+                    { color: theme.colors.text, fontSize: theme.typography.fontSizeBase },
+                  ]}
                   numberOfLines={2}
                 >
                   {book.title}
                 </Text>
                 <Text
-                  style={[{ color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeSM }]}
+                  style={[
+                    { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeSM },
+                  ]}
                   numberOfLines={1}
                 >
                   {book.author}
                 </Text>
                 {book.editions[0]?.publish_year && (
-                  <Text style={[{ color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeSM }]}>
+                  <Text
+                    style={[
+                      { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeSM },
+                    ]}
+                  >
                     {book.editions[0].publish_year}
                   </Text>
                 )}
@@ -135,7 +140,9 @@ export function BookCandidatePicker({ visible, candidates, onSelect, onDismiss }
             accessibilityLabel="None of these books match"
             accessibilityRole="button"
           >
-            <Text style={{ color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeBase }}>
+            <Text
+              style={{ color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeBase }}
+            >
               None of these
             </Text>
           </Pressable>

@@ -51,14 +51,24 @@ describe('BookCandidatePicker', () => {
 
   it('renders nothing meaningful when not visible', () => {
     const { queryByText } = render(
-      <BookCandidatePicker visible={false} candidates={BOOKS} onSelect={onSelect} onDismiss={onDismiss} />
+      <BookCandidatePicker
+        visible={false}
+        candidates={BOOKS}
+        onSelect={onSelect}
+        onDismiss={onDismiss}
+      />
     );
     expect(queryByText('Dune')).toBeNull();
   });
 
   it('renders candidate titles when visible', () => {
     const { getByText } = render(
-      <BookCandidatePicker visible={true} candidates={BOOKS} onSelect={onSelect} onDismiss={onDismiss} />
+      <BookCandidatePicker
+        visible={true}
+        candidates={BOOKS}
+        onSelect={onSelect}
+        onDismiss={onDismiss}
+      />
     );
     expect(getByText('Dune')).toBeTruthy();
     expect(getByText('Foundation')).toBeTruthy();
@@ -66,7 +76,12 @@ describe('BookCandidatePicker', () => {
 
   it('renders author names', () => {
     const { getByText } = render(
-      <BookCandidatePicker visible={true} candidates={BOOKS} onSelect={onSelect} onDismiss={onDismiss} />
+      <BookCandidatePicker
+        visible={true}
+        candidates={BOOKS}
+        onSelect={onSelect}
+        onDismiss={onDismiss}
+      />
     );
     expect(getByText('Frank Herbert')).toBeTruthy();
     expect(getByText('Isaac Asimov')).toBeTruthy();
@@ -74,21 +89,36 @@ describe('BookCandidatePicker', () => {
 
   it('shows publish year when available', () => {
     const { getByText } = render(
-      <BookCandidatePicker visible={true} candidates={BOOKS} onSelect={onSelect} onDismiss={onDismiss} />
+      <BookCandidatePicker
+        visible={true}
+        candidates={BOOKS}
+        onSelect={onSelect}
+        onDismiss={onDismiss}
+      />
     );
     expect(getByText('1965')).toBeTruthy();
   });
 
   it('shows Already owned badge for books in library', () => {
     const { getByText } = render(
-      <BookCandidatePicker visible={true} candidates={BOOKS} onSelect={onSelect} onDismiss={onDismiss} />
+      <BookCandidatePicker
+        visible={true}
+        candidates={BOOKS}
+        onSelect={onSelect}
+        onDismiss={onDismiss}
+      />
     );
     expect(getByText('Already owned')).toBeTruthy();
   });
 
   it('calls onSelect with the correct book when tapped', () => {
     const { getByLabelText } = render(
-      <BookCandidatePicker visible={true} candidates={BOOKS} onSelect={onSelect} onDismiss={onDismiss} />
+      <BookCandidatePicker
+        visible={true}
+        candidates={BOOKS}
+        onSelect={onSelect}
+        onDismiss={onDismiss}
+      />
     );
     fireEvent.press(getByLabelText('Select Dune by Frank Herbert'));
     expect(onSelect).toHaveBeenCalledWith(BOOKS[0]);
@@ -96,7 +126,12 @@ describe('BookCandidatePicker', () => {
 
   it('calls onDismiss when Cancel is pressed', () => {
     const { getByLabelText } = render(
-      <BookCandidatePicker visible={true} candidates={BOOKS} onSelect={onSelect} onDismiss={onDismiss} />
+      <BookCandidatePicker
+        visible={true}
+        candidates={BOOKS}
+        onSelect={onSelect}
+        onDismiss={onDismiss}
+      />
     );
     fireEvent.press(getByLabelText('Close picker'));
     expect(onDismiss).toHaveBeenCalled();
@@ -104,7 +139,12 @@ describe('BookCandidatePicker', () => {
 
   it('calls onDismiss when None of these is pressed', () => {
     const { getByLabelText } = render(
-      <BookCandidatePicker visible={true} candidates={BOOKS} onSelect={onSelect} onDismiss={onDismiss} />
+      <BookCandidatePicker
+        visible={true}
+        candidates={BOOKS}
+        onSelect={onSelect}
+        onDismiss={onDismiss}
+      />
     );
     fireEvent.press(getByLabelText('None of these books match'));
     expect(onDismiss).toHaveBeenCalled();
@@ -112,18 +152,26 @@ describe('BookCandidatePicker', () => {
 
   it('renders cover placeholder when cover_url is absent', () => {
     const { getAllByLabelText } = render(
-      <BookCandidatePicker visible={true} candidates={BOOKS} onSelect={onSelect} onDismiss={onDismiss} />
+      <BookCandidatePicker
+        visible={true}
+        candidates={BOOKS}
+        onSelect={onSelect}
+        onDismiss={onDismiss}
+      />
     );
     // Both books have no cover_url — expect placeholder views
     expect(getAllByLabelText('No cover available').length).toBe(2);
   });
 
   it('renders cover image when cover_url is present', () => {
-    const withCover: EnrichedBook[] = [
-      { ...BOOKS[0], cover_url: 'https://example.com/cover.jpg' },
-    ];
+    const withCover: EnrichedBook[] = [{ ...BOOKS[0], cover_url: 'https://example.com/cover.jpg' }];
     const { getByLabelText } = render(
-      <BookCandidatePicker visible={true} candidates={withCover} onSelect={onSelect} onDismiss={onDismiss} />
+      <BookCandidatePicker
+        visible={true}
+        candidates={withCover}
+        onSelect={onSelect}
+        onDismiss={onDismiss}
+      />
     );
     expect(getByLabelText('Cover of Dune')).toBeTruthy();
   });
