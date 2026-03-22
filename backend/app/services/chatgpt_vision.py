@@ -1,0 +1,83 @@
+"""Book identification via GPT-4o mini vision."""
+
+import base64
+import json
+import logging
+
+import httpx
+
+from app.core.config import settings
+from app.services.book_identifier import BookCandidate, BookIdentifierService
+
+logger = logging.getLogger(__name__)
+
+OPENAI_URL = "https://api.openai.com/v1/chat/completions"
+
+SYSTEM_PROMPT = """You are a book identification assistant.
+Given a photo of a book cover, identify the book and return a JSON array of up to 3 candidates ranked by confidence.
+
+Each candidate must have:
+- title: string
+- author: string
+- confidence: float between 0 and 1
+- isbn_13: string or null (13-digit ISBN if visible or known)
+- isbn_10: string or null (10-digit ISBN if visible or known)
+
+Return ONLY a valid JSON array, no other text. Example:
+[{"title":"Dune","author":"Frank Herbert","confidence":0.97,"isbn_13":"9780441013593","isbn_10":null}]"""
+
+
+class ChatGPTVisionIdentifier(BookIdentifierService):
+    async def identify(self, image_bytes: bytes) -> list[BookCandidate]:
+        b64 = base64.standard_b64encode(image_bytes).decode()
+
+        payload = {
+            "model": "gpt-4o-mini",
+            "max_tokens": 512,
+            "messages": [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/jpeg;base64,{b64}"},
+                        },
+                        {"type": "text", "text": "Identify this book cover."},
+                    ],
+                },
+            ],
+        }
+
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(
+                OPENAI_URL,
+                json=payload,
+                headers={"Authorization": f"Bearer {settings.openai_api_key}"},
+            )
+            resp.raise_for_status()
+
+        content = resp.json()["choices"][0]["message"]["content"].strip()
+
+        try:
+            raw = json.loads(content)
+        except json.JSONDecodeError:
+            logger.warning("GPT returned non-JSON: %s", content)
+            return []
+
+        candidates = []
+        for item in raw[:3]:
+            try:
+                candidates.append(
+                    BookCandidate(
+                        title=item["title"],
+                        author=item["author"],
+                        confidence=float(item.get("confidence", 0.5)),
+                        isbn_13=item.get("isbn_13"),
+                        isbn_10=item.get("isbn_10"),
+                    )
+                )
+            except (KeyError, TypeError, ValueError):
+                continue
+
+        return candidates
