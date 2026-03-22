@@ -20,11 +20,17 @@ class EditionBase(BaseModel):
 
 
 class EditionRead(EditionBase):
+    """Edition stored in DB — has id and book_id."""
+
     id: uuid.UUID
     book_id: uuid.UUID
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class EditionPreview(EditionBase):
+    """Edition from scan results — not yet persisted, no id/book_id."""
 
 
 class BookBase(BaseModel):
@@ -52,6 +58,7 @@ class EnrichedBook(BaseModel):
 
     book_id: uuid.UUID | None = None  # null if not yet in DB
     open_library_work_id: str | None = None
+    google_books_id: str | None = None
     title: str
     author: str
     description: str | None = None
@@ -59,4 +66,4 @@ class EnrichedBook(BaseModel):
     subjects: list[str] = []
     confidence: float  # 0–1, from image recognition
     already_in_library: bool = False
-    editions: list[EditionRead] = []
+    editions: list[EditionPreview] = []

@@ -6,13 +6,26 @@ from typing import Literal
 
 from pydantic import BaseModel, field_validator
 
-from app.schemas.book import BookRead, EditionRead
+from app.schemas.book import BookRead, EditionPreview, EditionRead
 
 BookStatus = Literal["wishlisted", "purchased", "reading", "read"]
 
 
+class WishlistRequest(BaseModel):
+    """Body for POST /wishlist — full book data from scan (book may not exist in DB yet)."""
+
+    open_library_work_id: str | None = None
+    google_books_id: str | None = None
+    title: str
+    author: str
+    description: str | None = None
+    cover_url: str | None = None
+    subjects: list[str] = []
+    editions: list["EditionPreview"] = []  # noqa: F821
+
+
 class UserBookCreate(BaseModel):
-    """Body for POST /wishlist."""
+    """Body for POST /wishlist — book already exists in DB."""
 
     book_id: uuid.UUID
     edition_id: uuid.UUID | None = None
