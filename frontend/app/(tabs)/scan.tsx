@@ -56,11 +56,17 @@ export default function ScanScreen() {
     }
   }
 
-  function handleSelect(book: EnrichedBook) {
+  async function handleSelect(book: EnrichedBook) {
     setCandidates([]);
-    setScreenState('camera');
-    // Phase 5: add to wishlist
-    Alert.alert('Book selected', `"${book.title}" will be added to your wishlist in Phase 5.`);
+    setScreenState('loading');
+    try {
+      await api.post('/wishlist', book);
+      setScreenState('camera');
+      Alert.alert('Added to wishlist', `"${book.title}" has been added to your wishlist.`);
+    } catch {
+      setScreenState('camera');
+      Alert.alert('Could not save', 'Failed to add book to wishlist. Please try again.');
+    }
   }
 
   function handleDismiss() {
