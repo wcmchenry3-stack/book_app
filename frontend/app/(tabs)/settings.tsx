@@ -9,7 +9,9 @@ export default function SettingsScreen() {
   const { t } = useTranslation('settings');
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Text style={{ color: theme.colors.text, marginBottom: theme.spacing.md }}>{t('heading')}</Text>
+      <Text style={{ color: theme.colors.text, marginBottom: theme.spacing.md }}>
+        {t('heading')}
+      </Text>
       <ThemeToggleButton />
     </View>
   );

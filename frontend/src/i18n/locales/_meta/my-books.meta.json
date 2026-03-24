@@ -1,25 +1,120 @@
 {
-  "loading": { "description": "Loading spinner message while fetching book list", "tone": "neutral", "characterLimit": 30 },
-  "noBooksYet": { "description": "Empty state message when the filtered book list is empty", "tone": "friendly", "characterLimit": 40 },
-  "statusTab.all": { "description": "Filter tab label showing all books regardless of status", "tone": "neutral", "characterLimit": 10 },
-  "statusTab.wishlisted": { "description": "Filter tab label for wishlisted books", "tone": "neutral", "characterLimit": 15 },
-  "statusTab.purchased": { "description": "Filter tab label for purchased books", "tone": "neutral", "characterLimit": 15 },
-  "statusTab.reading": { "description": "Filter tab label for books currently being read", "tone": "neutral", "characterLimit": 15 },
-  "statusTab.read": { "description": "Filter tab label for finished books", "tone": "neutral", "characterLimit": 10 },
-  "status.wishlisted": { "description": "Display badge label for wishlisted status", "tone": "neutral", "characterLimit": 15 },
-  "status.purchased": { "description": "Display badge label for purchased status", "tone": "neutral", "characterLimit": 15 },
-  "status.reading": { "description": "Display badge label for currently reading status", "tone": "neutral", "characterLimit": 15 },
-  "status.read": { "description": "Display badge label for finished/read status", "tone": "neutral", "characterLimit": 10 },
-  "filterBy": { "description": "Accessibility label for filter tab buttons, e.g. 'Filter by Reading'", "tone": "neutral", "placeholders": ["{{label}}"], "characterLimit": 30 },
-  "bookCardA11y": { "description": "Accessibility label for a book card row, combining title and status", "tone": "neutral", "placeholders": ["{{title}}", "{{status}}"] },
-  "bookCardHint": { "description": "Accessibility hint for a book card — tells the user what tapping does", "tone": "informative", "characterLimit": 50 },
-  "markAs": { "description": "Button label to advance a book to the next reading status, e.g. 'Mark as Reading'", "tone": "action", "placeholders": ["{{status}}"], "characterLimit": 30 },
-  "markAsA11y": { "description": "Accessibility label for the mark-as button", "tone": "neutral", "placeholders": ["{{status}}"] },
-  "removeFromList": { "description": "Button label to remove a book from the user's list", "tone": "neutral", "characterLimit": 25 },
-  "removeBookA11y": { "description": "Accessibility label for the remove button, includes book title", "tone": "neutral", "placeholders": ["{{title}}"] },
-  "pages": { "description": "Page count label, e.g. '320 pages'", "tone": "neutral", "placeholders": ["{{count}}"], "characterLimit": 20 },
-  "closeDetail": { "description": "Accessibility label for the close button on the book detail sheet", "tone": "neutral", "characterLimit": 20 },
-  "errorLoadBooks": { "description": "Error message when the book list fails to load", "tone": "neutral", "characterLimit": 50 },
-  "errorUpdateStatus": { "description": "Error message when updating book status fails", "tone": "neutral", "characterLimit": 50 },
-  "errorRemoveBook": { "description": "Error message when removing a book fails", "tone": "neutral", "characterLimit": 50 }
+  "loading": {
+    "description": "Loading spinner message while fetching book list",
+    "tone": "neutral",
+    "characterLimit": 30
+  },
+  "noBooksYet": {
+    "description": "Empty state message when the filtered book list is empty",
+    "tone": "friendly",
+    "characterLimit": 40
+  },
+  "statusTab.all": {
+    "description": "Filter tab label showing all books regardless of status",
+    "tone": "neutral",
+    "characterLimit": 10
+  },
+  "statusTab.wishlisted": {
+    "description": "Filter tab label for wishlisted books",
+    "tone": "neutral",
+    "characterLimit": 15
+  },
+  "statusTab.purchased": {
+    "description": "Filter tab label for purchased books",
+    "tone": "neutral",
+    "characterLimit": 15
+  },
+  "statusTab.reading": {
+    "description": "Filter tab label for books currently being read",
+    "tone": "neutral",
+    "characterLimit": 15
+  },
+  "statusTab.read": {
+    "description": "Filter tab label for finished books",
+    "tone": "neutral",
+    "characterLimit": 10
+  },
+  "status.wishlisted": {
+    "description": "Display badge label for wishlisted status",
+    "tone": "neutral",
+    "characterLimit": 15
+  },
+  "status.purchased": {
+    "description": "Display badge label for purchased status",
+    "tone": "neutral",
+    "characterLimit": 15
+  },
+  "status.reading": {
+    "description": "Display badge label for currently reading status",
+    "tone": "neutral",
+    "characterLimit": 15
+  },
+  "status.read": {
+    "description": "Display badge label for finished/read status",
+    "tone": "neutral",
+    "characterLimit": 10
+  },
+  "filterBy": {
+    "description": "Accessibility label for filter tab buttons, e.g. 'Filter by Reading'",
+    "tone": "neutral",
+    "placeholders": ["{{label}}"],
+    "characterLimit": 30
+  },
+  "bookCardA11y": {
+    "description": "Accessibility label for a book card row, combining title and status",
+    "tone": "neutral",
+    "placeholders": ["{{title}}", "{{status}}"]
+  },
+  "bookCardHint": {
+    "description": "Accessibility hint for a book card — tells the user what tapping does",
+    "tone": "informative",
+    "characterLimit": 50
+  },
+  "markAs": {
+    "description": "Button label to advance a book to the next reading status, e.g. 'Mark as Reading'",
+    "tone": "action",
+    "placeholders": ["{{status}}"],
+    "characterLimit": 30
+  },
+  "markAsA11y": {
+    "description": "Accessibility label for the mark-as button",
+    "tone": "neutral",
+    "placeholders": ["{{status}}"]
+  },
+  "removeFromList": {
+    "description": "Button label to remove a book from the user's list",
+    "tone": "neutral",
+    "characterLimit": 25
+  },
+  "removeBookA11y": {
+    "description": "Accessibility label for the remove button, includes book title",
+    "tone": "neutral",
+    "placeholders": ["{{title}}"]
+  },
+  "pages": {
+    "description": "Page count label, e.g. '320 pages'",
+    "tone": "neutral",
+    "placeholders": ["{{count}}"],
+    "characterLimit": 20
+  },
+  "closeDetail": {
+    "description": "Accessibility label for the close button on the book detail sheet",
+    "tone": "neutral",
+    "characterLimit": 20
+  },
+  "errorLoadBooks": {
+    "description": "Error message when the book list fails to load",
+    "tone": "neutral",
+    "characterLimit": 50
+  },
+  "errorUpdateStatus": {
+    "description": "Error message when updating book status fails",
+    "tone": "neutral",
+    "characterLimit": 50
+  },
+  "errorRemoveBook": {
+    "description": "Error message when removing a book fails",
+    "tone": "neutral",
+    "characterLimit": 50
+  }
 }

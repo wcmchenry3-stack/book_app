@@ -46,7 +46,9 @@
   },
   "jest": {
     "preset": "jest-expo",
-    "setupFilesAfterEnv": ["./jest.setup.ts"],
+    "setupFilesAfterEnv": [
+      "./jest.setup.ts"
+    ],
     "collectCoverageFrom": [
       "theme/**/*.{ts,tsx}",
       "components/**/*.{ts,tsx}",

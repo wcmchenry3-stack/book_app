@@ -1,7 +1,28 @@
 {
-  "errorTitle": { "description": "Title for generic error alert dialogs", "tone": "neutral", "characterLimit": 20 },
-  "close": { "description": "Button label to close a modal or sheet", "tone": "neutral", "characterLimit": 15 },
-  "remove": { "description": "Button label to remove an item", "tone": "neutral", "characterLimit": 15 },
-  "noCoverAvailable": { "description": "Accessibility label for a book card when no cover image exists", "tone": "neutral", "characterLimit": 30 },
-  "coverAlt": { "description": "Accessibility label for a book cover image", "tone": "neutral", "placeholders": ["{{title}}"], "characterLimit": 40 }
+  "errorTitle": {
+    "description": "Title for generic error alert dialogs",
+    "tone": "neutral",
+    "characterLimit": 20
+  },
+  "close": {
+    "description": "Button label to close a modal or sheet",
+    "tone": "neutral",
+    "characterLimit": 15
+  },
+  "remove": {
+    "description": "Button label to remove an item",
+    "tone": "neutral",
+    "characterLimit": 15
+  },
+  "noCoverAvailable": {
+    "description": "Accessibility label for a book card when no cover image exists",
+    "tone": "neutral",
+    "characterLimit": 30
+  },
+  "coverAlt": {
+    "description": "Accessibility label for a book cover image",
+    "tone": "neutral",
+    "placeholders": ["{{title}}"],
+    "characterLimit": 40
+  }
 }

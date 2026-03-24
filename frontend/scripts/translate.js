@@ -21,8 +21,30 @@ const https = require('https');
 // ---------------------------------------------------------------------------
 
 const LOCALES_DIR = path.join(__dirname, '../src/i18n/locales');
-const NAMESPACES = ['common', 'auth', 'tabs', 'my-books', 'scan', 'settings', 'wishlist', 'components'];
-const NON_ENGLISH_LOCALES = ['fr-CA', 'es', 'hi', 'ar', 'zh', 'ja', 'ko', 'pt', 'he', 'de', 'nl', 'ru'];
+const NAMESPACES = [
+  'common',
+  'auth',
+  'tabs',
+  'my-books',
+  'scan',
+  'settings',
+  'wishlist',
+  'components',
+];
+const NON_ENGLISH_LOCALES = [
+  'fr-CA',
+  'es',
+  'hi',
+  'ar',
+  'zh',
+  'ja',
+  'ko',
+  'pt',
+  'he',
+  'de',
+  'nl',
+  'ru',
+];
 const BATCH_SIZE = 20;
 const NEEDS_TRANSLATION = '__NEEDS_TRANSLATION__';
 
@@ -79,7 +101,7 @@ function openaiRequest(body) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         'Content-Length': Buffer.byteLength(data),
       },
     };
@@ -277,11 +299,15 @@ async function translateNamespace(locale, namespace) {
   });
 
   if (keysToTranslate.length === 0) {
-    console.log(`  [${locale}/${namespace}] All keys already translated — skip (use --force to redo)`);
+    console.log(
+      `  [${locale}/${namespace}] All keys already translated — skip (use --force to redo)`
+    );
     return;
   }
 
-  console.log(`  [${locale}/${namespace}] Translating ${keysToTranslate.length} key(s) to ${langName}…`);
+  console.log(
+    `  [${locale}/${namespace}] Translating ${keysToTranslate.length} key(s) to ${langName}…`
+  );
 
   if (dryRun) {
     console.log(`  [dry-run] Would translate: ${keysToTranslate.join(', ')}`);
@@ -326,12 +352,13 @@ async function translateNamespace(locale, namespace) {
 // ---------------------------------------------------------------------------
 
 async function main() {
-  const jobs =
-    runAll
-      ? NON_ENGLISH_LOCALES.flatMap((l) => NAMESPACES.map((ns) => ({ locale: l, namespace: ns })))
-      : [{ locale: targetLocale, namespace: targetNamespace }];
+  const jobs = runAll
+    ? NON_ENGLISH_LOCALES.flatMap((l) => NAMESPACES.map((ns) => ({ locale: l, namespace: ns })))
+    : [{ locale: targetLocale, namespace: targetNamespace }];
 
-  console.log(`Translate script — ${jobs.length} job(s)${dryRun ? ' [dry-run]' : ''}${force ? ' [force]' : ''}`);
+  console.log(
+    `Translate script — ${jobs.length} job(s)${dryRun ? ' [dry-run]' : ''}${force ? ' [force]' : ''}`
+  );
 
   for (const { locale, namespace } of jobs) {
     await translateNamespace(locale, namespace);

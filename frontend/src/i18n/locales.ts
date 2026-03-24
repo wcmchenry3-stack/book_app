@@ -16,6 +16,4 @@ export const LOCALES = [
 
 export type LocaleCode = (typeof LOCALES)[number]['code'];
 
-export const RTL_LOCALES = new Set(
-  LOCALES.filter((l) => l.dir === 'rtl').map((l) => l.code)
-);
+export const RTL_LOCALES = new Set(LOCALES.filter((l) => l.dir === 'rtl').map((l) => l.code));

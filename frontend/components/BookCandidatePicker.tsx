@@ -79,7 +79,10 @@ export function BookCandidatePicker({ visible, candidates, onSelect, onDismiss }
                 },
               ]}
               onPress={() => onSelect(book)}
-              accessibilityLabel={t('bookCandidatePicker.selectBook', { title: book.title, author: book.author })}
+              accessibilityLabel={t('bookCandidatePicker.selectBook', {
+                title: book.title,
+                author: book.author,
+              })}
               accessibilityRole="button"
               accessibilityHint={t('bookCandidatePicker.addToWishlistHint')}
             >
@@ -129,7 +132,9 @@ export function BookCandidatePicker({ visible, candidates, onSelect, onDismiss }
                 )}
                 {book.already_in_library && (
                   <View style={[styles.badge, { backgroundColor: theme.colors.success }]}>
-                    <Text style={[styles.badgeText, { color: '#FFFFFF' }]}>{t('bookCandidatePicker.alreadyOwned')}</Text>
+                    <Text style={[styles.badgeText, { color: '#FFFFFF' }]}>
+                      {t('bookCandidatePicker.alreadyOwned')}
+                    </Text>
                   </View>
                 )}
               </View>

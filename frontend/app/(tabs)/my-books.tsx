@@ -315,7 +315,9 @@ export default function MyBooksScreen() {
                   style={[styles.sheetButton, { backgroundColor: theme.colors.primary }]}
                   onPress={() => handleAdvanceStatus(selected)}
                   accessibilityRole="button"
-                  accessibilityLabel={t('markAsA11y', { status: t(`status.${NEXT_STATUS[selected.status]}`) })}
+                  accessibilityLabel={t('markAsA11y', {
+                    status: t(`status.${NEXT_STATUS[selected.status]}`),
+                  })}
                 >
                   <Text
                     style={[styles.sheetButtonText, { fontSize: theme.typography.fontSizeBase }]}

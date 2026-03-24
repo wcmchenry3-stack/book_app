@@ -1,5 +1,18 @@
 {
-  "appTitle": { "description": "The app name displayed as the main heading on the login screen", "doNotTranslate": true, "notes": "Always 'Bookshelf' — never translate" },
-  "signIn": { "description": "Button label for Google sign-in", "tone": "friendly", "characterLimit": 40, "notes": "'Google' must not be translated" },
-  "signInHint": { "description": "Accessibility hint describing what the sign-in button does", "tone": "informative", "characterLimit": 80 }
+  "appTitle": {
+    "description": "The app name displayed as the main heading on the login screen",
+    "doNotTranslate": true,
+    "notes": "Always 'Bookshelf' — never translate"
+  },
+  "signIn": {
+    "description": "Button label for Google sign-in",
+    "tone": "friendly",
+    "characterLimit": 40,
+    "notes": "'Google' must not be translated"
+  },
+  "signInHint": {
+    "description": "Accessibility hint describing what the sign-in button does",
+    "tone": "informative",
+    "characterLimit": 80
+  }
 }
