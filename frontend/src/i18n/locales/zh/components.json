@@ -1,0 +1,16 @@
+{
+  "bookCandidatePicker": {
+    "title": "这是哪本书？",
+    "cancel": "取消",
+    "closePicker": "关闭选择器",
+    "selectBook": "选择 {{title}} 作者 {{author}}",
+    "addToWishlistHint": "将此书加入愿望清单",
+    "alreadyOwned": "已拥有",
+    "noneOfThese": "都不是",
+    "noneOfTheseA11y": "没有匹配的书"
+  },
+  "themeToggle": {
+    "toDark": "切换到深色模式",
+    "toLight": "切换到浅色模式"
+  }
+}

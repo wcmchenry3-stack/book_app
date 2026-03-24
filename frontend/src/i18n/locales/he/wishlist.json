@@ -1,0 +1,11 @@
+{
+  "loading": "טוען רשימת משאלות…",
+  "empty": "רשימת המשאלות שלך ריקה.\nסרוק כריכת ספר להוספה.",
+  "markPurchased": "סמן כנקנה",
+  "markPurchasedA11y": "סמן את {{title}} כנקנה",
+  "remove": "הסר",
+  "removeA11y": "הסר את {{title}} מרשימת המשאלות",
+  "errorLoadWishlist": "לא ניתן לטעון את רשימת המשאלות.",
+  "errorUpdateStatus": "לא ניתן לעדכן את הסטטוס.",
+  "errorRemoveBook": "לא ניתן להסיר את הספר."
+}

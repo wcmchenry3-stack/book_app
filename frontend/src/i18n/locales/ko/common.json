@@ -1,0 +1,7 @@
+{
+  "errorTitle": "오류",
+  "close": "닫기",
+  "remove": "제거",
+  "noCoverAvailable": "표지 없음",
+  "coverAlt": "{{title}}의 표지"
+}

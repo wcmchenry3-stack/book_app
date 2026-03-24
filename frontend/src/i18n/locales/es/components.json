@@ -1,0 +1,16 @@
+{
+  "bookCandidatePicker": {
+    "title": "¿Cuál es este libro?",
+    "cancel": "Cancelar",
+    "closePicker": "Cerrar selector",
+    "selectBook": "Seleccionar {{title}} de {{author}}",
+    "addToWishlistHint": "Añade este libro a tu lista",
+    "alreadyOwned": "Ya en tu colección",
+    "noneOfThese": "Ninguno de estos",
+    "noneOfTheseA11y": "Ninguno de estos libros coincide"
+  },
+  "themeToggle": {
+    "toDark": "Cambiar a modo oscuro",
+    "toLight": "Cambiar a modo claro"
+  }
+}

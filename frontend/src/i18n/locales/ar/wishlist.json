@@ -1,0 +1,11 @@
+{
+  "loading": "جارٍ تحميل القائمة…",
+  "empty": "قائمتك فارغة.\nامسح غلاف كتاب لإضافة واحد.",
+  "markPurchased": "وضع كمُشترى",
+  "markPurchasedA11y": "وضع {{title}} كمُشترى",
+  "remove": "إزالة",
+  "removeA11y": "إزالة {{title}} من القائمة",
+  "errorLoadWishlist": "تعذر تحميل القائمة.",
+  "errorUpdateStatus": "تعذر تحديث الحالة.",
+  "errorRemoveBook": "تعذر إزالة الكتاب."
+}

@@ -1,0 +1,29 @@
+{
+  "loading": "加载书籍中…",
+  "noBooksYet": "这里还没有书。",
+  "statusTab": {
+    "all": "全部",
+    "wishlisted": "愿望单",
+    "purchased": "已购买",
+    "reading": "阅读中",
+    "read": "已读"
+  },
+  "status": {
+    "wishlisted": "愿望单",
+    "purchased": "已购买",
+    "reading": "阅读中",
+    "read": "已读"
+  },
+  "filterBy": "按{{label}}筛选",
+  "bookCardA11y": "{{title}} — {{status}}",
+  "bookCardHint": "点击查看详情和选项",
+  "markAs": "标记为{{status}}",
+  "markAsA11y": "标记为{{status}}",
+  "removeFromList": "从列表中移除",
+  "removeBookA11y": "移除{{title}}",
+  "pages": "{{count}}页",
+  "closeDetail": "关闭详情",
+  "errorLoadBooks": "无法加载书籍。",
+  "errorUpdateStatus": "无法更新状态。",
+  "errorRemoveBook": "无法移除书籍。"
+}

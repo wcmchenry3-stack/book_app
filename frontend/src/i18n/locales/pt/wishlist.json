@@ -1,0 +1,11 @@
+{
+  "loading": "Carregando lista…",
+  "empty": "Sua lista está vazia.\nEscaneie uma capa para adicionar.",
+  "markPurchased": "Marcar como comprado",
+  "markPurchasedA11y": "Marcar {{title}} como comprado",
+  "remove": "Remover",
+  "removeA11y": "Remover {{title}} da lista",
+  "errorLoadWishlist": "Não foi possível carregar a lista.",
+  "errorUpdateStatus": "Não foi possível atualizar o status.",
+  "errorRemoveBook": "Não foi possível remover o livro."
+}

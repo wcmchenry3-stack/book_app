@@ -1,0 +1,11 @@
+{
+  "loading": "위시리스트 불러오는 중…",
+  "empty": "위시리스트가 비어 있습니다.\n책 표지를 스캔해 추가하세요.",
+  "markPurchased": "구매 완료",
+  "markPurchasedA11y": "{{title}}을(를) 구매 완료로 표시",
+  "remove": "제거",
+  "removeA11y": "{{title}}을(를) 위시리스트에서 제거",
+  "errorLoadWishlist": "위시리스트를 불러올 수 없습니다.",
+  "errorUpdateStatus": "상태를 업데이트할 수 없습니다.",
+  "errorRemoveBook": "책을 제거할 수 없습니다."
+}

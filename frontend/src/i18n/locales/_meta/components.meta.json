@@ -1,0 +1,12 @@
+{
+  "bookCandidatePicker.title": { "description": "Sheet header asking the user to identify which book was scanned", "tone": "friendly", "characterLimit": 30 },
+  "bookCandidatePicker.cancel": { "description": "Button label to dismiss the book picker sheet without selecting", "tone": "neutral", "characterLimit": 15 },
+  "bookCandidatePicker.closePicker": { "description": "Accessibility label for the dismiss button on the picker sheet", "tone": "neutral", "characterLimit": 25 },
+  "bookCandidatePicker.selectBook": { "description": "Accessibility label for a book candidate card. {{title}} and {{author}} are dynamic.", "tone": "neutral", "placeholders": ["{{title}}", "{{author}}"] },
+  "bookCandidatePicker.addToWishlistHint": { "description": "Accessibility hint explaining that tapping a book card adds it to the wishlist", "tone": "informative", "characterLimit": 50 },
+  "bookCandidatePicker.alreadyOwned": { "description": "Badge label shown on book cards already in the user's library", "tone": "neutral", "characterLimit": 20 },
+  "bookCandidatePicker.noneOfThese": { "description": "Button label at the bottom of the picker to dismiss without selecting any book", "tone": "neutral", "characterLimit": 25 },
+  "bookCandidatePicker.noneOfTheseA11y": { "description": "Accessibility label for the none-of-these button", "tone": "neutral", "characterLimit": 40 },
+  "themeToggle.toDark": { "description": "Accessibility label for the theme toggle button when currently in light mode", "tone": "neutral", "characterLimit": 30 },
+  "themeToggle.toLight": { "description": "Accessibility label for the theme toggle button when currently in dark mode", "tone": "neutral", "characterLimit": 30 }
+}
