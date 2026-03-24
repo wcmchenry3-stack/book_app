@@ -1,0 +1,29 @@
+{
+  "loading": "Chargement des livres…",
+  "noBooksYet": "Aucun livre ici.",
+  "statusTab": {
+    "all": "Tous",
+    "wishlisted": "Liste de souhaits",
+    "purchased": "Achetés",
+    "reading": "En lecture",
+    "read": "Lus"
+  },
+  "status": {
+    "wishlisted": "En souhaits",
+    "purchased": "Acheté",
+    "reading": "En lecture",
+    "read": "Lu"
+  },
+  "filterBy": "Filtrer par {{label}}",
+  "bookCardA11y": "{{title}} — {{status}}",
+  "bookCardHint": "Touchez pour détails et options",
+  "markAs": "Marquer comme {{status}}",
+  "markAsA11y": "Marquer comme {{status}}",
+  "removeFromList": "Retirer de la liste",
+  "removeBookA11y": "Retirer {{title}}",
+  "pages": "{{count}} pages",
+  "closeDetail": "Fermer le détail",
+  "errorLoadBooks": "Impossible de charger les livres.",
+  "errorUpdateStatus": "Impossible de mettre à jour le statut.",
+  "errorRemoveBook": "Impossible de supprimer le livre."
+}

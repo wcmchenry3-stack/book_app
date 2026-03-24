@@ -1,0 +1,16 @@
+{
+  "bookCandidatePicker": {
+    "title": "Какую книгу выбрали?",
+    "cancel": "Отмена",
+    "closePicker": "Закрыть выбор",
+    "selectBook": "Выбрать {{title}} от {{author}}",
+    "addToWishlistHint": "Добавить книгу в список желаний",
+    "alreadyOwned": "Уже в библиотеке",
+    "noneOfThese": "Ничего из этого",
+    "noneOfTheseA11y": "Ни одна из этих книг не подходит"
+  },
+  "themeToggle": {
+    "toDark": "Переключить на тёмную тему",
+    "toLight": "Переключить на светлую тему"
+  }
+}

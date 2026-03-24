@@ -1,4 +1,5 @@
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { useTheme } from '../hooks/useTheme';
 
@@ -32,6 +33,7 @@ interface Props {
 
 export function BookCandidatePicker({ visible, candidates, onSelect, onDismiss }: Props) {
   const { theme } = useTheme();
+  const { t } = useTranslation('components');
 
   return (
     <Modal
@@ -50,17 +52,17 @@ export function BookCandidatePicker({ visible, candidates, onSelect, onDismiss }
             ]}
             accessibilityRole="header"
           >
-            Which book is this?
+            {t('bookCandidatePicker.title')}
           </Text>
           <Pressable
             onPress={onDismiss}
-            accessibilityLabel="Close picker"
+            accessibilityLabel={t('bookCandidatePicker.closePicker')}
             accessibilityRole="button"
             style={styles.closeButton}
             hitSlop={8}
           >
             <Text style={{ color: theme.colors.primary, fontSize: theme.typography.fontSizeBase }}>
-              Cancel
+              {t('bookCandidatePicker.cancel')}
             </Text>
           </Pressable>
         </View>
@@ -77,15 +79,18 @@ export function BookCandidatePicker({ visible, candidates, onSelect, onDismiss }
                 },
               ]}
               onPress={() => onSelect(book)}
-              accessibilityLabel={`Select ${book.title} by ${book.author}`}
+              accessibilityLabel={t('bookCandidatePicker.selectBook', {
+                title: book.title,
+                author: book.author,
+              })}
               accessibilityRole="button"
-              accessibilityHint="Adds this book to your wishlist"
+              accessibilityHint={t('bookCandidatePicker.addToWishlistHint')}
             >
               {book.cover_url ? (
                 <Image
                   source={{ uri: book.cover_url }}
                   style={styles.cover}
-                  accessibilityLabel={`Cover of ${book.title}`}
+                  accessibilityLabel={t('coverAlt', { ns: 'common', title: book.title })}
                 />
               ) : (
                 <View
@@ -94,7 +99,7 @@ export function BookCandidatePicker({ visible, candidates, onSelect, onDismiss }
                     styles.coverPlaceholder,
                     { backgroundColor: theme.colors.border },
                   ]}
-                  accessibilityLabel="No cover available"
+                  accessibilityLabel={t('noCoverAvailable', { ns: 'common' })}
                 />
               )}
 
@@ -127,7 +132,9 @@ export function BookCandidatePicker({ visible, candidates, onSelect, onDismiss }
                 )}
                 {book.already_in_library && (
                   <View style={[styles.badge, { backgroundColor: theme.colors.success }]}>
-                    <Text style={[styles.badgeText, { color: '#FFFFFF' }]}>Already owned</Text>
+                    <Text style={[styles.badgeText, { color: '#FFFFFF' }]}>
+                      {t('bookCandidatePicker.alreadyOwned')}
+                    </Text>
                   </View>
                 )}
               </View>
@@ -137,13 +144,13 @@ export function BookCandidatePicker({ visible, candidates, onSelect, onDismiss }
           <Pressable
             style={[styles.noneButton, { borderColor: theme.colors.border }]}
             onPress={onDismiss}
-            accessibilityLabel="None of these books match"
+            accessibilityLabel={t('bookCandidatePicker.noneOfTheseA11y')}
             accessibilityRole="button"
           >
             <Text
               style={{ color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeBase }}
             >
-              None of these
+              {t('bookCandidatePicker.noneOfThese')}
             </Text>
           </Pressable>
         </ScrollView>

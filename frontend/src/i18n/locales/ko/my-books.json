@@ -1,0 +1,29 @@
+{
+  "loading": "책을 불러오는 중…",
+  "noBooksYet": "아직 책이 없습니다.",
+  "statusTab": {
+    "all": "전체",
+    "wishlisted": "Wishlist",
+    "purchased": "구매함",
+    "reading": "읽는 중",
+    "read": "읽음"
+  },
+  "status": {
+    "wishlisted": "Wishlist",
+    "purchased": "구매함",
+    "reading": "읽는 중",
+    "read": "읽음"
+  },
+  "filterBy": "{{label}}별 필터",
+  "bookCardA11y": "{{title}} — {{status}}",
+  "bookCardHint": "탭하여 세부정보 보기",
+  "markAs": "{{status}}로 표시",
+  "markAsA11y": "{{status}}로 표시",
+  "removeFromList": "목록에서 제거",
+  "removeBookA11y": "{{title}} 제거",
+  "pages": "{{count}} 페이지",
+  "closeDetail": "세부정보 닫기",
+  "errorLoadBooks": "책을 불러올 수 없습니다.",
+  "errorUpdateStatus": "상태를 업데이트할 수 없습니다.",
+  "errorRemoveBook": "책을 삭제할 수 없습니다."
+}

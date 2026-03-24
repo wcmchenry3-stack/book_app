@@ -1,0 +1,29 @@
+{
+  "loading": "पुस्तकें लोड हो रही हैं…",
+  "noBooksYet": "यहाँ अभी कोई पुस्तक नहीं।",
+  "statusTab": {
+    "all": "सभी",
+    "wishlisted": "विशलिस्ट",
+    "purchased": "खरीदी गई",
+    "reading": "पढ़ रहे",
+    "read": "पढ़ी गई"
+  },
+  "status": {
+    "wishlisted": "विशलिस्टेड",
+    "purchased": "खरीदी गई",
+    "reading": "पढ़ रहे",
+    "read": "पढ़ी गई"
+  },
+  "filterBy": "{{label}} द्वारा फ़िल्टर करें",
+  "bookCardA11y": "{{title}} — {{status}}",
+  "bookCardHint": "विवरण और विकल्प देखने के लिए टैप करें",
+  "markAs": "{{status}} के रूप में चिह्नित करें",
+  "markAsA11y": "{{status}} के रूप में चिह्नित करें",
+  "removeFromList": "सूची से हटाएं",
+  "removeBookA11y": "{{title}} हटाएं",
+  "pages": "{{count}} पृष्ठ",
+  "closeDetail": "विवरण बंद करें",
+  "errorLoadBooks": "पुस्तकें लोड नहीं हो सकीं।",
+  "errorUpdateStatus": "स्थिति अपडेट नहीं हो सकी।",
+  "errorRemoveBook": "पुस्तक हटाई नहीं जा सकी।"
+}

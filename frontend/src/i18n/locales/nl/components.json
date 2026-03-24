@@ -1,0 +1,16 @@
+{
+  "bookCandidatePicker": {
+    "title": "Welk boek is dit?",
+    "cancel": "Annuleren",
+    "closePicker": "Sluit selectie",
+    "selectBook": "Selecteer {{title}} van {{author}}",
+    "addToWishlistHint": "Voegt dit boek toe aan je wensenlijst",
+    "alreadyOwned": "Al in bezit",
+    "noneOfThese": "Geen van deze",
+    "noneOfTheseA11y": "Geen van deze boeken komt overeen"
+  },
+  "themeToggle": {
+    "toDark": "Schakel naar donkere modus",
+    "toLight": "Schakel naar lichte modus"
+  }
+}

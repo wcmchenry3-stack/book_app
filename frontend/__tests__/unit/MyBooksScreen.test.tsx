@@ -114,7 +114,7 @@ describe('MyBooksScreen', () => {
   it('renders status badge on each card', async () => {
     mockGet.mockResolvedValue({ data: [WISHLISTED_BOOK] });
     const { getByText } = render(<MyBooksScreen />);
-    await waitFor(() => expect(getByText('wishlisted')).toBeTruthy());
+    await waitFor(() => expect(getByText('Wishlisted')).toBeTruthy());
   });
 
   it('opens detail sheet when card is tapped', async () => {
@@ -150,7 +150,7 @@ describe('MyBooksScreen', () => {
     const { getByLabelText } = render(<MyBooksScreen />);
     await waitFor(() => getByLabelText('Dune — wishlisted'));
     fireEvent.press(getByLabelText('Dune — wishlisted'));
-    await waitFor(() => expect(getByLabelText('Mark as purchased')).toBeTruthy());
+    await waitFor(() => expect(getByLabelText('Mark as Purchased')).toBeTruthy());
   });
 
   it('calls PATCH when advance status button pressed', async () => {
@@ -158,10 +158,10 @@ describe('MyBooksScreen', () => {
     const { getByLabelText } = render(<MyBooksScreen />);
     await waitFor(() => getByLabelText('Dune — wishlisted'));
     fireEvent.press(getByLabelText('Dune — wishlisted'));
-    await waitFor(() => getByLabelText('Mark as purchased'));
+    await waitFor(() => getByLabelText('Mark as Purchased'));
 
     await act(async () => {
-      fireEvent.press(getByLabelText('Mark as purchased'));
+      fireEvent.press(getByLabelText('Mark as Purchased'));
     });
 
     expect(mockPatch).toHaveBeenCalledWith('/user-books/ub-1', { status: 'purchased' });

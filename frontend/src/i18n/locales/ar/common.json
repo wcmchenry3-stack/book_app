@@ -1,0 +1,7 @@
+{
+  "errorTitle": "خطأ",
+  "close": "إغلاق",
+  "remove": "إزالة",
+  "noCoverAvailable": "لا توجد صورة غلاف",
+  "coverAlt": "غلاف {{title}}"
+}

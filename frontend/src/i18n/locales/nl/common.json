@@ -1,0 +1,7 @@
+{
+  "errorTitle": "Fout",
+  "close": "Sluiten",
+  "remove": "Verwijderen",
+  "noCoverAvailable": "Geen omslag beschikbaar",
+  "coverAlt": "Omslag van {{title}}"
+}

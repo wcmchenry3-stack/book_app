@@ -1,0 +1,29 @@
+{
+  "loading": "جارٍ تحميل الكتب…",
+  "noBooksYet": "لا توجد كتب هنا بعد.",
+  "statusTab": {
+    "all": "الكل",
+    "wishlisted": "قائمة الرغبات",
+    "purchased": "تم الشراء",
+    "reading": "قيد القراءة",
+    "read": "مقروء"
+  },
+  "status": {
+    "wishlisted": "في قائمة الرغبات",
+    "purchased": "تم الشراء",
+    "reading": "قيد القراءة",
+    "read": "مقروء"
+  },
+  "filterBy": "تصفية حسب {{label}}",
+  "bookCardA11y": "{{title}} — {{status}}",
+  "bookCardHint": "اضغط لرؤية التفاصيل والخيارات",
+  "markAs": "وضع كـ {{status}}",
+  "markAsA11y": "وضع كـ {{status}}",
+  "removeFromList": "إزالة من القائمة",
+  "removeBookA11y": "إزالة {{title}}",
+  "pages": "{{count}} صفحات",
+  "closeDetail": "إغلاق التفاصيل",
+  "errorLoadBooks": "تعذر تحميل الكتب.",
+  "errorUpdateStatus": "تعذر تحديث الحالة.",
+  "errorRemoveBook": "تعذر إزالة الكتاب."
+}

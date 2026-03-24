@@ -1,0 +1,29 @@
+{
+  "loading": "Загрузка книг…",
+  "noBooksYet": "Здесь пока нет книг.",
+  "statusTab": {
+    "all": "Все",
+    "wishlisted": "Избранное",
+    "purchased": "Куплено",
+    "reading": "Читаю",
+    "read": "Прочитано"
+  },
+  "status": {
+    "wishlisted": "Избранное",
+    "purchased": "Куплено",
+    "reading": "Читаю",
+    "read": "Прочитано"
+  },
+  "filterBy": "Фильтр по {{label}}",
+  "bookCardA11y": "{{title}} — {{status}}",
+  "bookCardHint": "Нажмите для деталей и опций",
+  "markAs": "Отметить как {{status}}",
+  "markAsA11y": "Отметить как {{status}}",
+  "removeFromList": "Удалить из списка",
+  "removeBookA11y": "Удалить {{title}}",
+  "pages": "{{count}} страниц",
+  "closeDetail": "Закрыть",
+  "errorLoadBooks": "Не удалось загрузить книги.",
+  "errorUpdateStatus": "Не удалось обновить статус.",
+  "errorRemoveBook": "Не удалось удалить книгу."
+}

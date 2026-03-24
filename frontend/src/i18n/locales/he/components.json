@@ -1,0 +1,16 @@
+{
+  "bookCandidatePicker": {
+    "title": "איזה ספר זה?",
+    "cancel": "ביטול",
+    "closePicker": "סגור בחירה",
+    "selectBook": "בחר {{title}} מאת {{author}}",
+    "addToWishlistHint": "מוסיף את הספר לרשימת המשאלות",
+    "alreadyOwned": "כבר בבעלותך",
+    "noneOfThese": "אף אחד מאלה",
+    "noneOfTheseA11y": "אף אחד מהספרים לא מתאים"
+  },
+  "themeToggle": {
+    "toDark": "החלף למצב כהה",
+    "toLight": "החלף למצב בהיר"
+  }
+}

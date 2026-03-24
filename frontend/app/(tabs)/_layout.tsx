@@ -1,9 +1,12 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+
 import { useTheme } from '../../hooks/useTheme';
 
 export default function TabLayout() {
   const { theme } = useTheme();
+  const { t } = useTranslation('tabs');
 
   return (
     <Tabs
@@ -19,8 +22,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="scan"
         options={{
-          title: 'Scan',
-          tabBarAccessibilityLabel: 'Scan a book',
+          title: t('scan'),
+          tabBarAccessibilityLabel: t('scanA11y'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="camera-outline" size={size} color={color} />
           ),
@@ -29,8 +32,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="wishlist"
         options={{
-          title: 'Wishlist',
-          tabBarAccessibilityLabel: 'Your wishlist',
+          title: t('wishlist'),
+          tabBarAccessibilityLabel: t('wishlistA11y'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="bookmark-outline" size={size} color={color} />
           ),
@@ -39,8 +42,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="my-books"
         options={{
-          title: 'My Books',
-          tabBarAccessibilityLabel: 'Your book collection',
+          title: t('myBooks'),
+          tabBarAccessibilityLabel: t('myBooksA11y'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="library-outline" size={size} color={color} />
           ),
@@ -49,8 +52,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
-          tabBarAccessibilityLabel: 'App settings',
+          title: t('settings'),
+          tabBarAccessibilityLabel: t('settingsA11y'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings-outline" size={size} color={color} />
           ),

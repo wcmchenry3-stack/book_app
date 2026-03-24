@@ -1,0 +1,42 @@
+{
+  "scan": {
+    "description": "Tab bar label for the camera/book-scan tab",
+    "tone": "neutral",
+    "characterLimit": 12
+  },
+  "scanA11y": {
+    "description": "Accessibility label for the scan tab bar item",
+    "tone": "neutral",
+    "characterLimit": 30
+  },
+  "wishlist": {
+    "description": "Tab bar label for the wishlist tab",
+    "tone": "neutral",
+    "characterLimit": 15
+  },
+  "wishlistA11y": {
+    "description": "Accessibility label for the wishlist tab bar item",
+    "tone": "neutral",
+    "characterLimit": 30
+  },
+  "myBooks": {
+    "description": "Tab bar label for the user's book collection tab",
+    "tone": "friendly",
+    "characterLimit": 15
+  },
+  "myBooksA11y": {
+    "description": "Accessibility label for the my books tab bar item",
+    "tone": "neutral",
+    "characterLimit": 40
+  },
+  "settings": {
+    "description": "Tab bar label for the settings tab",
+    "tone": "neutral",
+    "characterLimit": 15
+  },
+  "settingsA11y": {
+    "description": "Accessibility label for the settings tab bar item",
+    "tone": "neutral",
+    "characterLimit": 30
+  }
+}

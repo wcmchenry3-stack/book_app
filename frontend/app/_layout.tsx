@@ -1,3 +1,5 @@
+import '../src/i18n/i18n';
+
 import { Stack } from 'expo-router';
 
 import { ThemeToggleButton } from '../components/ThemeToggleButton';

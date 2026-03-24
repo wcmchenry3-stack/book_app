@@ -1,0 +1,16 @@
+{
+  "bookCandidatePicker": {
+    "title": "ما هو هذا الكتاب؟",
+    "cancel": "إلغاء",
+    "closePicker": "إغلاق",
+    "selectBook": "اختر {{title}} لـ {{author}}",
+    "addToWishlistHint": "يضيف الكتاب إلى قائمة الأمنيات",
+    "alreadyOwned": "مملوك بالفعل",
+    "noneOfThese": "لا شيء من هذه",
+    "noneOfTheseA11y": "لا يوجد تطابق بين هذه الكتب"
+  },
+  "themeToggle": {
+    "toDark": "التبديل إلى الوضع الداكن",
+    "toLight": "التبديل إلى الوضع الفاتح"
+  }
+}

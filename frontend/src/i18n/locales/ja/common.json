@@ -1,0 +1,7 @@
+{
+  "errorTitle": "エラー",
+  "close": "閉じる",
+  "remove": "削除",
+  "noCoverAvailable": "カバーがありません",
+  "coverAlt": "{{title}}のカバー"
+}

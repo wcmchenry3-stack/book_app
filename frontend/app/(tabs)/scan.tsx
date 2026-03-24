@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { useTranslation } from 'react-i18next';
 
 import { BookCandidatePicker, EnrichedBook } from '../../components/BookCandidatePicker';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
@@ -12,6 +13,7 @@ type ScreenState = 'idle' | 'loading' | 'picker';
 
 export default function ScanScreen() {
   const { theme } = useTheme();
+  const { t } = useTranslation('scan');
   const [permission, requestPermission] = useCameraPermissions();
   const [inputMode, setInputMode] = useState<InputMode>('camera');
   const [screenState, setScreenState] = useState<ScreenState>('idle');
@@ -47,7 +49,7 @@ export default function ScanScreen() {
 
       if (!response.data || response.data.length === 0) {
         setScreenState('idle');
-        Alert.alert('No books found', 'Point the camera at a book cover and try again.');
+        Alert.alert(t('noBooksFoundTitle'), t('noBooksFoundMessage'));
         return;
       }
 
@@ -55,7 +57,7 @@ export default function ScanScreen() {
       setScreenState('picker');
     } catch {
       setScreenState('idle');
-      Alert.alert('Scan failed', 'Something went wrong. Please try again.');
+      Alert.alert(t('scanFailedTitle'), t('scanFailedMessage'));
     }
   }
 
@@ -69,7 +71,7 @@ export default function ScanScreen() {
 
       if (!response.data || response.data.length === 0) {
         setScreenState('idle');
-        Alert.alert('No results', 'No books found. Try a different title or author.');
+        Alert.alert(t('noResultsTitle'), t('noResultsMessage'));
         return;
       }
 
@@ -77,7 +79,7 @@ export default function ScanScreen() {
       setScreenState('picker');
     } catch {
       setScreenState('idle');
-      Alert.alert('Search failed', 'Something went wrong. Please try again.');
+      Alert.alert(t('searchFailedTitle'), t('searchFailedMessage'));
     }
   }
 
@@ -87,10 +89,10 @@ export default function ScanScreen() {
     try {
       await api.post('/wishlist', book);
       setScreenState('idle');
-      Alert.alert('Added to wishlist', `"${book.title}" has been added to your wishlist.`);
+      Alert.alert(t('addedTitle'), t('addedMessage', { title: book.title }));
     } catch {
       setScreenState('idle');
-      Alert.alert('Could not save', 'Failed to add book to wishlist. Please try again.');
+      Alert.alert(t('couldNotSaveTitle'), t('couldNotSaveMessage'));
     }
   }
 
@@ -102,7 +104,7 @@ export default function ScanScreen() {
   if (screenState === 'loading') {
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <LoadingSpinner message="Identifying book…" />
+        <LoadingSpinner message={t('loading')} />
       </View>
     );
   }
@@ -121,7 +123,7 @@ export default function ScanScreen() {
         ]}
         onPress={() => setInputMode('camera')}
         accessibilityRole="button"
-        accessibilityLabel="Camera scan mode"
+        accessibilityLabel={t('cameraModeLabel')}
         accessibilityState={{ selected: inputMode === 'camera' }}
       >
         <Text
@@ -130,7 +132,7 @@ export default function ScanScreen() {
             { color: inputMode === 'camera' ? '#fff' : theme.colors.text },
           ]}
         >
-          Camera
+          {t('cameraTab')}
         </Text>
       </Pressable>
       <Pressable
@@ -140,7 +142,7 @@ export default function ScanScreen() {
         ]}
         onPress={() => setInputMode('search')}
         accessibilityRole="button"
-        accessibilityLabel="Text search mode"
+        accessibilityLabel={t('searchModeLabel')}
         accessibilityState={{ selected: inputMode === 'search' }}
       >
         <Text
@@ -149,7 +151,7 @@ export default function ScanScreen() {
             { color: inputMode === 'search' ? '#fff' : theme.colors.text },
           ]}
         >
-          Search
+          {t('searchTab')}
         </Text>
       </Pressable>
     </View>
@@ -172,19 +174,19 @@ export default function ScanScreen() {
             ]}
             value={query}
             onChangeText={setQuery}
-            placeholder="e.g. John Adams by McCullough"
+            placeholder={t('searchPlaceholder')}
             placeholderTextColor={theme.colors.textSecondary}
             onSubmitEditing={handleSearch}
             returnKeyType="search"
-            accessibilityLabel="Book title or author search"
+            accessibilityLabel={t('searchInputA11y')}
           />
           <Pressable
             style={[styles.searchButton, { backgroundColor: theme.colors.primary }]}
             onPress={handleSearch}
             accessibilityRole="button"
-            accessibilityLabel="Search for book"
+            accessibilityLabel={t('searchButtonA11y')}
           >
-            <Text style={styles.searchButtonText}>Search</Text>
+            <Text style={styles.searchButtonText}>{t('searchButton')}</Text>
           </Pressable>
         </View>
 
@@ -217,16 +219,16 @@ export default function ScanScreen() {
             { color: theme.colors.text, fontSize: theme.typography.fontSizeBase },
           ]}
         >
-          Camera access is required to scan books.
+          {t('permissionText')}
         </Text>
         <Pressable
           style={[styles.permissionButton, { backgroundColor: theme.colors.primary }]}
           onPress={requestPermission}
           accessibilityRole="button"
-          accessibilityLabel="Grant camera permission"
+          accessibilityLabel={t('allowCameraA11y')}
         >
           <Text style={[styles.permissionButtonText, { fontSize: theme.typography.fontSizeBase }]}>
-            Allow Camera
+            {t('allowCamera')}
           </Text>
         </Pressable>
       </View>
@@ -243,8 +245,8 @@ export default function ScanScreen() {
             style={[styles.captureButton, { backgroundColor: theme.colors.primary }]}
             onPress={handleCapture}
             accessibilityRole="button"
-            accessibilityLabel="Capture book cover"
-            accessibilityHint="Takes a photo and identifies the book"
+            accessibilityLabel={t('captureA11y')}
+            accessibilityHint={t('captureHint')}
           >
             <View style={[styles.captureInner, { backgroundColor: theme.colors.background }]} />
           </Pressable>

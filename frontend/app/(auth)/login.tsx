@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
+import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
@@ -11,6 +12,7 @@ WebBrowser.maybeCompleteAuthSession();
 export default function LoginScreen() {
   const { theme } = useTheme();
   const { login } = useAuth();
+  const { t } = useTranslation('auth');
 
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
     clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
@@ -31,7 +33,7 @@ export default function LoginScreen() {
         style={{ color: theme.colors.text, fontSize: theme.typography.fontSizeXL }}
         accessibilityRole="header"
       >
-        Bookshelf
+        {t('appTitle')}
       </Text>
       <Pressable
         style={[
@@ -44,15 +46,15 @@ export default function LoginScreen() {
         ]}
         onPress={() => promptAsync()}
         disabled={!request}
-        accessibilityLabel="Sign in with Google"
+        accessibilityLabel={t('signIn')}
         accessibilityRole="button"
-        accessibilityHint="Opens Google sign-in to access your bookshelf"
+        accessibilityHint={t('signInHint')}
       >
         {!request ? (
           <ActivityIndicator color="#FFFFFF" />
         ) : (
           <Text style={{ color: '#FFFFFF', fontWeight: theme.typography.fontWeightBold }}>
-            Sign in with Google
+            {t('signIn')}
           </Text>
         )}
       </Pressable>

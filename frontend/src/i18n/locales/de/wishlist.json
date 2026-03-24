@@ -1,0 +1,11 @@
+{
+  "loading": "Wunschliste laden…",
+  "empty": "Deine Wunschliste ist leer.\nScanne ein Buchcover, um eins hinzuzufügen.",
+  "markPurchased": "Als gekauft markieren",
+  "markPurchasedA11y": "{{title}} als gekauft markieren",
+  "remove": "Entfernen",
+  "removeA11y": "{{title}} aus Wunschliste entfernen",
+  "errorLoadWishlist": "Wunschliste konnte nicht geladen werden.",
+  "errorUpdateStatus": "Status konnte nicht aktualisiert werden.",
+  "errorRemoveBook": "Buch konnte nicht entfernt werden."
+}

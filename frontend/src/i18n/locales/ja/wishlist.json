@@ -1,0 +1,11 @@
+{
+  "loading": "ウィッシュリストを読み込み中…",
+  "empty": "ウィッシュリストは空です。\n本のカバーをスキャンして追加。",
+  "markPurchased": "購入済みにする",
+  "markPurchasedA11y": "{{title}}を購入済みにする",
+  "remove": "削除",
+  "removeA11y": "{{title}}をウィッシュリストから削除",
+  "errorLoadWishlist": "ウィッシュリストを読み込めませんでした。",
+  "errorUpdateStatus": "ステータスを更新できませんでした。",
+  "errorRemoveBook": "本を削除できませんでした。"
+}
