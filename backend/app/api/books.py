@@ -1,7 +1,11 @@
 """Book search endpoint — free-text query returning enriched candidates."""
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
+from app.auth.dependencies import get_current_user
+from app.core.config import settings
+from app.core.limiter import limiter
+from app.models.user import User
 from app.schemas.book import EnrichedBook
 from app.services.book_identifier import BookCandidate
 from app.services.enrichment import EnrichmentService
@@ -36,10 +40,13 @@ def _volume_to_candidate(volume: dict) -> BookCandidate:
 
 
 @router.get("/search", response_model=list[EnrichedBook])
+@limiter.limit(settings.rate_limit_books_search)
 async def search_books(
+    request: Request,
     q: str = Query(
         ..., min_length=2, description="Free-text query, e.g. 'John Adams McCullough'"
     ),
+    current_user: User = Depends(get_current_user),
 ) -> list[EnrichedBook]:
     """Search for books by free text. Returns up to 3 enriched candidates."""
     try:

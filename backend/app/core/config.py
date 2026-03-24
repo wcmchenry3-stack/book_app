@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     environment: str = "development"
     cors_origins: list[str] = []
     rate_limit_scan: str = "10/minute"
+    rate_limit_auth: str = "5/minute"
+    rate_limit_books_search: str = "30/minute"
+    rate_limit_writes: str = "60/minute"
+    rate_limit_reads: str = "120/minute"
 
     @property
     def async_database_url(self) -> str:
