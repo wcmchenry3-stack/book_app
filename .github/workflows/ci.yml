@@ -52,5 +52,5 @@ jobs:
     uses: wcmchenry3-stack/.github/.github/workflows/called-cve-frontend.yml@main
     with:
       working-directory: frontend
-      audit-level: critical
+      audit-level: high
     secrets: inherit

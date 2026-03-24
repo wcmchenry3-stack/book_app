@@ -5,13 +5,15 @@ import uuid
 from datetime import datetime, timezone
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.auth.dependencies import get_current_user
+from app.core.config import settings
 from app.core.database import get_db
+from app.core.limiter import limiter
 from app.models.book import Book
 from app.models.edition import Edition
 from app.models.user import User
@@ -46,7 +48,9 @@ def _user_book_query(user_id: uuid.UUID):
 @router.post(
     "/wishlist", response_model=UserBookRead, status_code=status.HTTP_201_CREATED
 )
+@limiter.limit(settings.rate_limit_writes)
 async def add_to_wishlist(
+    request: Request,
     req: WishlistRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -56,7 +60,9 @@ async def add_to_wishlist(
 
 
 @router.get("/user-books", response_model=list[UserBookRead])
+@limiter.limit(settings.rate_limit_reads)
 async def list_user_books(
+    request: Request,
     status_filter: BookStatus | None = Query(default=None, alias="status"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -71,7 +77,9 @@ async def list_user_books(
 @router.post(
     "/purchased", response_model=UserBookRead, status_code=status.HTTP_201_CREATED
 )
+@limiter.limit(settings.rate_limit_writes)
 async def add_purchased(
+    request: Request,
     req: PurchasedCreate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -132,7 +140,9 @@ async def add_purchased(
 
 
 @router.patch("/user-books/{user_book_id}", response_model=UserBookRead)
+@limiter.limit(settings.rate_limit_writes)
 async def update_user_book(
+    request: Request,
     user_book_id: uuid.UUID,
     req: UserBookUpdate,
     current_user: User = Depends(get_current_user),
@@ -171,7 +181,9 @@ async def update_user_book(
 
 
 @router.delete("/user-books/{user_book_id}", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit(settings.rate_limit_writes)
 async def delete_user_book(
+    request: Request,
     user_book_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

@@ -2,7 +2,7 @@ import logging
 import uuid
 
 import jwt
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,6 +11,7 @@ from app.auth.google import verify_google_id_token
 from app.auth.jwt import create_access_token, create_refresh_token, decode_token
 from app.core.config import settings
 from app.core.database import get_db
+from app.core.limiter import limiter
 from app.models.user import User
 from app.schemas.auth import GoogleAuthRequest, RefreshRequest, TokenResponse, UserRead
 
@@ -19,8 +20,9 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/google", response_model=TokenResponse)
+@limiter.limit(settings.rate_limit_auth)
 async def google_auth(
-    body: GoogleAuthRequest, db: AsyncSession = Depends(get_db)
+    request: Request, body: GoogleAuthRequest, db: AsyncSession = Depends(get_db)
 ) -> TokenResponse:
     logger.info("POST /auth/google — verifying Google ID token")
     try:
@@ -84,8 +86,9 @@ async def google_auth(
 
 
 @router.post("/refresh", response_model=TokenResponse)
+@limiter.limit(settings.rate_limit_auth)
 async def refresh(
-    body: RefreshRequest, db: AsyncSession = Depends(get_db)
+    request: Request, body: RefreshRequest, db: AsyncSession = Depends(get_db)
 ) -> TokenResponse:
     try:
         payload = decode_token(body.refresh_token)
@@ -119,5 +122,6 @@ async def refresh(
 
 
 @router.get("/me", response_model=UserRead)
-async def get_me(current_user: User = Depends(get_current_user)) -> User:
+@limiter.limit(settings.rate_limit_reads)
+async def get_me(request: Request, current_user: User = Depends(get_current_user)) -> User:
     return current_user
