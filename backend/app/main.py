@@ -27,6 +27,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         return response
 
+
 app = FastAPI(
     title="Bookshelf API",
     version="0.1.0",

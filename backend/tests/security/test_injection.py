@@ -6,7 +6,6 @@ independently:  pytest -m security -v
 """
 
 import io
-from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -164,7 +163,9 @@ class TestSecurityHeaders:
         response = client.get("/health")
         assert response.headers.get("x-frame-options") == "DENY"
         assert response.headers.get("x-content-type-options") == "nosniff"
-        assert response.headers.get("referrer-policy") == "strict-origin-when-cross-origin"
+        assert (
+            response.headers.get("referrer-policy") == "strict-origin-when-cross-origin"
+        )
 
     def test_unauthed_request_returns_security_headers(self) -> None:
         client = TestClient(app)
