@@ -18,6 +18,17 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 
+def include_object(object, name, type_, reflected, compare_to):
+    # Indexes and unique constraints are managed explicitly in migrations using the
+    # project's idx_/uq_ naming conventions. SQLAlchemy autogenerate uses ix_ names
+    # and unnamed unique constraints, causing false positives in `alembic check`.
+    # Excluding these object types prevents spurious diffs while still detecting
+    # table, column, and check constraint changes.
+    if type_ in ("index", "unique_constraint"):
+        return False
+    return True
+
+
 def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
@@ -25,13 +36,18 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_object=include_object,
     )
     with context.begin_transaction():
         context.run_migrations()
 
 
 def do_run_migrations(connection):
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        include_object=include_object,
+    )
     with context.begin_transaction():
         context.run_migrations()
 

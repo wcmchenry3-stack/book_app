@@ -1,0 +1,16 @@
+{
+  "bookCandidatePicker": {
+    "title": "यह कौन सी किताब है?",
+    "cancel": "रद्द करें",
+    "closePicker": "पिकर बंद करें",
+    "selectBook": "{{author}} की {{title}} चुनें",
+    "addToWishlistHint": "इसे आपकी विशलिस्ट में जोड़ता है",
+    "alreadyOwned": "पहले से मौजूद",
+    "noneOfThese": "इनमें से कोई नहीं",
+    "noneOfTheseA11y": "इनमें से कोई किताब मेल नहीं खाती"
+  },
+  "themeToggle": {
+    "toDark": "डार्क मोड में स्विच करें",
+    "toLight": "लाइट मोड में स्विच करें"
+  }
+}

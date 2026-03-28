@@ -1,0 +1,16 @@
+{
+  "bookCandidatePicker": {
+    "title": "どの本ですか？",
+    "cancel": "キャンセル",
+    "closePicker": "ピッカーを閉じる",
+    "selectBook": "{{author}}の{{title}}を選択",
+    "addToWishlistHint": "この本をウィッシュリストに追加",
+    "alreadyOwned": "所有済み",
+    "noneOfThese": "どれでもない",
+    "noneOfTheseA11y": "どの本も一致しません"
+  },
+  "themeToggle": {
+    "toDark": "ダークモードに切替",
+    "toLight": "ライトモードに切替"
+  }
+}

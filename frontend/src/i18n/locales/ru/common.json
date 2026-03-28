@@ -1,0 +1,7 @@
+{
+  "errorTitle": "Ошибка",
+  "close": "Закрыть",
+  "remove": "Удалить",
+  "noCoverAvailable": "Обложка недоступна",
+  "coverAlt": "Обложка {{title}}"
+}

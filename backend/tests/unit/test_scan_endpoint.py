@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.models.user import User
 from app.schemas.book import EditionPreview, EnrichedBook
-from app.services.book_identifier import BookCandidate
+from app.services.book_identifier import BookCandidate, ScanUnavailableError
 
 FAKE_USER = User(id="00000000-0000-0000-0000-000000000001", email="test@example.com")
 
@@ -60,6 +60,16 @@ class TestScanEndpoint:
         big = 5 * 1024 * 1024 + 1  # 1 byte over 5MB
         resp = client.post("/scan", files={"file": _image_file(size_bytes=big)})
         assert resp.status_code == 413
+
+    def test_returns_503_when_vision_service_unavailable(self, client):
+        with patch("app.api.scan.ChatGPTVisionIdentifier") as mock_id_cls:
+            mock_id_cls.return_value.identify = AsyncMock(
+                side_effect=ScanUnavailableError("timeout")
+            )
+            resp = client.post("/scan", files={"file": _image_file()})
+
+        assert resp.status_code == 503
+        assert resp.json()["detail"] == "scan_unavailable"
 
     def test_returns_empty_list_when_no_candidates(self, client):
         with (

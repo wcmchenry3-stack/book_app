@@ -32,6 +32,67 @@ See [~/.claude/standards/accessibility.md](~/.claude/standards/accessibility.md)
 - Auth: `app/(auth)/<name>.tsx`
 - Modals: `app/<name>.tsx` with `presentation: 'modal'`
 
+### Internationalisation (i18n)
+
+Stack: `i18next` + `react-i18next`. All user-facing strings must use `useTranslation()`.
+
+#### Namespaces
+
+| Namespace | Covers |
+|-----------|--------|
+| `common` | Error title, Close, Remove, cover alt |
+| `auth` | Login screen |
+| `tabs` | Tab bar labels + a11y labels |
+| `my-books` | My Books screen — status tabs, badge, detail sheet, actions |
+| `scan` | Scan screen — alerts, mode tabs, permission, camera |
+| `settings` | Settings screen |
+| `wishlist` | Wishlist screen |
+| `components` | `BookCandidatePicker`, `ThemeToggleButton` |
+
+#### Using translations in a screen
+
+```tsx
+import { useTranslation } from 'react-i18next';
+
+const { t } = useTranslation('my-books');
+// Cross-namespace lookup:
+t('close', { ns: 'common' })
+// Interpolation:
+t('coverAlt', { ns: 'common', title: book.title })
+// Dynamic nested key:
+t(`status.${item.status}`)
+```
+
+#### Adding a new language
+
+1. Add locale object to `LOCALES` in `src/i18n/locales.ts`
+2. Run translate script for each namespace:
+   ```bash
+   cd frontend
+   OPENAI_API_KEY=... node scripts/translate.js --locale <code> --namespace <ns>
+   # or all namespaces at once for one locale:
+   OPENAI_API_KEY=... node scripts/translate.js --locale <code> --namespace common && ...
+   ```
+3. Add 8 static imports to `src/i18n/i18n.ts` and add locale entry to `resources`
+4. If RTL (ar/he), add to `RTL_LOCALES` in `locales.ts`
+
+#### Re-running translations (e.g. after adding keys)
+
+```bash
+# Translate missing keys only:
+node scripts/translate.js --locale es --namespace scan
+# Retranslate all keys (force):
+node scripts/translate.js --locale es --namespace scan --force
+# Preview without writing:
+node scripts/translate.js --locale es --namespace scan --dry-run
+# All locales × all namespaces:
+node scripts/translate.js --all
+```
+
+#### RTL locales
+Arabic (`ar`) and Hebrew (`he`) are RTL. String translations are complete.
+Layout mirroring (`I18nManager.forceRTL()` + app restart) is a follow-up task.
+
 ## Commands
 
 ```bash

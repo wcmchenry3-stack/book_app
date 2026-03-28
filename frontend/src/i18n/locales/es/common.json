@@ -1,0 +1,7 @@
+{
+  "errorTitle": "Error",
+  "close": "Cerrar",
+  "remove": "Eliminar",
+  "noCoverAvailable": "Sin portada disponible",
+  "coverAlt": "Portada de {{title}}"
+}

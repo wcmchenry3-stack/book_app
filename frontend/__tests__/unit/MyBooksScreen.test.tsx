@@ -114,7 +114,7 @@ describe('MyBooksScreen', () => {
   it('renders status badge on each card', async () => {
     mockGet.mockResolvedValue({ data: [WISHLISTED_BOOK] });
     const { getByText } = render(<MyBooksScreen />);
-    await waitFor(() => expect(getByText('wishlisted')).toBeTruthy());
+    await waitFor(() => expect(getByText('Wishlisted')).toBeTruthy());
   });
 
   it('opens detail sheet when card is tapped', async () => {
@@ -150,7 +150,7 @@ describe('MyBooksScreen', () => {
     const { getByLabelText } = render(<MyBooksScreen />);
     await waitFor(() => getByLabelText('Dune — wishlisted'));
     fireEvent.press(getByLabelText('Dune — wishlisted'));
-    await waitFor(() => expect(getByLabelText('Mark as purchased')).toBeTruthy());
+    await waitFor(() => expect(getByLabelText('Mark as Purchased')).toBeTruthy());
   });
 
   it('calls PATCH when advance status button pressed', async () => {
@@ -158,13 +158,53 @@ describe('MyBooksScreen', () => {
     const { getByLabelText } = render(<MyBooksScreen />);
     await waitFor(() => getByLabelText('Dune — wishlisted'));
     fireEvent.press(getByLabelText('Dune — wishlisted'));
-    await waitFor(() => getByLabelText('Mark as purchased'));
+    await waitFor(() => getByLabelText('Mark as Purchased'));
 
     await act(async () => {
-      fireEvent.press(getByLabelText('Mark as purchased'));
+      fireEvent.press(getByLabelText('Mark as Purchased'));
     });
 
     expect(mockPatch).toHaveBeenCalledWith('/user-books/ub-1', { status: 'purchased' });
+  });
+
+  it('updates status badge optimistically on "all" tab before PATCH resolves', async () => {
+    let resolvePatch!: () => void;
+    mockPatch.mockReturnValue(
+      new Promise((resolve) => {
+        resolvePatch = () => resolve({ data: {} });
+      })
+    );
+    mockGet.mockResolvedValue({ data: [WISHLISTED_BOOK] });
+    const { getByLabelText, queryByLabelText } = render(<MyBooksScreen />);
+    await waitFor(() => getByLabelText('Dune — wishlisted'));
+    fireEvent.press(getByLabelText('Dune — wishlisted'));
+    await waitFor(() => getByLabelText('Mark as Purchased'));
+
+    // Fire press and flush synchronous state updates (PATCH still pending)
+    await act(async () => {
+      fireEvent.press(getByLabelText('Mark as Purchased'));
+    });
+
+    // Card a11y label reflects the new status before API resolves
+    expect(queryByLabelText('Dune — purchased')).toBeTruthy();
+    await act(async () => {
+      resolvePatch();
+    });
+  });
+
+  it('reverts status optimistic update when PATCH fails', async () => {
+    mockPatch.mockRejectedValue(new Error('Network error'));
+    mockGet.mockResolvedValue({ data: [WISHLISTED_BOOK] });
+    const { getByLabelText, queryByText } = render(<MyBooksScreen />);
+    await waitFor(() => getByLabelText('Dune — wishlisted'));
+    fireEvent.press(getByLabelText('Dune — wishlisted'));
+    await waitFor(() => getByLabelText('Mark as Purchased'));
+
+    await act(async () => {
+      fireEvent.press(getByLabelText('Mark as Purchased'));
+    });
+
+    await waitFor(() => expect(queryByText('Wishlisted')).toBeTruthy());
   });
 
   it('does not show advance button for read books', async () => {
@@ -188,6 +228,44 @@ describe('MyBooksScreen', () => {
     });
 
     expect(mockDelete).toHaveBeenCalledWith('/user-books/ub-1');
+  });
+
+  it('removes book optimistically before DELETE resolves', async () => {
+    let resolveDelete!: () => void;
+    mockDelete.mockReturnValue(
+      new Promise((resolve) => {
+        resolveDelete = () => resolve({});
+      })
+    );
+    mockGet.mockResolvedValue({ data: [WISHLISTED_BOOK] });
+    const { getByLabelText, queryByText } = render(<MyBooksScreen />);
+    await waitFor(() => getByLabelText('Dune — wishlisted'));
+    fireEvent.press(getByLabelText('Dune — wishlisted'));
+    await waitFor(() => getByLabelText('Remove Dune'));
+
+    act(() => {
+      fireEvent.press(getByLabelText('Remove Dune'));
+    });
+
+    await waitFor(() => expect(queryByText('Dune')).toBeNull());
+    await act(async () => {
+      resolveDelete();
+    });
+  });
+
+  it('restores book when DELETE fails', async () => {
+    mockDelete.mockRejectedValue(new Error('Network error'));
+    mockGet.mockResolvedValue({ data: [WISHLISTED_BOOK] });
+    const { getByLabelText, queryByText } = render(<MyBooksScreen />);
+    await waitFor(() => getByLabelText('Dune — wishlisted'));
+    fireEvent.press(getByLabelText('Dune — wishlisted'));
+    await waitFor(() => getByLabelText('Remove Dune'));
+
+    await act(async () => {
+      fireEvent.press(getByLabelText('Remove Dune'));
+    });
+
+    await waitFor(() => expect(queryByText('Dune')).toBeTruthy());
   });
 
   it('refetches when a filter tab is tapped', async () => {

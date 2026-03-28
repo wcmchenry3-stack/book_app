@@ -1,0 +1,7 @@
+{
+  "heading": {
+    "description": "Screen heading label for the settings page",
+    "tone": "neutral",
+    "characterLimit": 20
+  }
+}

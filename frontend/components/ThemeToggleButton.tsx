@@ -1,16 +1,19 @@
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+
 import { useTheme } from '../hooks/useTheme';
 
 export function ThemeToggleButton() {
   const { theme, mode, toggleTheme } = useTheme();
+  const { t } = useTranslation('components');
 
   return (
     <Pressable
       onPress={toggleTheme}
       style={styles.button}
-      accessibilityLabel={mode === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+      accessibilityLabel={mode === 'light' ? t('themeToggle.toDark') : t('themeToggle.toLight')}
       accessibilityRole="button"
       hitSlop={8}
     >

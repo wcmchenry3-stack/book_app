@@ -3,8 +3,10 @@
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx
 import pytest
 
+from app.services.book_identifier import ScanUnavailableError
 from app.services.chatgpt_vision import ChatGPTVisionIdentifier
 
 IMAGE_BYTES = b"fakeimagebytes"
@@ -149,13 +151,11 @@ class TestIdentifyFailures:
 
         assert candidates == []
 
-    async def test_raises_on_http_error(self, identifier):
-        from httpx import HTTPStatusError
-
+    async def test_raises_scan_unavailable_on_http_error(self, identifier):
         with patch("app.services.chatgpt_vision.httpx.AsyncClient") as mock_client_cls:
             mock_client = AsyncMock()
             mock_client.post = AsyncMock(
-                side_effect=HTTPStatusError(
+                side_effect=httpx.HTTPStatusError(
                     "401", request=MagicMock(), response=MagicMock()
                 )
             )
@@ -163,5 +163,18 @@ class TestIdentifyFailures:
             mock_client.__aexit__ = AsyncMock(return_value=False)
             mock_client_cls.return_value = mock_client
 
-            with pytest.raises(HTTPStatusError):
+            with pytest.raises(ScanUnavailableError):
+                await identifier.identify(IMAGE_BYTES)
+
+    async def test_raises_scan_unavailable_on_timeout(self, identifier):
+        with patch("app.services.chatgpt_vision.httpx.AsyncClient") as mock_client_cls:
+            mock_client = AsyncMock()
+            mock_client.post = AsyncMock(
+                side_effect=httpx.TimeoutException("timed out")
+            )
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=False)
+            mock_client_cls.return_value = mock_client
+
+            with pytest.raises(ScanUnavailableError):
                 await identifier.identify(IMAGE_BYTES)

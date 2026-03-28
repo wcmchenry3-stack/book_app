@@ -1,0 +1,29 @@
+{
+  "loading": "Boeken laden…",
+  "noBooksYet": "Nog geen boeken hier.",
+  "statusTab": {
+    "all": "Alle",
+    "wishlisted": "Wishlist",
+    "purchased": "Gekocht",
+    "reading": "Lezen",
+    "read": "Gelezen"
+  },
+  "status": {
+    "wishlisted": "Wishlist",
+    "purchased": "Gekocht",
+    "reading": "Lezen",
+    "read": "Gelezen"
+  },
+  "filterBy": "Filter op {{label}}",
+  "bookCardA11y": "{{title}} — {{status}}",
+  "bookCardHint": "Tik voor details en opties",
+  "markAs": "Markeer als {{status}}",
+  "markAsA11y": "Markeer als {{status}}",
+  "removeFromList": "Verwijder uit lijst",
+  "removeBookA11y": "Verwijder {{title}}",
+  "pages": "{{count}} pagina's",
+  "closeDetail": "Sluit detail",
+  "errorLoadBooks": "Kon boeken niet laden.",
+  "errorUpdateStatus": "Kon status niet bijwerken.",
+  "errorRemoveBook": "Kon boek niet verwijderen."
+}

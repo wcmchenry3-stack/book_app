@@ -7,6 +7,7 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     preDeployCommand: alembic upgrade head
+    healthCheckPath: /health
     rootDir: backend
     envVars:
       - key: DATABASE_URL
@@ -15,14 +16,43 @@ services:
           property: connectionString
       - key: ENVIRONMENT
         value: production
+      - key: CORS_ORIGINS
+        value: '["https://bookshelf-web-vw0s.onrender.com"]'
 
   - type: web
     name: bookshelf-web
     env: static
     region: oregon
-    buildCommand: npm install && npx expo export --platform web
+    buildCommand: npm ci && npx expo export --platform web
     staticPublishPath: dist
     rootDir: frontend
+    pullRequestPreviewsEnabled: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Strict-Transport-Security
+        value: 'max-age=31536000; includeSubDomains'
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; img-src 'self' https: data:; connect-src 'self' https://bookshelf-api-rxp3.onrender.com; style-src 'self' 'unsafe-inline'; script-src 'self'"
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+      - path: /assets/*
+        name: Cache-Control
+        value: 'public, max-age=31536000, immutable'
     envVars:
       - key: EXPO_PUBLIC_API_URL
         value: https://bookshelf-api-rxp3.onrender.com

@@ -1,0 +1,133 @@
+{
+  "loading": {
+    "description": "Loading spinner message while the scan API processes the image",
+    "tone": "neutral",
+    "characterLimit": 30
+  },
+  "cameraTab": {
+    "description": "Mode toggle tab label for camera scanning",
+    "tone": "neutral",
+    "characterLimit": 12
+  },
+  "searchTab": {
+    "description": "Mode toggle tab label for text search",
+    "tone": "neutral",
+    "characterLimit": 12
+  },
+  "cameraModeLabel": {
+    "description": "Accessibility label for the camera mode toggle button",
+    "tone": "neutral",
+    "characterLimit": 30
+  },
+  "searchModeLabel": {
+    "description": "Accessibility label for the text search mode toggle button",
+    "tone": "neutral",
+    "characterLimit": 30
+  },
+  "searchPlaceholder": {
+    "description": "Placeholder text for the book title/author search input. 'John Adams' and 'McCullough' are proper names — keep them.",
+    "tone": "neutral",
+    "notes": "Proper nouns must not be translated",
+    "characterLimit": 50
+  },
+  "searchInputA11y": {
+    "description": "Accessibility label for the search text input",
+    "tone": "neutral",
+    "characterLimit": 40
+  },
+  "searchButtonA11y": {
+    "description": "Accessibility label for the search submit button",
+    "tone": "neutral",
+    "characterLimit": 30
+  },
+  "searchButton": {
+    "description": "Label on the search submit button",
+    "tone": "action",
+    "characterLimit": 15
+  },
+  "permissionText": {
+    "description": "Explanatory text shown when camera permission is not granted",
+    "tone": "informative",
+    "characterLimit": 60
+  },
+  "allowCamera": {
+    "description": "Button label to request camera permission",
+    "tone": "action",
+    "characterLimit": 20
+  },
+  "allowCameraA11y": {
+    "description": "Accessibility label for the allow camera button",
+    "tone": "neutral",
+    "characterLimit": 40
+  },
+  "captureA11y": {
+    "description": "Accessibility label for the camera shutter button",
+    "tone": "neutral",
+    "characterLimit": 30
+  },
+  "captureHint": {
+    "description": "Accessibility hint explaining what the capture button does",
+    "tone": "informative",
+    "characterLimit": 60
+  },
+  "noBooksFoundTitle": {
+    "description": "Alert title when scan returns no book matches",
+    "tone": "neutral",
+    "characterLimit": 25
+  },
+  "noBooksFoundMessage": {
+    "description": "Alert message prompting user to try again after empty scan result",
+    "tone": "friendly",
+    "characterLimit": 80
+  },
+  "scanFailedTitle": {
+    "description": "Alert title when the scan API call fails",
+    "tone": "neutral",
+    "characterLimit": 20
+  },
+  "scanFailedMessage": {
+    "description": "Alert message for a scan API failure",
+    "tone": "friendly",
+    "characterLimit": 60
+  },
+  "noResultsTitle": {
+    "description": "Alert title when text search returns no results",
+    "tone": "neutral",
+    "characterLimit": 20
+  },
+  "noResultsMessage": {
+    "description": "Alert message prompting user to try a different search query",
+    "tone": "friendly",
+    "characterLimit": 80
+  },
+  "searchFailedTitle": {
+    "description": "Alert title when the search API call fails",
+    "tone": "neutral",
+    "characterLimit": 20
+  },
+  "searchFailedMessage": {
+    "description": "Alert message for a search API failure",
+    "tone": "friendly",
+    "characterLimit": 60
+  },
+  "addedTitle": {
+    "description": "Alert title confirming a book was added to the wishlist",
+    "tone": "positive",
+    "characterLimit": 30
+  },
+  "addedMessage": {
+    "description": "Alert message confirming which book was added. {{title}} is the book title.",
+    "tone": "friendly",
+    "placeholders": ["{{title}}"]
+  },
+  "couldNotSaveTitle": {
+    "description": "Alert title when saving to wishlist fails",
+    "tone": "neutral",
+    "characterLimit": 25
+  },
+  "couldNotSaveMessage": {
+    "description": "Alert message for a wishlist save failure",
+    "tone": "friendly",
+    "characterLimit": 70
+  }
+}

@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { useFocusEffect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { useTheme } from '../../hooks/useTheme';
@@ -42,13 +43,7 @@ interface UserBook {
   } | null;
 }
 
-const STATUS_TABS: { key: Status; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'wishlisted', label: 'Wishlist' },
-  { key: 'purchased', label: 'Purchased' },
-  { key: 'reading', label: 'Reading' },
-  { key: 'read', label: 'Read' },
-];
+const STATUS_TAB_KEYS: Status[] = ['all', 'wishlisted', 'purchased', 'reading', 'read'];
 
 const NEXT_STATUS: Record<string, string> = {
   wishlisted: 'purchased',
@@ -58,6 +53,7 @@ const NEXT_STATUS: Record<string, string> = {
 
 export default function MyBooksScreen() {
   const { theme } = useTheme();
+  const { t } = useTranslation('my-books');
   const [books, setBooks] = useState<UserBook[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -70,7 +66,7 @@ export default function MyBooksScreen() {
       const { data } = await api.get<UserBook[]>('/user-books', { params });
       setBooks(data.filter((b) => b.book != null));
     } catch {
-      Alert.alert('Error', 'Could not load books.');
+      Alert.alert(t('errorTitle', { ns: 'common' }), t('errorLoadBooks'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -93,29 +89,40 @@ export default function MyBooksScreen() {
   async function handleAdvanceStatus(item: UserBook) {
     const next = NEXT_STATUS[item.status];
     if (!next) return;
+    // Optimistic: on "all" tab update status in-place; on filtered tabs remove the item
+    setBooks((prev) =>
+      activeTab === 'all'
+        ? prev.map((b) => (b.id === item.id ? { ...b, status: next } : b))
+        : prev.filter((b) => b.id !== item.id)
+    );
+    setSelected(null);
     try {
       await api.patch(`/user-books/${item.id}`, { status: next });
-      setSelected(null);
-      fetchBooks();
     } catch {
-      Alert.alert('Error', 'Could not update status.');
+      setBooks((prev) =>
+        activeTab === 'all'
+          ? prev.map((b) => (b.id === item.id ? { ...b, status: item.status } : b))
+          : [...prev, item]
+      );
+      Alert.alert(t('errorTitle', { ns: 'common' }), t('errorUpdateStatus'));
     }
   }
 
   async function handleRemove(item: UserBook) {
+    setBooks((prev) => prev.filter((b) => b.id !== item.id));
+    setSelected(null);
     try {
       await api.delete(`/user-books/${item.id}`);
-      setSelected(null);
-      setBooks((prev) => prev.filter((b) => b.id !== item.id));
     } catch {
-      Alert.alert('Error', 'Could not remove book.');
+      setBooks((prev) => [...prev, item]);
+      Alert.alert(t('errorTitle', { ns: 'common' }), t('errorRemoveBook'));
     }
   }
 
   if (loading) {
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <LoadingSpinner message="Loading books…" />
+        <LoadingSpinner message={t('loading')} />
       </View>
     );
   }
@@ -128,11 +135,12 @@ export default function MyBooksScreen() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.tabs}
       >
-        {STATUS_TABS.map((tab) => {
-          const active = activeTab === tab.key;
+        {STATUS_TAB_KEYS.map((key) => {
+          const active = activeTab === key;
+          const label = t(`statusTab.${key}`);
           return (
             <Pressable
-              key={tab.key}
+              key={key}
               style={[
                 styles.tab,
                 {
@@ -140,9 +148,9 @@ export default function MyBooksScreen() {
                   borderColor: theme.colors.border,
                 },
               ]}
-              onPress={() => handleTabChange(tab.key)}
+              onPress={() => handleTabChange(key)}
               accessibilityRole="button"
-              accessibilityLabel={`Filter by ${tab.label}`}
+              accessibilityLabel={t('filterBy', { label })}
               accessibilityState={{ selected: active }}
             >
               <Text
@@ -154,7 +162,7 @@ export default function MyBooksScreen() {
                   },
                 ]}
               >
-                {tab.label}
+                {label}
               </Text>
             </Pressable>
           );
@@ -182,7 +190,7 @@ export default function MyBooksScreen() {
               { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeBase },
             ]}
           >
-            No books here yet.
+            {t('noBooksYet')}
           </Text>
         }
         renderItem={({ item }) => (
@@ -193,14 +201,14 @@ export default function MyBooksScreen() {
             ]}
             onPress={() => setSelected(item)}
             accessibilityRole="button"
-            accessibilityLabel={`${item.book.title} — ${item.status}`}
-            accessibilityHint="Tap to see details and options"
+            accessibilityLabel={t('bookCardA11y', { title: item.book.title, status: item.status })}
+            accessibilityHint={t('bookCardHint')}
           >
             {item.book.cover_url ? (
               <Image
                 source={{ uri: item.book.cover_url }}
                 style={styles.cover}
-                accessibilityLabel={`Cover of ${item.book.title}`}
+                accessibilityLabel={t('coverAlt', { ns: 'common', title: item.book.title })}
               />
             ) : (
               <View
@@ -209,7 +217,7 @@ export default function MyBooksScreen() {
                   styles.coverPlaceholder,
                   { backgroundColor: theme.colors.border },
                 ]}
-                accessibilityLabel="No cover available"
+                accessibilityLabel={t('noCoverAvailable', { ns: 'common' })}
               />
             )}
 
@@ -233,7 +241,7 @@ export default function MyBooksScreen() {
               </Text>
               <View style={[styles.statusBadge, { backgroundColor: theme.colors.primary + '22' }]}>
                 <Text style={[styles.statusText, { color: theme.colors.primary, fontSize: 11 }]}>
-                  {item.status}
+                  {t(`status.${item.status}`, item.status)}
                 </Text>
               </View>
             </View>
@@ -265,14 +273,14 @@ export default function MyBooksScreen() {
               <Pressable
                 onPress={() => setSelected(null)}
                 accessibilityRole="button"
-                accessibilityLabel="Close detail"
+                accessibilityLabel={t('closeDetail')}
                 style={styles.closeButton}
                 hitSlop={8}
               >
                 <Text
                   style={{ color: theme.colors.primary, fontSize: theme.typography.fontSizeBase }}
                 >
-                  Close
+                  {t('close', { ns: 'common' })}
                 </Text>
               </Pressable>
             </View>
@@ -282,7 +290,7 @@ export default function MyBooksScreen() {
                 <Image
                   source={{ uri: selected.book.cover_url }}
                   style={styles.sheetCover}
-                  accessibilityLabel={`Cover of ${selected.book.title}`}
+                  accessibilityLabel={t('coverAlt', { ns: 'common', title: selected.book.title })}
                 />
               )}
               <Text
@@ -309,7 +317,7 @@ export default function MyBooksScreen() {
                     { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeSM },
                   ]}
                 >
-                  {selected.edition.page_count} pages
+                  {t('pages', { count: selected.edition.page_count })}
                 </Text>
               )}
 
@@ -318,12 +326,14 @@ export default function MyBooksScreen() {
                   style={[styles.sheetButton, { backgroundColor: theme.colors.primary }]}
                   onPress={() => handleAdvanceStatus(selected)}
                   accessibilityRole="button"
-                  accessibilityLabel={`Mark as ${NEXT_STATUS[selected.status]}`}
+                  accessibilityLabel={t('markAsA11y', {
+                    status: t(`status.${NEXT_STATUS[selected.status]}`),
+                  })}
                 >
                   <Text
                     style={[styles.sheetButtonText, { fontSize: theme.typography.fontSizeBase }]}
                   >
-                    Mark as {NEXT_STATUS[selected.status]}
+                    {t('markAs', { status: t(`status.${NEXT_STATUS[selected.status]}`) })}
                   </Text>
                 </Pressable>
               )}
@@ -332,7 +342,7 @@ export default function MyBooksScreen() {
                 style={[styles.sheetButton, { backgroundColor: theme.colors.border }]}
                 onPress={() => handleRemove(selected)}
                 accessibilityRole="button"
-                accessibilityLabel={`Remove ${selected.book.title}`}
+                accessibilityLabel={t('removeBookA11y', { title: selected.book.title })}
               >
                 <Text
                   style={[
@@ -340,7 +350,7 @@ export default function MyBooksScreen() {
                     { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeBase },
                   ]}
                 >
-                  Remove from list
+                  {t('removeFromList')}
                 </Text>
               </Pressable>
             </ScrollView>

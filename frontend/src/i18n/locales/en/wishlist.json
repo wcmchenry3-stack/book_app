@@ -1,0 +1,11 @@
+{
+  "loading": "Loading wishlist…",
+  "empty": "Your wishlist is empty.\nScan a book cover to add one.",
+  "markPurchased": "Mark Purchased",
+  "markPurchasedA11y": "Mark {{title}} as purchased",
+  "remove": "Remove",
+  "removeA11y": "Remove {{title}} from wishlist",
+  "errorLoadWishlist": "Could not load wishlist.",
+  "errorUpdateStatus": "Could not update status.",
+  "errorRemoveBook": "Could not remove book."
+}

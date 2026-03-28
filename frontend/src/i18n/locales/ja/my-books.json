@@ -1,0 +1,29 @@
+{
+  "loading": "本を読み込み中…",
+  "noBooksYet": "まだ本がありません。",
+  "statusTab": {
+    "all": "すべて",
+    "wishlisted": "ウィッシュリスト",
+    "purchased": "購入済み",
+    "reading": "読書中",
+    "read": "読了"
+  },
+  "status": {
+    "wishlisted": "ウィッシュリスト",
+    "purchased": "購入済み",
+    "reading": "読書中",
+    "read": "読了"
+  },
+  "filterBy": "{{label}}で絞り込む",
+  "bookCardA11y": "{{title}} — {{status}}",
+  "bookCardHint": "タップして詳細とオプションを見る",
+  "markAs": "{{status}}にする",
+  "markAsA11y": "{{status}}にする",
+  "removeFromList": "リストから削除",
+  "removeBookA11y": "{{title}}を削除",
+  "pages": "{{count}}ページ",
+  "closeDetail": "詳細を閉じる",
+  "errorLoadBooks": "本を読み込めませんでした。",
+  "errorUpdateStatus": "ステータスを更新できませんでした。",
+  "errorRemoveBook": "本を削除できませんでした。"
+}

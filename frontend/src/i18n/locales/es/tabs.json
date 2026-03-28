@@ -1,0 +1,10 @@
+{
+  "scan": "Escanear",
+  "scanA11y": "Escanear un libro",
+  "wishlist": "Lista de deseos",
+  "wishlistA11y": "Tu lista de deseos",
+  "myBooks": "Mis Libros",
+  "myBooksA11y": "Tu colección de libros",
+  "settings": "Ajustes",
+  "settingsA11y": "Ajustes de la app"
+}

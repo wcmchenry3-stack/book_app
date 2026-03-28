@@ -1,0 +1,11 @@
+{
+  "loading": "Chargement de la liste…",
+  "empty": "Votre liste est vide.\nScannez une couverture pour ajouter.",
+  "markPurchased": "Marquer acheté",
+  "markPurchasedA11y": "Marquer {{title}} comme acheté",
+  "remove": "Retirer",
+  "removeA11y": "Retirer {{title}} de la liste",
+  "errorLoadWishlist": "Impossible de charger la liste.",
+  "errorUpdateStatus": "Impossible de mettre à jour le statut.",
+  "errorRemoveBook": "Impossible de retirer le livre."
+}

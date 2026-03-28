@@ -19,6 +19,8 @@ Monorepo: `backend/` · `frontend/` · `.github/` · `docs/`
 5. No hardcoded colours — always use `useTheme()`.
 6. `SecureStore` only for tokens — never `AsyncStorage`.
 7. SQLAlchemy ORM only — no raw SQL.
+8. Every API endpoint must have a `@limiter.limit(settings.rate_limit_*)` decorator — import `limiter` from `app.main`; use `rate_limit_auth` for auth, `rate_limit_writes` for mutations, `rate_limit_reads` for reads.
+9. i18n required on all user-facing strings — use i18next + react-i18next + `i18next-resources-to-backend` (bundled locales for Expo/native); no hardcoded copy in components.
 
 ## Quick Commands
 ```

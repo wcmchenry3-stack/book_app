@@ -1,0 +1,11 @@
+{
+  "loading": "Verlanglijst laden…",
+  "empty": "Je verlanglijst is leeg.\nScan een boekomslag om toe te voegen.",
+  "markPurchased": "Markeer gekocht",
+  "markPurchasedA11y": "Markeer {{title}} als gekocht",
+  "remove": "Verwijderen",
+  "removeA11y": "Verwijder {{title}} van verlanglijst",
+  "errorLoadWishlist": "Kon verlanglijst niet laden.",
+  "errorUpdateStatus": "Kon status niet bijwerken.",
+  "errorRemoveBook": "Kon boek niet verwijderen."
+}

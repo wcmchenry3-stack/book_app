@@ -1,0 +1,29 @@
+{
+  "loading": "Bücher laden…",
+  "noBooksYet": "Noch keine Bücher hier.",
+  "statusTab": {
+    "all": "Alle",
+    "wishlisted": "Wunschliste",
+    "purchased": "Gekauft",
+    "reading": "Lesen",
+    "read": "Gelesen"
+  },
+  "status": {
+    "wishlisted": "Wunschliste",
+    "purchased": "Gekauft",
+    "reading": "Lesen",
+    "read": "Gelesen"
+  },
+  "filterBy": "Filtern nach {{label}}",
+  "bookCardA11y": "{{title}} — {{status}}",
+  "bookCardHint": "Tippen für Details und Optionen",
+  "markAs": "Als {{status}} markieren",
+  "markAsA11y": "Als {{status}} markieren",
+  "removeFromList": "Aus Liste entfernen",
+  "removeBookA11y": "{{title}} entfernen",
+  "pages": "{{count}} Seiten",
+  "closeDetail": "Detail schließen",
+  "errorLoadBooks": "Bücher konnten nicht geladen werden.",
+  "errorUpdateStatus": "Status konnte nicht aktualisiert werden.",
+  "errorRemoveBook": "Buch konnte nicht entfernt werden."
+}

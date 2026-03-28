@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { useFocusEffect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { useTheme } from '../../hooks/useTheme';
@@ -31,6 +32,7 @@ interface UserBook {
 
 export default function WishlistScreen() {
   const { theme } = useTheme();
+  const { t } = useTranslation('wishlist');
   const [books, setBooks] = useState<UserBook[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -42,7 +44,7 @@ export default function WishlistScreen() {
       });
       setBooks(data);
     } catch {
-      Alert.alert('Error', 'Could not load wishlist.');
+      Alert.alert(t('errorTitle', { ns: 'common' }), t('errorLoadWishlist'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -57,27 +59,29 @@ export default function WishlistScreen() {
   );
 
   async function handleMarkPurchased(item: UserBook) {
+    setBooks((prev) => prev.filter((b) => b.id !== item.id));
     try {
       await api.patch(`/user-books/${item.id}`, { status: 'purchased' });
-      setBooks((prev) => prev.filter((b) => b.id !== item.id));
     } catch {
-      Alert.alert('Error', 'Could not update status.');
+      setBooks((prev) => [...prev, item]);
+      Alert.alert(t('errorTitle', { ns: 'common' }), t('errorUpdateStatus'));
     }
   }
 
   async function handleRemove(item: UserBook) {
+    setBooks((prev) => prev.filter((b) => b.id !== item.id));
     try {
       await api.delete(`/user-books/${item.id}`);
-      setBooks((prev) => prev.filter((b) => b.id !== item.id));
     } catch {
-      Alert.alert('Error', 'Could not remove book.');
+      setBooks((prev) => [...prev, item]);
+      Alert.alert(t('errorTitle', { ns: 'common' }), t('errorRemoveBook'));
     }
   }
 
   if (loading) {
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <LoadingSpinner message="Loading wishlist…" />
+        <LoadingSpinner message={t('loading')} />
       </View>
     );
   }
@@ -105,7 +109,7 @@ export default function WishlistScreen() {
               { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeBase },
             ]}
           >
-            {'Your wishlist is empty.\nScan a book cover to add one.'}
+            {t('empty')}
           </Text>
         }
         renderItem={({ item }) => (
@@ -119,7 +123,7 @@ export default function WishlistScreen() {
               <Image
                 source={{ uri: item.book.cover_url }}
                 style={styles.cover}
-                accessibilityLabel={`Cover of ${item.book.title}`}
+                accessibilityLabel={t('coverAlt', { ns: 'common', title: item.book.title })}
               />
             ) : (
               <View
@@ -128,7 +132,7 @@ export default function WishlistScreen() {
                   styles.coverPlaceholder,
                   { backgroundColor: theme.colors.border },
                 ]}
-                accessibilityLabel="No cover available"
+                accessibilityLabel={t('noCoverAvailable', { ns: 'common' })}
               />
             )}
 
@@ -165,17 +169,17 @@ export default function WishlistScreen() {
                   style={[styles.actionButton, { backgroundColor: theme.colors.primary }]}
                   onPress={() => handleMarkPurchased(item)}
                   accessibilityRole="button"
-                  accessibilityLabel={`Mark ${item.book.title} as purchased`}
+                  accessibilityLabel={t('markPurchasedA11y', { title: item.book.title })}
                 >
                   <Text style={[styles.actionText, { fontSize: theme.typography.fontSizeSM }]}>
-                    Mark Purchased
+                    {t('markPurchased')}
                   </Text>
                 </Pressable>
                 <Pressable
                   style={[styles.actionButton, { backgroundColor: theme.colors.border }]}
                   onPress={() => handleRemove(item)}
                   accessibilityRole="button"
-                  accessibilityLabel={`Remove ${item.book.title} from wishlist`}
+                  accessibilityLabel={t('removeA11y', { title: item.book.title })}
                 >
                   <Text
                     style={[
@@ -183,7 +187,7 @@ export default function WishlistScreen() {
                       { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeSM },
                     ]}
                   >
-                    Remove
+                    {t('remove')}
                   </Text>
                 </Pressable>
               </View>

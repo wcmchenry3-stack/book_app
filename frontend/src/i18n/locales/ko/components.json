@@ -1,0 +1,16 @@
+{
+  "bookCandidatePicker": {
+    "title": "이 책은 어떤 책인가요?",
+    "cancel": "취소",
+    "closePicker": "선택기 닫기",
+    "selectBook": "{{author}}의 {{title}} 선택",
+    "addToWishlistHint": "위시리스트에 추가됩니다",
+    "alreadyOwned": "이미 소유함",
+    "noneOfThese": "해당 없음",
+    "noneOfTheseA11y": "해당하는 책이 없습니다"
+  },
+  "themeToggle": {
+    "toDark": "다크 모드로 전환",
+    "toLight": "라이트 모드로 전환"
+  }
+}

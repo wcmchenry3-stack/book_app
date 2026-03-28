@@ -1,8 +1,9 @@
 import logging
 import uuid
+from datetime import datetime, timedelta, timezone
 
 import jwt
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,16 +12,25 @@ from app.auth.google import verify_google_id_token
 from app.auth.jwt import create_access_token, create_refresh_token, decode_token
 from app.core.config import settings
 from app.core.database import get_db
+from app.core.limiter import limiter
+from app.models.refresh_token import RefreshToken
 from app.models.user import User
-from app.schemas.auth import GoogleAuthRequest, RefreshRequest, TokenResponse, UserRead
+from app.schemas.auth import (
+    GoogleAuthRequest,
+    LogoutRequest,
+    RefreshRequest,
+    TokenResponse,
+    UserRead,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/google", response_model=TokenResponse)
+@limiter.limit(settings.rate_limit_auth)
 async def google_auth(
-    body: GoogleAuthRequest, db: AsyncSession = Depends(get_db)
+    request: Request, body: GoogleAuthRequest, db: AsyncSession = Depends(get_db)
 ) -> TokenResponse:
     logger.info("POST /auth/google — verifying Google ID token")
     try:
@@ -74,7 +84,12 @@ async def google_auth(
     await db.refresh(user)
 
     access_token = create_access_token(str(user.id), user.email)
-    refresh_token = create_refresh_token(str(user.id))
+    refresh_token, jti = create_refresh_token(str(user.id))
+    expires_at = datetime.now(timezone.utc) + timedelta(
+        days=settings.refresh_token_expiry_days
+    )
+    db.add(RefreshToken(jti=jti, user_id=user.id, expires_at=expires_at))
+    await db.commit()
     logger.info("Auth successful for %s", email)
     return TokenResponse(
         access_token=access_token,
@@ -84,8 +99,9 @@ async def google_auth(
 
 
 @router.post("/refresh", response_model=TokenResponse)
+@limiter.limit(settings.rate_limit_auth)
 async def refresh(
-    body: RefreshRequest, db: AsyncSession = Depends(get_db)
+    request: Request, body: RefreshRequest, db: AsyncSession = Depends(get_db)
 ) -> TokenResponse:
     try:
         payload = decode_token(body.refresh_token)
@@ -103,14 +119,35 @@ async def refresh(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type"
         )
 
+    jti = payload.get("jti")
+    if not jti:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+        )
+
+    result = await db.execute(select(RefreshToken).where(RefreshToken.jti == jti))
+    stored = result.scalar_one_or_none()
+    if stored is None or stored.revoked_at is not None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token revoked or not found",
+        )
+
     user = await db.get(User, uuid.UUID(payload["sub"]))
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
         )
 
+    # Rotate: revoke old token, issue new one
+    stored.revoked_at = datetime.now(timezone.utc)
+    new_refresh, new_jti = create_refresh_token(str(user.id))
+    expires_at = datetime.now(timezone.utc) + timedelta(
+        days=settings.refresh_token_expiry_days
+    )
+    db.add(RefreshToken(jti=new_jti, user_id=user.id, expires_at=expires_at))
     access_token = create_access_token(str(user.id), user.email)
-    new_refresh = create_refresh_token(str(user.id))
+    await db.commit()
     return TokenResponse(
         access_token=access_token,
         refresh_token=new_refresh,
@@ -118,6 +155,34 @@ async def refresh(
     )
 
 
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit(settings.rate_limit_auth)
+async def logout(
+    request: Request, body: LogoutRequest, db: AsyncSession = Depends(get_db)
+) -> None:
+    try:
+        payload = decode_token(body.refresh_token)
+    except jwt.InvalidTokenError:
+        # Token already invalid — treat as successful logout
+        return
+
+    if payload.get("type") != "refresh":
+        return
+
+    jti = payload.get("jti")
+    if not jti:
+        return
+
+    result = await db.execute(select(RefreshToken).where(RefreshToken.jti == jti))
+    stored = result.scalar_one_or_none()
+    if stored is not None and stored.revoked_at is None:
+        stored.revoked_at = datetime.now(timezone.utc)
+        await db.commit()
+
+
 @router.get("/me", response_model=UserRead)
-async def get_me(current_user: User = Depends(get_current_user)) -> User:
+@limiter.limit(settings.rate_limit_reads)
+async def get_me(
+    request: Request, current_user: User = Depends(get_current_user)
+) -> User:
     return current_user

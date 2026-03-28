@@ -1,0 +1,29 @@
+{
+  "loading": "טוען ספרים…",
+  "noBooksYet": "אין ספרים כאן עדיין.",
+  "statusTab": {
+    "all": "הכל",
+    "wishlisted": "רשימת משאלות",
+    "purchased": "נרכש",
+    "reading": "קורא",
+    "read": "נקרא"
+  },
+  "status": {
+    "wishlisted": "ברשימת משאלות",
+    "purchased": "נרכש",
+    "reading": "קורא",
+    "read": "נקרא"
+  },
+  "filterBy": "סנן לפי {{label}}",
+  "bookCardA11y": "{{title}} — {{status}}",
+  "bookCardHint": "הקש לפרטים ואפשרויות",
+  "markAs": "סמן כ{{status}}",
+  "markAsA11y": "סמן כ{{status}}",
+  "removeFromList": "הסר מהרשימה",
+  "removeBookA11y": "הסר {{title}}",
+  "pages": "{{count}} עמודים",
+  "closeDetail": "סגור פרטים",
+  "errorLoadBooks": "לא ניתן לטעון ספרים.",
+  "errorUpdateStatus": "לא ניתן לעדכן סטטוס.",
+  "errorRemoveBook": "לא ניתן להסיר ספר."
+}
