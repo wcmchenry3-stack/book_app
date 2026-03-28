@@ -26,5 +26,7 @@
   "couldNotSaveTitle": "Could not save",
   "couldNotSaveMessage": "Failed to add book to wishlist. Please try again.",
   "scanUnavailableTitle": "Scan unavailable",
-  "scanUnavailableMessage": "Cover scanning is temporarily unavailable. Try searching by title instead."
+  "scanUnavailableMessage": "Cover scanning is temporarily unavailable. Try searching by title instead.",
+  "flipCamera": "Flip",
+  "flipCameraA11y": "Flip camera"
 }
