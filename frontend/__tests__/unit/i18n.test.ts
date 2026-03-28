@@ -3,9 +3,9 @@
  *
  * Validates that:
  * - All 8 namespaces initialise for the `en` locale and return strings
- * - Exactly 13 locales are registered (one per entry in LOCALES)
+ * - Exactly 11 locales are registered (one per entry in LOCALES; ar/he excluded until RTL ready)
  * - No English key has __NEEDS_TRANSLATION__ as its value
- * - RTL_LOCALES contains exactly 'ar' and 'he'
+ * - RTL_LOCALES is empty (no RTL locales are currently active)
  */
 
 import i18n from '../../src/i18n/i18n';
@@ -23,10 +23,10 @@ const NAMESPACES = [
 ] as const;
 
 describe('i18n initialisation', () => {
-  it('registers exactly 13 locales', () => {
+  it('registers exactly 11 locales', () => {
     const registered = Object.keys((i18n as any).store?.data ?? {});
     expect(registered.length).toBe(LOCALES.length);
-    expect(registered.length).toBe(13);
+    expect(registered.length).toBe(11);
   });
 
   it.each(NAMESPACES)('en/%s namespace exists and has at least one string', (ns) => {
@@ -80,13 +80,11 @@ describe('i18n initialisation', () => {
 });
 
 describe('RTL_LOCALES', () => {
-  it('contains exactly ar and he', () => {
-    expect(RTL_LOCALES.size).toBe(2);
-    expect(RTL_LOCALES.has('ar')).toBe(true);
-    expect(RTL_LOCALES.has('he')).toBe(true);
+  it('is empty — ar and he are inactive until RTL layout is implemented', () => {
+    expect(RTL_LOCALES.size).toBe(0);
   });
 
-  it('does not contain ltr locales', () => {
+  it('does not contain any ltr locales', () => {
     expect(RTL_LOCALES.has('en')).toBe(false);
     expect(RTL_LOCALES.has('es')).toBe(false);
     expect(RTL_LOCALES.has('fr-CA')).toBe(false);

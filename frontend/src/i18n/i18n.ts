@@ -3,7 +3,10 @@
  *
  * Metro bundler cannot resolve fully dynamic import() paths, so every
  * locale × namespace combination must be a static import.
- * 13 locales × 8 namespaces = 104 imports.
+ * 11 locales × 8 namespaces = 88 imports.
+ *
+ * ar and he are excluded until RTL layout mirroring is implemented.
+ * Translation files are preserved in locales/ar/ and locales/he/.
  */
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
@@ -59,18 +62,6 @@ import hi_wishlist from './locales/hi/wishlist.json';
 import hi_components from './locales/hi/components.json';
 
 // ---------------------------------------------------------------------------
-// ar
-// ---------------------------------------------------------------------------
-import ar_common from './locales/ar/common.json';
-import ar_auth from './locales/ar/auth.json';
-import ar_tabs from './locales/ar/tabs.json';
-import ar_myBooks from './locales/ar/my-books.json';
-import ar_scan from './locales/ar/scan.json';
-import ar_settings from './locales/ar/settings.json';
-import ar_wishlist from './locales/ar/wishlist.json';
-import ar_components from './locales/ar/components.json';
-
-// ---------------------------------------------------------------------------
 // zh
 // ---------------------------------------------------------------------------
 import zh_common from './locales/zh/common.json';
@@ -117,18 +108,6 @@ import pt_scan from './locales/pt/scan.json';
 import pt_settings from './locales/pt/settings.json';
 import pt_wishlist from './locales/pt/wishlist.json';
 import pt_components from './locales/pt/components.json';
-
-// ---------------------------------------------------------------------------
-// he
-// ---------------------------------------------------------------------------
-import he_common from './locales/he/common.json';
-import he_auth from './locales/he/auth.json';
-import he_tabs from './locales/he/tabs.json';
-import he_myBooks from './locales/he/my-books.json';
-import he_scan from './locales/he/scan.json';
-import he_settings from './locales/he/settings.json';
-import he_wishlist from './locales/he/wishlist.json';
-import he_components from './locales/he/components.json';
 
 // ---------------------------------------------------------------------------
 // de
@@ -211,16 +190,6 @@ const resources = {
     wishlist: hi_wishlist,
     components: hi_components,
   },
-  ar: {
-    common: ar_common,
-    auth: ar_auth,
-    tabs: ar_tabs,
-    'my-books': ar_myBooks,
-    scan: ar_scan,
-    settings: ar_settings,
-    wishlist: ar_wishlist,
-    components: ar_components,
-  },
   zh: {
     common: zh_common,
     auth: zh_auth,
@@ -260,16 +229,6 @@ const resources = {
     settings: pt_settings,
     wishlist: pt_wishlist,
     components: pt_components,
-  },
-  he: {
-    common: he_common,
-    auth: he_auth,
-    tabs: he_tabs,
-    'my-books': he_myBooks,
-    scan: he_scan,
-    settings: he_settings,
-    wishlist: he_wishlist,
-    components: he_components,
   },
   de: {
     common: de_common,
