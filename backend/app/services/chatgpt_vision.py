@@ -20,9 +20,10 @@ Each candidate must have:
 - title: string
 - author: string
 - confidence: float between 0 and 1
-- isbn_13: string or null (13-digit ISBN if visible or known)
-- isbn_10: string or null (10-digit ISBN if visible or known)
+- isbn_13: string or null (any valid 13-digit ISBN for this book — any edition is fine)
+- isbn_10: string or null (any valid 10-digit ISBN for this book — any edition is fine)
 
+Provide at least one ISBN whenever you can identify the book, even if you are not certain which specific edition is shown. The ISBN will only be used as a search hint.
 Return ONLY a valid JSON array, no other text. Example:
 [{"title":"Dune","author":"Frank Herbert","confidence":0.97,"isbn_13":"9780441013593","isbn_10":null}]"""
 
