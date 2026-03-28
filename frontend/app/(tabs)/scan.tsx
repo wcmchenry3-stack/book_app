@@ -195,8 +195,11 @@ export default function ScanScreen() {
   // ── Search mode ──────────────────────────────────────────────────────────
   if (inputMode === 'search') {
     if (screenState === 'loading') {
+      // Keep modeToggle visible so the user can switch back while a search
+      // (or a camera scan that was mid-flight when they switched) is running.
       return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+          {modeToggle}
           <LoadingSpinner message={t('loading')} />
         </View>
       );
