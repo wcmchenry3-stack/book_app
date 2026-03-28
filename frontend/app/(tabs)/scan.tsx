@@ -43,14 +43,16 @@ export default function ScanScreen() {
       //   Native — set it explicitly; React Native's network layer adds the
       //            boundary when the hint is 'multipart/form-data'.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      transformRequest: [(data: FormData, headers: any) => {
-        if (Platform.OS === 'web') {
-          headers.delete('Content-Type');
-        } else {
-          headers.set('Content-Type', 'multipart/form-data');
-        }
-        return data;
-      }],
+      transformRequest: [
+        (data: FormData, headers: any) => {
+          if (Platform.OS === 'web') {
+            headers.delete('Content-Type');
+          } else {
+            headers.set('Content-Type', 'multipart/form-data');
+          }
+          return data;
+        },
+      ],
     });
     if (!response.data || response.data.length === 0) {
       setScreenState('idle');
