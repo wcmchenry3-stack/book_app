@@ -36,7 +36,21 @@ export default function ScanScreen() {
 
   async function submitScan(formData: FormData) {
     const response = await api.post<EnrichedBook[]>('/scan', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      // transformRequest runs after all header merging, so we can adjust
+      // Content-Type reliably here:
+      //   Web   — delete it; the browser XHR sets multipart/form-data with the
+      //           correct boundary automatically when the body is a FormData.
+      //   Native — set it explicitly; React Native's network layer adds the
+      //            boundary when the hint is 'multipart/form-data'.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      transformRequest: [(data: FormData, headers: any) => {
+        if (Platform.OS === 'web') {
+          headers.delete('Content-Type');
+        } else {
+          headers.set('Content-Type', 'multipart/form-data');
+        }
+        return data;
+      }],
     });
     if (!response.data || response.data.length === 0) {
       setScreenState('idle');
