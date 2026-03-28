@@ -30,6 +30,7 @@ GOOGLE_CLAIMS = {
 
 FAKE_ACCESS = "fake.access.token"
 FAKE_REFRESH = "fake.refresh.token"
+FAKE_JTI = "fake-jti-uuid"
 
 
 def _mock_user(uid=FAKE_USER_ID, email="test@example.com"):
@@ -101,10 +102,11 @@ class TestGoogleAuth:
             patch("app.api.auth.verify_google_id_token", return_value=GOOGLE_CLAIMS),
             patch("app.api.auth.settings") as mock_settings,
             patch("app.api.auth.create_access_token", return_value=FAKE_ACCESS),
-            patch("app.api.auth.create_refresh_token", return_value=FAKE_REFRESH),
+            patch("app.api.auth.create_refresh_token", return_value=(FAKE_REFRESH, FAKE_JTI)),
         ):
             mock_settings.allowed_emails_list = []
             mock_settings.jwt_expiry_hours = 24
+            mock_settings.refresh_token_expiry_days = 7
             resp = TestClient(app).post("/auth/google", json={"id_token": "valid"})
 
         app.dependency_overrides.clear()
@@ -124,10 +126,11 @@ class TestGoogleAuth:
             patch("app.api.auth.verify_google_id_token", return_value=GOOGLE_CLAIMS),
             patch("app.api.auth.settings") as mock_settings,
             patch("app.api.auth.create_access_token", return_value=FAKE_ACCESS),
-            patch("app.api.auth.create_refresh_token", return_value=FAKE_REFRESH),
+            patch("app.api.auth.create_refresh_token", return_value=(FAKE_REFRESH, FAKE_JTI)),
         ):
             mock_settings.allowed_emails_list = []
             mock_settings.jwt_expiry_hours = 24
+            mock_settings.refresh_token_expiry_days = 7
             resp = TestClient(app).post("/auth/google", json={"id_token": "valid"})
 
         app.dependency_overrides.clear()
@@ -145,10 +148,11 @@ class TestGoogleAuth:
             patch("app.api.auth.verify_google_id_token", return_value=claims),
             patch("app.api.auth.settings") as mock_settings,
             patch("app.api.auth.create_access_token", return_value=FAKE_ACCESS),
-            patch("app.api.auth.create_refresh_token", return_value=FAKE_REFRESH),
+            patch("app.api.auth.create_refresh_token", return_value=(FAKE_REFRESH, FAKE_JTI)),
         ):
             mock_settings.allowed_emails_list = []
             mock_settings.jwt_expiry_hours = 24
+            mock_settings.refresh_token_expiry_days = 7
             TestClient(app).post("/auth/google", json={"id_token": "valid"})
 
         app.dependency_overrides.clear()
@@ -164,10 +168,11 @@ class TestGoogleAuth:
             patch("app.api.auth.verify_google_id_token", return_value=GOOGLE_CLAIMS),
             patch("app.api.auth.settings") as mock_settings,
             patch("app.api.auth.create_access_token", return_value=FAKE_ACCESS),
-            patch("app.api.auth.create_refresh_token", return_value=FAKE_REFRESH),
+            patch("app.api.auth.create_refresh_token", return_value=(FAKE_REFRESH, FAKE_JTI)),
         ):
             mock_settings.allowed_emails_list = []
             mock_settings.jwt_expiry_hours = 24
+            mock_settings.refresh_token_expiry_days = 7
             resp = TestClient(app).post("/auth/google", json={"id_token": "valid"})
 
         app.dependency_overrides.clear()
@@ -204,11 +209,76 @@ class TestRefresh:
         assert resp.status_code == 401
         assert "type" in resp.json()["detail"].lower()
 
+    def test_returns_401_for_missing_jti(self, client):
+        with patch(
+            "app.api.auth.decode_token",
+            return_value={"sub": str(FAKE_USER_ID), "type": "refresh"},  # no jti
+        ):
+            resp = client.post("/auth/refresh", json={"refresh_token": "old-token"})
+        assert resp.status_code == 401
+
+    def test_returns_401_for_unknown_jti(self):
+        from app.core.database import get_db
+
+        async def _db_no_record():
+            db = AsyncMock()
+            result = MagicMock()
+            result.scalar_one_or_none.return_value = None
+            db.execute = AsyncMock(return_value=result)
+            yield db
+
+        app.dependency_overrides[get_db] = _db_no_record
+
+        with patch(
+            "app.api.auth.decode_token",
+            return_value={"sub": str(FAKE_USER_ID), "type": "refresh", "jti": "unknown"},
+        ):
+            resp = TestClient(app).post("/auth/refresh", json={"refresh_token": "tok"})
+
+        app.dependency_overrides.clear()
+        assert resp.status_code == 401
+        assert "revoked or not found" in resp.json()["detail"].lower()
+
+    def test_returns_401_for_revoked_token(self):
+        from datetime import datetime, timezone
+
+        from app.core.database import get_db
+        from app.models.refresh_token import RefreshToken
+
+        revoked_record = MagicMock(spec=RefreshToken)
+        revoked_record.revoked_at = datetime.now(timezone.utc)
+
+        async def _db_revoked():
+            db = AsyncMock()
+            result = MagicMock()
+            result.scalar_one_or_none.return_value = revoked_record
+            db.execute = AsyncMock(return_value=result)
+            yield db
+
+        app.dependency_overrides[get_db] = _db_revoked
+
+        with patch(
+            "app.api.auth.decode_token",
+            return_value={"sub": str(FAKE_USER_ID), "type": "refresh", "jti": FAKE_JTI},
+        ):
+            resp = TestClient(app).post("/auth/refresh", json={"refresh_token": "tok"})
+
+        app.dependency_overrides.clear()
+        assert resp.status_code == 401
+        assert "revoked" in resp.json()["detail"].lower()
+
     def test_returns_401_when_user_deleted(self):
         from app.core.database import get_db
+        from app.models.refresh_token import RefreshToken
+
+        valid_record = MagicMock(spec=RefreshToken)
+        valid_record.revoked_at = None
 
         async def _db_no_user():
             db = AsyncMock()
+            result = MagicMock()
+            result.scalar_one_or_none.return_value = valid_record
+            db.execute = AsyncMock(return_value=result)
             db.get = AsyncMock(return_value=None)
             yield db
 
@@ -216,7 +286,7 @@ class TestRefresh:
 
         with patch(
             "app.api.auth.decode_token",
-            return_value={"sub": str(FAKE_USER_ID), "type": "refresh"},
+            return_value={"sub": str(FAKE_USER_ID), "type": "refresh", "jti": FAKE_JTI},
         ):
             resp = TestClient(app).post("/auth/refresh", json={"refresh_token": "tok"})
 
@@ -226,11 +296,17 @@ class TestRefresh:
 
     def test_returns_new_tokens_for_valid_refresh(self):
         from app.core.database import get_db
+        from app.models.refresh_token import RefreshToken
 
         user = _mock_user()
+        valid_record = MagicMock(spec=RefreshToken)
+        valid_record.revoked_at = None
 
         async def _db_with_user():
             db = AsyncMock()
+            result = MagicMock()
+            result.scalar_one_or_none.return_value = valid_record
+            db.execute = AsyncMock(return_value=result)
             db.get = AsyncMock(return_value=user)
             yield db
 
@@ -239,13 +315,14 @@ class TestRefresh:
         with (
             patch(
                 "app.api.auth.decode_token",
-                return_value={"sub": str(FAKE_USER_ID), "type": "refresh"},
+                return_value={"sub": str(FAKE_USER_ID), "type": "refresh", "jti": FAKE_JTI},
             ),
             patch("app.api.auth.create_access_token", return_value=FAKE_ACCESS),
-            patch("app.api.auth.create_refresh_token", return_value=FAKE_REFRESH),
+            patch("app.api.auth.create_refresh_token", return_value=(FAKE_REFRESH, FAKE_JTI)),
             patch("app.api.auth.settings") as mock_settings,
         ):
             mock_settings.jwt_expiry_hours = 24
+            mock_settings.refresh_token_expiry_days = 7
             resp = TestClient(app).post("/auth/refresh", json={"refresh_token": "tok"})
 
         app.dependency_overrides.clear()
@@ -253,6 +330,108 @@ class TestRefresh:
         data = resp.json()
         assert data["access_token"] == FAKE_ACCESS
         assert data["refresh_token"] == FAKE_REFRESH
+
+    def test_rotates_token_on_valid_refresh(self):
+        """Old token must be marked revoked when a new one is issued."""
+        from app.core.database import get_db
+        from app.models.refresh_token import RefreshToken
+
+        user = _mock_user()
+        valid_record = MagicMock(spec=RefreshToken)
+        valid_record.revoked_at = None
+
+        async def _db_with_user():
+            db = AsyncMock()
+            result = MagicMock()
+            result.scalar_one_or_none.return_value = valid_record
+            db.execute = AsyncMock(return_value=result)
+            db.get = AsyncMock(return_value=user)
+            yield db
+
+        app.dependency_overrides[get_db] = _db_with_user
+
+        with (
+            patch(
+                "app.api.auth.decode_token",
+                return_value={"sub": str(FAKE_USER_ID), "type": "refresh", "jti": FAKE_JTI},
+            ),
+            patch("app.api.auth.create_access_token", return_value=FAKE_ACCESS),
+            patch("app.api.auth.create_refresh_token", return_value=(FAKE_REFRESH, FAKE_JTI)),
+            patch("app.api.auth.settings") as mock_settings,
+        ):
+            mock_settings.jwt_expiry_hours = 24
+            mock_settings.refresh_token_expiry_days = 7
+            TestClient(app).post("/auth/refresh", json={"refresh_token": "tok"})
+
+        app.dependency_overrides.clear()
+        assert valid_record.revoked_at is not None
+
+
+# ─── POST /auth/logout ────────────────────────────────────────────────────────
+
+
+class TestLogout:
+    def test_returns_204_for_valid_token(self):
+        from app.core.database import get_db
+        from app.models.refresh_token import RefreshToken
+
+        active_record = MagicMock(spec=RefreshToken)
+        active_record.revoked_at = None
+
+        async def _db():
+            db = AsyncMock()
+            result = MagicMock()
+            result.scalar_one_or_none.return_value = active_record
+            db.execute = AsyncMock(return_value=result)
+            yield db
+
+        app.dependency_overrides[get_db] = _db
+
+        with patch(
+            "app.api.auth.decode_token",
+            return_value={"type": "refresh", "jti": FAKE_JTI},
+        ):
+            resp = TestClient(app).post("/auth/logout", json={"refresh_token": "tok"})
+
+        app.dependency_overrides.clear()
+        assert resp.status_code == 204
+        assert active_record.revoked_at is not None
+
+    def test_returns_204_for_already_invalid_token(self, client):
+        """Logout with an expired/garbage token should still return 204."""
+        with patch(
+            "app.api.auth.decode_token",
+            side_effect=jwt.InvalidTokenError("expired"),
+        ):
+            resp = client.post("/auth/logout", json={"refresh_token": "garbage"})
+        assert resp.status_code == 204
+
+    def test_returns_204_for_already_revoked_token(self):
+        from datetime import datetime, timezone
+
+        from app.core.database import get_db
+        from app.models.refresh_token import RefreshToken
+
+        revoked_record = MagicMock(spec=RefreshToken)
+        revoked_record.revoked_at = datetime.now(timezone.utc)
+
+        async def _db():
+            db = AsyncMock()
+            result = MagicMock()
+            result.scalar_one_or_none.return_value = revoked_record
+            db.execute = AsyncMock(return_value=result)
+            yield db
+
+        app.dependency_overrides[get_db] = _db
+
+        with patch(
+            "app.api.auth.decode_token",
+            return_value={"type": "refresh", "jti": FAKE_JTI},
+        ):
+            resp = TestClient(app).post("/auth/logout", json={"refresh_token": "tok"})
+
+        app.dependency_overrides.clear()
+        assert resp.status_code == 204
 
 
 # ─── GET /auth/me ──────────────────────────────────────────────────────────────

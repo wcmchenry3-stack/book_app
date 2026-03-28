@@ -27,6 +27,12 @@ class RefreshRequest(BaseModel):
     refresh_token: str
 
 
+class LogoutRequest(BaseModel):
+    """Body for POST /auth/logout."""
+
+    refresh_token: str
+
+
 class UserRead(BaseModel):
     """Returned by GET /auth/me."""
 
