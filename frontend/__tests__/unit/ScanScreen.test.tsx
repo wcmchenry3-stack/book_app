@@ -99,6 +99,18 @@ function makeAxiosError(status: number) {
   });
 }
 
+// Helper: set Platform.OS for a describe block
+function setPlatform(os: string) {
+  let original: string;
+  beforeEach(() => {
+    original = Platform.OS;
+    Object.defineProperty(Platform, 'OS', { value: os, configurable: true });
+  });
+  afterEach(() => {
+    Object.defineProperty(Platform, 'OS', { value: original, configurable: true });
+  });
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   jest.spyOn(Alert, 'alert').mockImplementation(() => {});
@@ -181,16 +193,12 @@ describe('ScanScreen — search mode', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Camera mode — permissions
+// Native camera mode — permissions
 // ---------------------------------------------------------------------------
-describe('ScanScreen — camera mode permissions', () => {
-  it('renders capture button by default when permission is granted', () => {
+describe('ScanScreen — native camera permissions', () => {
+  it('renders capture button and flip button when permission is granted', () => {
     const { getByLabelText } = render(<ScanScreen />);
     expect(getByLabelText('Capture book cover')).toBeTruthy();
-  });
-
-  it('renders flip camera button when permission is granted', () => {
-    const { getByLabelText } = render(<ScanScreen />);
     expect(getByLabelText('Flip camera')).toBeTruthy();
   });
 
@@ -215,30 +223,23 @@ describe('ScanScreen — camera mode permissions', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Camera mode — facing toggle
+// Native camera mode — facing toggle
 // ---------------------------------------------------------------------------
-describe('ScanScreen — camera facing toggle', () => {
-  it('shows flip button overlay in camera mode', () => {
-    const { getByLabelText } = render(<ScanScreen />);
-    expect(getByLabelText('Flip camera')).toBeTruthy();
-  });
-
+describe('ScanScreen — native camera facing toggle', () => {
   it('toggles facing state when flip button is pressed', () => {
     const { getByLabelText } = render(<ScanScreen />);
     const flipBtn = getByLabelText('Flip camera');
-    // Press once: back → front
     fireEvent.press(flipBtn);
-    // Press again: front → back — button still present
     fireEvent.press(flipBtn);
     expect(getByLabelText('Flip camera')).toBeTruthy();
   });
 });
 
 // ---------------------------------------------------------------------------
-// Camera mode — capture flow
+// Native camera mode — capture flow
 // ---------------------------------------------------------------------------
-describe('ScanScreen — capture flow', () => {
-  it('shows loading spinner during capture', async () => {
+describe('ScanScreen — native capture flow', () => {
+  it('shows loading spinner during capture (camera stays mounted)', async () => {
     let resolveTake!: (v: unknown) => void;
     mockTakePictureAsync.mockReturnValue(
       new Promise((res) => {
@@ -247,6 +248,7 @@ describe('ScanScreen — capture flow', () => {
     );
     const { getByLabelText, getByTestId } = render(<ScanScreen />);
     fireEvent.press(getByLabelText('Capture book cover'));
+    // Loading spinner visible while camera processes
     expect(getByTestId('loading-spinner')).toBeTruthy();
     await act(async () => resolveTake({ uri: 'file://test.jpg' }));
   });
@@ -254,7 +256,6 @@ describe('ScanScreen — capture flow', () => {
   it('shows picker after successful scan', async () => {
     mockTakePictureAsync.mockResolvedValue({ uri: 'file://test.jpg' });
     mockPost.mockResolvedValue({ data: [{ title: 'Dune', author: 'Herbert' }] });
-
     const { getByLabelText, getByTestId } = render(<ScanScreen />);
     await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
     await waitFor(() => expect(getByTestId('dismiss-picker')).toBeTruthy());
@@ -264,7 +265,6 @@ describe('ScanScreen — capture flow', () => {
   it('alerts when scan returns no books', async () => {
     mockTakePictureAsync.mockResolvedValue({ uri: 'file://test.jpg' });
     mockPost.mockResolvedValue({ data: [] });
-
     const { getByLabelText } = render(<ScanScreen />);
     await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
     expect(Alert.alert).toHaveBeenCalledWith('No books found', expect.any(String));
@@ -273,7 +273,6 @@ describe('ScanScreen — capture flow', () => {
   it('alerts with scan-unavailable message on 503', async () => {
     mockTakePictureAsync.mockResolvedValue({ uri: 'file://test.jpg' });
     mockPost.mockRejectedValue(makeAxiosError(503));
-
     const { getByLabelText } = render(<ScanScreen />);
     await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
     expect(Alert.alert).toHaveBeenCalledWith('Scan unavailable', expect.any(String));
@@ -282,39 +281,107 @@ describe('ScanScreen — capture flow', () => {
   it('alerts with generic scan-failed message on other errors', async () => {
     mockTakePictureAsync.mockResolvedValue({ uri: 'file://test.jpg' });
     mockPost.mockRejectedValue(new Error('network'));
-
     const { getByLabelText } = render(<ScanScreen />);
     await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
     expect(Alert.alert).toHaveBeenCalledWith('Scan failed', expect.any(String));
   });
 
-  it('exits early without alert when takePictureAsync returns no uri', async () => {
+  it('exits early without posting when takePictureAsync returns no uri', async () => {
     mockTakePictureAsync.mockResolvedValue({ uri: null });
-
     const { getByLabelText } = render(<ScanScreen />);
     await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
     expect(mockPost).not.toHaveBeenCalled();
     expect(Alert.alert).not.toHaveBeenCalled();
   });
+});
 
-  it('uses fetch blob path on web platform', async () => {
-    const originalOS = Platform.OS;
-    Object.defineProperty(Platform, 'OS', { value: 'web', configurable: true });
+// ---------------------------------------------------------------------------
+// Web camera mode
+// ---------------------------------------------------------------------------
+describe('ScanScreen — web camera mode', () => {
+  setPlatform('web');
 
-    const mockBlob = new Blob(['img'], { type: 'image/jpeg' });
-    const mockFetch = jest.fn().mockResolvedValue({ blob: () => Promise.resolve(mockBlob) });
-    (global as unknown as { fetch: typeof mockFetch }).fetch = mockFetch;
+  it('renders Scan Book Cover button instead of CameraView controls', () => {
+    const { getByLabelText, queryByLabelText } = render(<ScanScreen />);
+    expect(getByLabelText('Capture book cover')).toBeTruthy();
+    expect(queryByLabelText('Flip camera')).toBeNull();
+  });
 
-    mockTakePictureAsync.mockResolvedValue({ uri: 'data:image/jpeg;base64,abc' });
-    mockPost.mockResolvedValue({ data: [{ title: 'Test Book' }] });
+  // RNTL's getByTestId doesn't traverse host string elements (e.g. <input>).
+  // Use UNSAFE_getAllByType to find the raw HTML input in the test renderer tree.
+  function getWebInput(utils: ReturnType<typeof render>) {
+    const [input] = utils.UNSAFE_getAllByType('input' as unknown as React.ComponentType);
+    return input;
+  }
 
-    const { getByLabelText, getByTestId } = render(<ScanScreen />);
-    await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
-    await waitFor(() => expect(getByTestId('dismiss-picker')).toBeTruthy());
+  it('renders hidden file input with correct attributes', () => {
+    const utils = render(<ScanScreen />);
+    const input = getWebInput(utils);
+    expect(input.props.type).toBe('file');
+    expect(input.props.accept).toBe('image/*');
+    expect(input.props.capture).toBe('environment');
+  });
 
-    expect(mockFetch).toHaveBeenCalledWith('data:image/jpeg;base64,abc');
+  it('shows picker after file is selected and scan succeeds', async () => {
+    const mockFile = new File(['img'], 'scan.jpg', { type: 'image/jpeg' });
+    mockPost.mockResolvedValue({ data: [{ title: 'Dune', author: 'Herbert' }] });
+    const utils = render(<ScanScreen />);
+    const input = getWebInput(utils);
+    await act(async () => fireEvent(input, 'change', { target: { files: [mockFile] } }));
+    await waitFor(() => expect(utils.getByTestId('dismiss-picker')).toBeTruthy());
+    expect(mockPost).toHaveBeenCalledWith('/scan', expect.any(FormData), expect.any(Object));
+  });
 
-    Object.defineProperty(Platform, 'OS', { value: originalOS, configurable: true });
+  it('shows loading spinner during web file processing', async () => {
+    let resolvePost!: (v: unknown) => void;
+    mockPost.mockReturnValue(
+      new Promise((res) => {
+        resolvePost = res;
+      })
+    );
+    const mockFile = new File(['img'], 'scan.jpg', { type: 'image/jpeg' });
+    const utils = render(<ScanScreen />);
+    const input = getWebInput(utils);
+    act(() => {
+      fireEvent(input, 'change', { target: { files: [mockFile] } });
+    });
+    expect(utils.getByTestId('loading-spinner')).toBeTruthy();
+    await act(async () => resolvePost({ data: [] }));
+  });
+
+  it('alerts when web scan returns no books', async () => {
+    const mockFile = new File(['img'], 'scan.jpg', { type: 'image/jpeg' });
+    mockPost.mockResolvedValue({ data: [] });
+    const utils = render(<ScanScreen />);
+    const input = getWebInput(utils);
+    await act(async () => fireEvent(input, 'change', { target: { files: [mockFile] } }));
+    expect(Alert.alert).toHaveBeenCalledWith('No books found', expect.any(String));
+  });
+
+  it('alerts with scan-unavailable on 503 from web', async () => {
+    const mockFile = new File(['img'], 'scan.jpg', { type: 'image/jpeg' });
+    mockPost.mockRejectedValue(makeAxiosError(503));
+    const utils = render(<ScanScreen />);
+    const input = getWebInput(utils);
+    await act(async () => fireEvent(input, 'change', { target: { files: [mockFile] } }));
+    expect(Alert.alert).toHaveBeenCalledWith('Scan unavailable', expect.any(String));
+  });
+
+  it('alerts with scan-failed on generic error from web', async () => {
+    const mockFile = new File(['img'], 'scan.jpg', { type: 'image/jpeg' });
+    mockPost.mockRejectedValue(new Error('network'));
+    const utils = render(<ScanScreen />);
+    const input = getWebInput(utils);
+    await act(async () => fireEvent(input, 'change', { target: { files: [mockFile] } }));
+    expect(Alert.alert).toHaveBeenCalledWith('Scan failed', expect.any(String));
+  });
+
+  it('does nothing when change fires with no file selected', async () => {
+    const utils = render(<ScanScreen />);
+    const input = getWebInput(utils);
+    await act(async () => fireEvent(input, 'change', { target: { files: [] } }));
+    expect(mockPost).not.toHaveBeenCalled();
+    expect(Alert.alert).not.toHaveBeenCalled();
   });
 });
 

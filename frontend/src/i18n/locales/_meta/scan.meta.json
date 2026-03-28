@@ -139,5 +139,10 @@
     "description": "Accessibility label for the flip camera button",
     "tone": "neutral",
     "characterLimit": 30
+  },
+  "takePhoto": {
+    "description": "Label on the web camera button that opens the device camera to scan a book cover",
+    "tone": "action",
+    "characterLimit": 25
   }
 }

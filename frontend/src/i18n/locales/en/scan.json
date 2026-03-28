@@ -28,5 +28,6 @@
   "scanUnavailableTitle": "Scan unavailable",
   "scanUnavailableMessage": "Cover scanning is temporarily unavailable. Try searching by title instead.",
   "flipCamera": "Flip",
-  "flipCameraA11y": "Flip camera"
+  "flipCameraA11y": "Flip camera",
+  "takePhoto": "Scan Book Cover"
 }
