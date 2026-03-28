@@ -59,19 +59,21 @@ export default function WishlistScreen() {
   );
 
   async function handleMarkPurchased(item: UserBook) {
+    setBooks((prev) => prev.filter((b) => b.id !== item.id));
     try {
       await api.patch(`/user-books/${item.id}`, { status: 'purchased' });
-      setBooks((prev) => prev.filter((b) => b.id !== item.id));
     } catch {
+      setBooks((prev) => [...prev, item]);
       Alert.alert(t('errorTitle', { ns: 'common' }), t('errorUpdateStatus'));
     }
   }
 
   async function handleRemove(item: UserBook) {
+    setBooks((prev) => prev.filter((b) => b.id !== item.id));
     try {
       await api.delete(`/user-books/${item.id}`);
-      setBooks((prev) => prev.filter((b) => b.id !== item.id));
     } catch {
+      setBooks((prev) => [...prev, item]);
       Alert.alert(t('errorTitle', { ns: 'common' }), t('errorRemoveBook'));
     }
   }

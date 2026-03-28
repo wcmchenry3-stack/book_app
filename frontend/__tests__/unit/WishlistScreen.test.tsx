@@ -106,6 +106,41 @@ describe('WishlistScreen', () => {
     await waitFor(() => expect(queryByText('Dune')).toBeNull());
   });
 
+  it('removes book optimistically before PATCH resolves', async () => {
+    let resolvePatch!: () => void;
+    mockPatch.mockReturnValue(
+      new Promise((resolve) => {
+        resolvePatch = () => resolve({ data: {} });
+      })
+    );
+    mockGet.mockResolvedValue({ data: [BOOK_1] });
+    const { getByLabelText, queryByText } = render(<WishlistScreen />);
+    await waitFor(() => getByLabelText('Mark Dune as purchased'));
+
+    act(() => {
+      fireEvent.press(getByLabelText('Mark Dune as purchased'));
+    });
+
+    // Item gone before PATCH resolves
+    expect(queryByText('Dune')).toBeNull();
+    await act(async () => {
+      resolvePatch();
+    });
+  });
+
+  it('restores book when PATCH fails', async () => {
+    mockPatch.mockRejectedValue(new Error('Network error'));
+    mockGet.mockResolvedValue({ data: [BOOK_1] });
+    const { getByLabelText, queryByText } = render(<WishlistScreen />);
+    await waitFor(() => getByLabelText('Mark Dune as purchased'));
+
+    await act(async () => {
+      fireEvent.press(getByLabelText('Mark Dune as purchased'));
+    });
+
+    await waitFor(() => expect(queryByText('Dune')).toBeTruthy());
+  });
+
   it('calls DELETE and removes book when Remove pressed', async () => {
     mockGet.mockResolvedValue({ data: [BOOK_1] });
     const { getByLabelText, queryByText } = render(<WishlistScreen />);
@@ -117,6 +152,40 @@ describe('WishlistScreen', () => {
 
     expect(mockDelete).toHaveBeenCalledWith('/user-books/ub-1');
     await waitFor(() => expect(queryByText('Dune')).toBeNull());
+  });
+
+  it('removes book optimistically before DELETE resolves', async () => {
+    let resolveDelete!: () => void;
+    mockDelete.mockReturnValue(
+      new Promise((resolve) => {
+        resolveDelete = () => resolve({});
+      })
+    );
+    mockGet.mockResolvedValue({ data: [BOOK_1] });
+    const { getByLabelText, queryByText } = render(<WishlistScreen />);
+    await waitFor(() => getByLabelText('Remove Dune from wishlist'));
+
+    act(() => {
+      fireEvent.press(getByLabelText('Remove Dune from wishlist'));
+    });
+
+    expect(queryByText('Dune')).toBeNull();
+    await act(async () => {
+      resolveDelete();
+    });
+  });
+
+  it('restores book when DELETE fails', async () => {
+    mockDelete.mockRejectedValue(new Error('Network error'));
+    mockGet.mockResolvedValue({ data: [BOOK_1] });
+    const { getByLabelText, queryByText } = render(<WishlistScreen />);
+    await waitFor(() => getByLabelText('Remove Dune from wishlist'));
+
+    await act(async () => {
+      fireEvent.press(getByLabelText('Remove Dune from wishlist'));
+    });
+
+    await waitFor(() => expect(queryByText('Dune')).toBeTruthy());
   });
 
   it('fetches with status=wishlisted filter', async () => {
