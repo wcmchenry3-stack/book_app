@@ -404,6 +404,127 @@ class TestUpdateUserBookSuccess:
         assert resp.status_code == 422
 
 
+# ─── POST /purchased — success paths ─────────────────────────────────────────
+
+
+class TestAddPurchasedSuccess:
+    def test_creates_new_user_book_when_none_exists(self, client):
+        book = MagicMock()
+        book.id = BOOK_ID
+        ub = _make_user_book(status="purchased")
+
+        async def _fake_db():
+            db = AsyncMock()
+            db.execute = AsyncMock(
+                side_effect=[
+                    _scalar_result(book),   # verify book exists
+                    _none_result(),          # no existing user_book → create
+                    _scalar_one_result(ub),  # re-fetch after commit
+                ]
+            )
+            db.add = MagicMock()
+            db.commit = AsyncMock()
+            db.refresh = AsyncMock()
+            yield db
+
+        from app.core.database import get_db
+
+        app.dependency_overrides[get_db] = _fake_db
+        resp = client.post("/purchased", json={"book_id": str(BOOK_ID)})
+        assert resp.status_code == 201
+
+    def test_updates_existing_user_book_on_upsert(self, client):
+        book = MagicMock()
+        book.id = BOOK_ID
+        ub = _make_user_book(status="wishlisted")
+
+        async def _fake_db():
+            db = AsyncMock()
+            db.execute = AsyncMock(
+                side_effect=[
+                    _scalar_result(book),   # verify book exists
+                    _scalar_result(ub),     # existing user_book found → update
+                    _scalar_one_result(ub), # re-fetch after commit
+                ]
+            )
+            db.commit = AsyncMock()
+            db.refresh = AsyncMock()
+            yield db
+
+        from app.core.database import get_db
+
+        app.dependency_overrides[get_db] = _fake_db
+        resp = client.post("/purchased", json={"book_id": str(BOOK_ID)})
+        assert resp.status_code == 201
+        assert ub.status == "purchased"
+        assert ub.purchased_at is not None
+
+    def test_resolves_edition_when_isbn_13_provided_and_edition_found(self, client):
+        book = MagicMock()
+        book.id = BOOK_ID
+        edition = MagicMock()
+        edition_id = uuid.UUID("cccccccc-cccc-cccc-cccc-cccccccccccc")
+        edition.id = edition_id
+        ub = _make_user_book(status="purchased")
+
+        async def _fake_db():
+            db = AsyncMock()
+            db.execute = AsyncMock(
+                side_effect=[
+                    _scalar_result(book),       # verify book exists
+                    _scalar_result(edition),    # resolve edition by ISBN
+                    _none_result(),             # no existing user_book → create
+                    _scalar_one_result(ub),     # re-fetch after commit
+                ]
+            )
+            db.add = MagicMock()
+            db.commit = AsyncMock()
+            db.refresh = AsyncMock()
+            yield db
+
+        from app.core.database import get_db
+
+        app.dependency_overrides[get_db] = _fake_db
+        resp = client.post(
+            "/purchased",
+            json={"book_id": str(BOOK_ID), "isbn_13": "9780441013593"},
+        )
+        assert resp.status_code == 201
+
+    def test_skips_edition_lookup_when_isbn_not_provided(self, client):
+        book = MagicMock()
+        book.id = BOOK_ID
+        ub = _make_user_book(status="purchased")
+
+        execute_calls = []
+
+        async def _fake_db():
+            db = AsyncMock()
+
+            async def _execute(q, *args, **kwargs):
+                execute_calls.append(q)
+                if len(execute_calls) == 1:
+                    return _scalar_result(book)
+                elif len(execute_calls) == 2:
+                    return _none_result()
+                else:
+                    return _scalar_one_result(ub)
+
+            db.execute = _execute
+            db.add = MagicMock()
+            db.commit = AsyncMock()
+            db.refresh = AsyncMock()
+            yield db
+
+        from app.core.database import get_db
+
+        app.dependency_overrides[get_db] = _fake_db
+        resp = client.post("/purchased", json={"book_id": str(BOOK_ID)})
+        assert resp.status_code == 201
+        # Only 3 execute calls: book lookup, user_book lookup, re-fetch
+        assert len(execute_calls) == 3
+
+
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 
