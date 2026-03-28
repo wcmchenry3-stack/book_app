@@ -50,12 +50,16 @@
       "./jest.setup.ts"
     ],
     "collectCoverageFrom": [
-      "theme/**/*.{ts,tsx}",
+      "app/**/*.{ts,tsx}",
       "components/**/*.{ts,tsx}",
       "contexts/**/*.{ts,tsx}",
-      "app/(tabs)/wishlist.tsx",
-      "app/(tabs)/my-books.tsx",
-      "!theme/index.ts"
+      "hooks/**/*.{ts,tsx}",
+      "lib/**/*.{ts,tsx}",
+      "src/i18n/**/*.{ts,tsx}",
+      "theme/**/*.{ts,tsx}",
+      "!theme/index.ts",
+      "!app/(tabs)/_layout.tsx",
+      "!app/_layout.tsx"
     ],
     "transformIgnorePatterns": [
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|i18next|react-i18next)"
