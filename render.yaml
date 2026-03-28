@@ -23,7 +23,7 @@ services:
     name: bookshelf-web
     env: static
     region: oregon
-    buildCommand: npm ci && printf "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=%s\n" "$EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID" > .env && npx expo export --platform web --clear
+    buildCommand: npm ci && printf "EXPO_PUBLIC_API_URL=%s\nEXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=%s\n" "$EXPO_PUBLIC_API_URL" "$EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID" > .env && npx expo export --platform web --clear
     staticPublishPath: dist
     rootDir: frontend
     pullRequestPreviewsEnabled: false
@@ -32,6 +32,9 @@ services:
         source: /*
         destination: /index.html
     headers:
+      - path: /*
+        name: Cross-Origin-Opener-Policy
+        value: unsafe-none
       - path: /*
         name: X-Frame-Options
         value: DENY
