@@ -23,7 +23,7 @@ services:
     name: bookshelf-web
     env: static
     region: oregon
-    buildCommand: npm ci && npx expo export --platform web --clear
+    buildCommand: npm ci && printf "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=%s\n" "$EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID" > .env && npx expo export --platform web --clear
     staticPublishPath: dist
     rootDir: frontend
     pullRequestPreviewsEnabled: false
