@@ -386,6 +386,162 @@ describe('ScanScreen — web camera mode', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Mode switch — camera controls disappear when switching to search
+// ---------------------------------------------------------------------------
+describe('ScanScreen — mode switch hides camera controls (native)', () => {
+  it('hides capture and flip buttons after switching to search mode', () => {
+    const { getByLabelText, queryByLabelText } = render(<ScanScreen />);
+    // Camera controls visible initially
+    expect(getByLabelText('Capture book cover')).toBeTruthy();
+    expect(getByLabelText('Flip camera')).toBeTruthy();
+    // Switch to search
+    fireEvent.press(getByLabelText('Text search mode'));
+    // Camera controls gone
+    expect(queryByLabelText('Capture book cover')).toBeNull();
+    expect(queryByLabelText('Flip camera')).toBeNull();
+  });
+
+  it('shows search input after switching to search mode', () => {
+    const { getByLabelText } = render(<ScanScreen />);
+    fireEvent.press(getByLabelText('Text search mode'));
+    expect(getByLabelText('Book title or author search')).toBeTruthy();
+  });
+
+  it('shows capture and flip buttons after switching back to camera mode', () => {
+    const { getByLabelText } = render(<ScanScreen />);
+    fireEvent.press(getByLabelText('Text search mode'));
+    fireEvent.press(getByLabelText('Camera scan mode'));
+    expect(getByLabelText('Capture book cover')).toBeTruthy();
+    expect(getByLabelText('Flip camera')).toBeTruthy();
+  });
+});
+
+describe('ScanScreen — mode switch hides camera controls (web)', () => {
+  setPlatform('web');
+
+  function getWebInput(utils: ReturnType<typeof render>) {
+    const [input] = utils.UNSAFE_getAllByType('input' as unknown as React.ComponentType);
+    return input;
+  }
+
+  it('hides capture button and file input after switching to search mode', () => {
+    const utils = render(<ScanScreen />);
+    // Camera mode: capture button present
+    expect(utils.getByLabelText('Capture book cover')).toBeTruthy();
+    // Switch to search
+    fireEvent.press(utils.getByLabelText('Text search mode'));
+    // Capture button gone; file input no longer rendered
+    expect(utils.queryByLabelText('Capture book cover')).toBeNull();
+    // UNSAFE_getAllByType throws on empty — use try/catch to assert absence
+    expect(() => utils.UNSAFE_getAllByType('input' as unknown as React.ComponentType)).toThrow();
+  });
+
+  it('shows capture button and file input after switching back to camera mode', () => {
+    const utils = render(<ScanScreen />);
+    fireEvent.press(utils.getByLabelText('Text search mode'));
+    fireEvent.press(utils.getByLabelText('Camera scan mode'));
+    expect(utils.getByLabelText('Capture book cover')).toBeTruthy();
+    const input = getWebInput(utils);
+    expect(input.props.type).toBe('file');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Full end-to-end flows
+// ---------------------------------------------------------------------------
+describe('ScanScreen — full native capture → wishlist flow', () => {
+  it('captures, shows picker, selects book, posts to wishlist, alerts success', async () => {
+    const book = { title: 'Dune', author: 'Herbert' };
+    mockTakePictureAsync.mockResolvedValue({ uri: 'file://test.jpg' });
+    mockPost
+      .mockResolvedValueOnce({ data: [book] }) // /scan
+      .mockResolvedValueOnce({}); // /wishlist
+    const { getByLabelText, getByTestId } = render(<ScanScreen />);
+
+    // Step 1: press capture
+    await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
+
+    // Step 2: picker appears
+    await waitFor(() => expect(getByTestId('select-book-0')).toBeTruthy());
+    expect(mockPost).toHaveBeenCalledWith('/scan', expect.any(FormData), expect.any(Object));
+
+    // Step 3: select the book
+    await act(async () => fireEvent.press(getByTestId('select-book-0')));
+
+    // Step 4: wishlist POST and success alert
+    expect(mockPost).toHaveBeenCalledWith('/wishlist', expect.objectContaining({ title: 'Dune' }));
+    expect(Alert.alert).toHaveBeenCalledWith('Added to wishlist', expect.any(String));
+  });
+
+  it('returns to idle if wishlist save fails', async () => {
+    const book = { title: 'Dune', author: 'Herbert' };
+    mockTakePictureAsync.mockResolvedValue({ uri: 'file://test.jpg' });
+    mockPost
+      .mockResolvedValueOnce({ data: [book] })
+      .mockRejectedValueOnce(new Error('save failed'));
+    const { getByLabelText, getByTestId, queryByTestId } = render(<ScanScreen />);
+
+    await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
+    await waitFor(() => expect(getByTestId('select-book-0')).toBeTruthy());
+    await act(async () => fireEvent.press(getByTestId('select-book-0')));
+
+    expect(Alert.alert).toHaveBeenCalledWith('Could not save', expect.any(String));
+    // Picker is dismissed after failed save
+    expect(queryByTestId('select-book-0')).toBeNull();
+  });
+});
+
+describe('ScanScreen — full web capture → wishlist flow', () => {
+  setPlatform('web');
+
+  function getWebInput(utils: ReturnType<typeof render>) {
+    const [input] = utils.UNSAFE_getAllByType('input' as unknown as React.ComponentType);
+    return input;
+  }
+
+  it('selects file, shows picker, selects book, posts to wishlist, alerts success', async () => {
+    const book = { title: 'Dune', author: 'Herbert' };
+    const mockFile = new File(['img'], 'scan.jpg', { type: 'image/jpeg' });
+    mockPost
+      .mockResolvedValueOnce({ data: [book] }) // /scan
+      .mockResolvedValueOnce({}); // /wishlist
+    const utils = render(<ScanScreen />);
+
+    // Step 1: fire file change
+    const input = getWebInput(utils);
+    await act(async () => fireEvent(input, 'change', { target: { files: [mockFile] } }));
+
+    // Step 2: picker appears
+    await waitFor(() => expect(utils.getByTestId('select-book-0')).toBeTruthy());
+    expect(mockPost).toHaveBeenCalledWith('/scan', expect.any(FormData), expect.any(Object));
+
+    // Step 3: select the book
+    await act(async () => fireEvent.press(utils.getByTestId('select-book-0')));
+
+    // Step 4: wishlist POST and success alert
+    expect(mockPost).toHaveBeenCalledWith('/wishlist', expect.objectContaining({ title: 'Dune' }));
+    expect(Alert.alert).toHaveBeenCalledWith('Added to wishlist', expect.any(String));
+  });
+
+  it('returns to idle if wishlist save fails after web scan', async () => {
+    const book = { title: 'Dune', author: 'Herbert' };
+    const mockFile = new File(['img'], 'scan.jpg', { type: 'image/jpeg' });
+    mockPost
+      .mockResolvedValueOnce({ data: [book] })
+      .mockRejectedValueOnce(new Error('save failed'));
+    const utils = render(<ScanScreen />);
+
+    const input = getWebInput(utils);
+    await act(async () => fireEvent(input, 'change', { target: { files: [mockFile] } }));
+    await waitFor(() => expect(utils.getByTestId('select-book-0')).toBeTruthy());
+    await act(async () => fireEvent.press(utils.getByTestId('select-book-0')));
+
+    expect(Alert.alert).toHaveBeenCalledWith('Could not save', expect.any(String));
+    expect(utils.queryByTestId('select-book-0')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Select book
 // ---------------------------------------------------------------------------
 describe('ScanScreen — select book', () => {
