@@ -23,7 +23,7 @@ describe('ErrorBoundary', () => {
     const { getByText } = render(
       <ErrorBoundary>
         <Bomb shouldThrow={false} />
-      </ErrorBoundary>,
+      </ErrorBoundary>
     );
     expect(() => getByText('Something went wrong')).toThrow();
   });
@@ -32,7 +32,7 @@ describe('ErrorBoundary', () => {
     const { getByText } = render(
       <ErrorBoundary>
         <Bomb shouldThrow={true} />
-      </ErrorBoundary>,
+      </ErrorBoundary>
     );
     expect(getByText('Something went wrong')).toBeTruthy();
     expect(getByText('The app ran into an unexpected error.')).toBeTruthy();
@@ -43,12 +43,12 @@ describe('ErrorBoundary', () => {
     render(
       <ErrorBoundary>
         <Bomb shouldThrow={true} />
-      </ErrorBoundary>,
+      </ErrorBoundary>
     );
     expect(consoleError).toHaveBeenCalledWith(
       '[ErrorBoundary] Unhandled error:',
       expect.any(Error),
-      expect.anything(),
+      expect.anything()
     );
   });
 
@@ -56,14 +56,14 @@ describe('ErrorBoundary', () => {
     const { getByText, rerender } = render(
       <ErrorBoundary>
         <Bomb shouldThrow={true} />
-      </ErrorBoundary>,
+      </ErrorBoundary>
     );
 
     // Swap to non-throwing child first so the reset re-render succeeds
     rerender(
       <ErrorBoundary>
         <Bomb shouldThrow={false} />
-      </ErrorBoundary>,
+      </ErrorBoundary>
     );
 
     fireEvent.press(getByText('Try again'));
