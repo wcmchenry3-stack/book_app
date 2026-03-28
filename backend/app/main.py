@@ -2,8 +2,10 @@ import logging
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from sqlalchemy import text
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
@@ -12,6 +14,7 @@ from app.api.books import router as books_router
 from app.api.scan import router as scan_router
 from app.api.user_books import router as user_books_router
 from app.core.config import settings
+from app.core.database import AsyncSessionLocal
 from app.core.limiter import limiter
 
 logging.basicConfig(
@@ -54,5 +57,16 @@ app.include_router(user_books_router)
 
 
 @app.get("/health")
-async def health() -> dict:
-    return {"status": "ok", "environment": settings.environment}
+async def health() -> JSONResponse:
+    try:
+        async with AsyncSessionLocal() as session:
+            await session.execute(text("SELECT 1"))
+        db_status = "ok"
+    except Exception:
+        db_status = "error"
+
+    healthy = db_status == "ok"
+    return JSONResponse(
+        status_code=200 if healthy else 503,
+        content={"status": "ok" if healthy else "degraded", "db": db_status},
+    )
