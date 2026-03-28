@@ -16,10 +16,20 @@ from app.api.user_books import router as user_books_router
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal
 from app.core.limiter import limiter
+from app.core.logging import configure_logging, new_request_id, request_id_var
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s"
-)
+configure_logging()
+
+logger = logging.getLogger(__name__)
+
+
+class RequestIdMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next) -> Response:
+        rid = new_request_id()
+        request_id_var.set(rid)
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = rid
+        return response
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -42,6 +52,7 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestIdMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
