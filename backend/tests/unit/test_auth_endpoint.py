@@ -102,7 +102,10 @@ class TestGoogleAuth:
             patch("app.api.auth.verify_google_id_token", return_value=GOOGLE_CLAIMS),
             patch("app.api.auth.settings") as mock_settings,
             patch("app.api.auth.create_access_token", return_value=FAKE_ACCESS),
-            patch("app.api.auth.create_refresh_token", return_value=(FAKE_REFRESH, FAKE_JTI)),
+            patch(
+                "app.api.auth.create_refresh_token",
+                return_value=(FAKE_REFRESH, FAKE_JTI),
+            ),
         ):
             mock_settings.allowed_emails_list = []
             mock_settings.jwt_expiry_hours = 24
@@ -126,7 +129,10 @@ class TestGoogleAuth:
             patch("app.api.auth.verify_google_id_token", return_value=GOOGLE_CLAIMS),
             patch("app.api.auth.settings") as mock_settings,
             patch("app.api.auth.create_access_token", return_value=FAKE_ACCESS),
-            patch("app.api.auth.create_refresh_token", return_value=(FAKE_REFRESH, FAKE_JTI)),
+            patch(
+                "app.api.auth.create_refresh_token",
+                return_value=(FAKE_REFRESH, FAKE_JTI),
+            ),
         ):
             mock_settings.allowed_emails_list = []
             mock_settings.jwt_expiry_hours = 24
@@ -148,7 +154,10 @@ class TestGoogleAuth:
             patch("app.api.auth.verify_google_id_token", return_value=claims),
             patch("app.api.auth.settings") as mock_settings,
             patch("app.api.auth.create_access_token", return_value=FAKE_ACCESS),
-            patch("app.api.auth.create_refresh_token", return_value=(FAKE_REFRESH, FAKE_JTI)),
+            patch(
+                "app.api.auth.create_refresh_token",
+                return_value=(FAKE_REFRESH, FAKE_JTI),
+            ),
         ):
             mock_settings.allowed_emails_list = []
             mock_settings.jwt_expiry_hours = 24
@@ -168,7 +177,10 @@ class TestGoogleAuth:
             patch("app.api.auth.verify_google_id_token", return_value=GOOGLE_CLAIMS),
             patch("app.api.auth.settings") as mock_settings,
             patch("app.api.auth.create_access_token", return_value=FAKE_ACCESS),
-            patch("app.api.auth.create_refresh_token", return_value=(FAKE_REFRESH, FAKE_JTI)),
+            patch(
+                "app.api.auth.create_refresh_token",
+                return_value=(FAKE_REFRESH, FAKE_JTI),
+            ),
         ):
             mock_settings.allowed_emails_list = []
             mock_settings.jwt_expiry_hours = 24
@@ -231,7 +243,11 @@ class TestRefresh:
 
         with patch(
             "app.api.auth.decode_token",
-            return_value={"sub": str(FAKE_USER_ID), "type": "refresh", "jti": "unknown"},
+            return_value={
+                "sub": str(FAKE_USER_ID),
+                "type": "refresh",
+                "jti": "unknown",
+            },
         ):
             resp = TestClient(app).post("/auth/refresh", json={"refresh_token": "tok"})
 
@@ -315,10 +331,17 @@ class TestRefresh:
         with (
             patch(
                 "app.api.auth.decode_token",
-                return_value={"sub": str(FAKE_USER_ID), "type": "refresh", "jti": FAKE_JTI},
+                return_value={
+                    "sub": str(FAKE_USER_ID),
+                    "type": "refresh",
+                    "jti": FAKE_JTI,
+                },
             ),
             patch("app.api.auth.create_access_token", return_value=FAKE_ACCESS),
-            patch("app.api.auth.create_refresh_token", return_value=(FAKE_REFRESH, FAKE_JTI)),
+            patch(
+                "app.api.auth.create_refresh_token",
+                return_value=(FAKE_REFRESH, FAKE_JTI),
+            ),
             patch("app.api.auth.settings") as mock_settings,
         ):
             mock_settings.jwt_expiry_hours = 24
@@ -353,10 +376,17 @@ class TestRefresh:
         with (
             patch(
                 "app.api.auth.decode_token",
-                return_value={"sub": str(FAKE_USER_ID), "type": "refresh", "jti": FAKE_JTI},
+                return_value={
+                    "sub": str(FAKE_USER_ID),
+                    "type": "refresh",
+                    "jti": FAKE_JTI,
+                },
             ),
             patch("app.api.auth.create_access_token", return_value=FAKE_ACCESS),
-            patch("app.api.auth.create_refresh_token", return_value=(FAKE_REFRESH, FAKE_JTI)),
+            patch(
+                "app.api.auth.create_refresh_token",
+                return_value=(FAKE_REFRESH, FAKE_JTI),
+            ),
             patch("app.api.auth.settings") as mock_settings,
         ):
             mock_settings.jwt_expiry_hours = 24
