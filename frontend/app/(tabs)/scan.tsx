@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { isAxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 
 import { BookCandidatePicker, EnrichedBook } from '../../components/BookCandidatePicker';
@@ -55,9 +56,13 @@ export default function ScanScreen() {
 
       setCandidates(response.data);
       setScreenState('picker');
-    } catch {
+    } catch (err) {
       setScreenState('idle');
-      Alert.alert(t('scanFailedTitle'), t('scanFailedMessage'));
+      if (isAxiosError(err) && err.response?.status === 503) {
+        Alert.alert(t('scanUnavailableTitle'), t('scanUnavailableMessage'));
+      } else {
+        Alert.alert(t('scanFailedTitle'), t('scanFailedMessage'));
+      }
     }
   }
 

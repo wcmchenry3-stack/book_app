@@ -7,7 +7,11 @@ import logging
 import httpx
 
 from app.core.config import settings
-from app.services.book_identifier import BookCandidate, BookIdentifierService
+from app.services.book_identifier import (
+    BookCandidate,
+    BookIdentifierService,
+    ScanUnavailableError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -49,13 +53,22 @@ class ChatGPTVisionIdentifier(BookIdentifierService):
             ],
         }
 
-        async with httpx.AsyncClient(timeout=30) as client:
-            resp = await client.post(
-                OPENAI_URL,
-                json=payload,
-                headers={"Authorization": f"Bearer {settings.openai_api_key}"},
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                resp = await client.post(
+                    OPENAI_URL,
+                    json=payload,
+                    headers={"Authorization": f"Bearer {settings.openai_api_key}"},
+                )
+                resp.raise_for_status()
+        except httpx.TimeoutException as exc:
+            logger.warning("OpenAI vision request timed out: %s", exc)
+            raise ScanUnavailableError("Vision API timed out") from exc
+        except httpx.HTTPStatusError as exc:
+            logger.warning(
+                "OpenAI vision request failed with HTTP %s", exc.response.status_code
             )
-            resp.raise_for_status()
+            raise ScanUnavailableError("Vision API returned an error") from exc
 
         content = resp.json()["choices"][0]["message"]["content"].strip()
 
