@@ -9,6 +9,7 @@ from app.core.database import get_db
 from app.core.limiter import limiter
 from app.models.user import User
 from app.schemas.book import EnrichedBook
+from app.services.book_identifier import ScanUnavailableError
 from app.services.chatgpt_vision import ChatGPTVisionIdentifier
 from app.services.deduplication import DeduplicationService
 from app.services.enrichment import EnrichmentService
@@ -53,7 +54,13 @@ async def scan(
         )
 
     identifier = ChatGPTVisionIdentifier()
-    candidates = await identifier.identify(image_bytes)
+    try:
+        candidates = await identifier.identify(image_bytes)
+    except ScanUnavailableError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="scan_unavailable",
+        )
 
     if not candidates:
         return []

@@ -13,6 +13,10 @@ class BookCandidate:
     isbn_10: str | None = None
 
 
+class ScanUnavailableError(Exception):
+    """Raised when the vision API is unreachable or times out."""
+
+
 class BookIdentifierService(ABC):
     @abstractmethod
     async def identify(self, image_bytes: bytes) -> list[BookCandidate]:

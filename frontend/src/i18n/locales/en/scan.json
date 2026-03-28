@@ -24,5 +24,7 @@
   "addedTitle": "Added to wishlist",
   "addedMessage": "\"{{title}}\" has been added to your wishlist.",
   "couldNotSaveTitle": "Could not save",
-  "couldNotSaveMessage": "Failed to add book to wishlist. Please try again."
+  "couldNotSaveMessage": "Failed to add book to wishlist. Please try again.",
+  "scanUnavailableTitle": "Scan unavailable",
+  "scanUnavailableMessage": "Cover scanning is temporarily unavailable. Try searching by title instead."
 }
