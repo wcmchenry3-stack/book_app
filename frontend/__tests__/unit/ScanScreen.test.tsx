@@ -433,9 +433,7 @@ describe('ScanScreen — mode switch hides camera controls (web)', () => {
     // Capture button gone; file input no longer rendered
     expect(utils.queryByLabelText('Capture book cover')).toBeNull();
     // UNSAFE_getAllByType throws on empty — use try/catch to assert absence
-    expect(() =>
-      utils.UNSAFE_getAllByType('input' as unknown as React.ComponentType)
-    ).toThrow();
+    expect(() => utils.UNSAFE_getAllByType('input' as unknown as React.ComponentType)).toThrow();
   });
 
   it('shows capture button and file input after switching back to camera mode', () => {
