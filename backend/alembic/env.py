@@ -19,11 +19,12 @@ target_metadata = Base.metadata
 
 
 def include_object(object, name, type_, reflected, compare_to):
-    # Indexes are managed explicitly in migrations using the project's idx_ naming
-    # convention. SQLAlchemy autogenerate uses ix_ names, causing false positives in
-    # `alembic check`. Excluding index objects prevents these spurious diffs while
-    # still detecting table/column/constraint changes.
-    if type_ == "index":
+    # Indexes and unique constraints are managed explicitly in migrations using the
+    # project's idx_/uq_ naming conventions. SQLAlchemy autogenerate uses ix_ names
+    # and unnamed unique constraints, causing false positives in `alembic check`.
+    # Excluding these object types prevents spurious diffs while still detecting
+    # table, column, and check constraint changes.
+    if type_ in ("index", "unique_constraint"):
         return False
     return True
 
