@@ -1,14 +1,18 @@
 /**
  * i18n infrastructure tests.
  *
+ * Architecture: en is bundled statically (always synchronous), all other
+ * locales are lazy-loaded via i18next-resources-to-backend using the importMap.
+ *
  * Validates that:
- * - All 8 namespaces initialise for the `en` locale and return strings
- * - Exactly 11 locales are registered (one per entry in LOCALES; ar/he excluded until RTL ready)
+ * - importMap covers all 10 non-en active locales with 8 namespaces each
+ * - en JSON files have the correct keys and values (via direct require)
  * - No English key has __NEEDS_TRANSLATION__ as its value
- * - RTL_LOCALES is empty (no RTL locales are currently active)
+ * - Exactly 11 locales are active (ar/he excluded until RTL ready)
+ * - RTL_LOCALES is empty
  */
 
-import i18n from '../../src/i18n/i18n';
+import { importMap } from '../../src/i18n/i18n';
 import { LOCALES, RTL_LOCALES } from '../../src/i18n/locales';
 
 const NAMESPACES = [
@@ -22,43 +26,63 @@ const NAMESPACES = [
   'components',
 ] as const;
 
-describe('i18n initialisation', () => {
-  it('registers exactly 11 locales', () => {
-    const registered = Object.keys((i18n as any).store?.data ?? {});
-    expect(registered.length).toBe(LOCALES.length);
-    expect(registered.length).toBe(11);
+const NON_EN_LOCALES = LOCALES.filter((l) => l.code !== 'en').map((l) => l.code);
+
+describe('importMap structure', () => {
+  it('covers all 10 non-en active locales', () => {
+    expect(Object.keys(importMap).length).toBe(NON_EN_LOCALES.length);
+    for (const code of NON_EN_LOCALES) {
+      expect(importMap[code]).toBeDefined();
+    }
   });
 
-  it.each(NAMESPACES)('en/%s namespace exists and has at least one string', (ns) => {
-    const bundle = (i18n as any).store?.data?.en?.[ns];
-    expect(bundle).toBeDefined();
-    const keys = Object.keys(bundle ?? {});
-    expect(keys.length).toBeGreaterThan(0);
+  it('has all 8 namespaces for every non-en locale', () => {
+    for (const code of NON_EN_LOCALES) {
+      for (const ns of NAMESPACES) {
+        expect(typeof importMap[code]?.[ns]).toBe('function');
+      }
+    }
+  });
+
+  it('does not include inactive RTL locales (ar, he)', () => {
+    expect(importMap['ar']).toBeUndefined();
+    expect(importMap['he']).toBeUndefined();
+  });
+
+  it('does not include en (en is statically bundled)', () => {
+    expect(importMap['en']).toBeUndefined();
+  });
+});
+
+describe('en namespace content', () => {
+  it.each(NAMESPACES)('en/%s has at least one key', (ns) => {
+    const data = require(`../../src/i18n/locales/en/${ns}.json`);
+    expect(Object.keys(data).length).toBeGreaterThan(0);
   });
 
   it('en/auth.appTitle is "Bookshelf"', () => {
-    expect(i18n.t('appTitle', { ns: 'auth', lng: 'en' })).toBe('Bookshelf');
+    const data = require('../../src/i18n/locales/en/auth.json');
+    expect(data.appTitle).toBe('Bookshelf');
   });
 
   it('en/tabs has all 4 tab keys', () => {
-    const bundle = (i18n as any).store?.data?.en?.tabs ?? {};
-    expect(bundle.scan).toBeDefined();
-    expect(bundle.wishlist).toBeDefined();
-    expect(bundle.myBooks).toBeDefined();
-    expect(bundle.settings).toBeDefined();
+    const data = require('../../src/i18n/locales/en/tabs.json');
+    expect(data.scan).toBeDefined();
+    expect(data.wishlist).toBeDefined();
+    expect(data.myBooks).toBeDefined();
+    expect(data.settings).toBeDefined();
   });
 
   it('en/my-books has all status tab keys', () => {
-    const statusTab = (i18n as any).store?.data?.en?.['my-books']?.statusTab ?? {};
-    expect(statusTab.all).toBeDefined();
-    expect(statusTab.wishlisted).toBeDefined();
-    expect(statusTab.purchased).toBeDefined();
-    expect(statusTab.reading).toBeDefined();
-    expect(statusTab.read).toBeDefined();
+    const data = require('../../src/i18n/locales/en/my-books.json');
+    expect(data.statusTab?.all).toBeDefined();
+    expect(data.statusTab?.wishlisted).toBeDefined();
+    expect(data.statusTab?.purchased).toBeDefined();
+    expect(data.statusTab?.reading).toBeDefined();
+    expect(data.statusTab?.read).toBeDefined();
   });
 
   it('no English key has __NEEDS_TRANSLATION__ as value', () => {
-    const enData = (i18n as any).store?.data?.en ?? {};
     const problematic: string[] = [];
 
     function checkValues(obj: unknown, path: string) {
@@ -71,11 +95,18 @@ describe('i18n initialisation', () => {
       }
     }
 
-    for (const [ns, bundle] of Object.entries(enData)) {
-      checkValues(bundle, `en.${ns}`);
+    for (const ns of NAMESPACES) {
+      const data = require(`../../src/i18n/locales/en/${ns}.json`);
+      checkValues(data, `en.${ns}`);
     }
 
     expect(problematic).toEqual([]);
+  });
+});
+
+describe('i18n locale config', () => {
+  it('registers exactly 11 active locales', () => {
+    expect(LOCALES.length).toBe(11);
   });
 });
 
