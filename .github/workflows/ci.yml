@@ -103,6 +103,3 @@ jobs:
           DATABASE_URL: postgresql://test:test@localhost:5432/test
         run: alembic downgrade -1
 
-  openai-policy:
-    uses: wcmchenry3-stack/.github/.github/workflows/called-openai-policy.yml@main
-    secrets: inherit
