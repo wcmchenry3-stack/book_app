@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timedelta, timezone
 
 import jwt
@@ -17,15 +18,19 @@ def create_access_token(user_id: str, email: str) -> str:
     return jwt.encode(payload, settings.jwt_private_key, algorithm="RS256")
 
 
-def create_refresh_token(user_id: str) -> str:
+def create_refresh_token(user_id: str) -> tuple[str, str]:
+    """Return (encoded_jwt, jti). The jti must be stored in the DB for revocation."""
     now = datetime.now(timezone.utc)
+    jti = str(uuid.uuid4())
     payload = {
         "sub": user_id,
         "iat": now,
         "exp": now + timedelta(days=settings.refresh_token_expiry_days),
         "type": "refresh",
+        "jti": jti,
     }
-    return jwt.encode(payload, settings.jwt_private_key, algorithm="RS256")
+    token = jwt.encode(payload, settings.jwt_private_key, algorithm="RS256")
+    return token, jti
 
 
 def decode_token(token: str) -> dict:

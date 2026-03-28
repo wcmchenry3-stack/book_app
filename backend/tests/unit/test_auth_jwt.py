@@ -70,21 +70,27 @@ class TestCreateAccessToken:
 class TestCreateRefreshToken:
     def test_contains_correct_claims(self, rsa_key_pair):
         _, public_pem = rsa_key_pair
-        token = create_refresh_token("user-xyz")
+        token, jti = create_refresh_token("user-xyz")
         payload = jwt.decode(token, public_pem, algorithms=["RS256"])
         assert payload["sub"] == "user-xyz"
         assert payload["type"] == "refresh"
+        assert payload["jti"] == jti
+
+    def test_returns_unique_jti_each_call(self, rsa_key_pair):
+        _, jti1 = create_refresh_token("u")
+        _, jti2 = create_refresh_token("u")
+        assert jti1 != jti2
 
     def test_refresh_has_no_email_claim(self, rsa_key_pair):
         _, public_pem = rsa_key_pair
-        token = create_refresh_token("user-xyz")
+        token, _ = create_refresh_token("user-xyz")
         payload = jwt.decode(token, public_pem, algorithms=["RS256"])
         assert "email" not in payload
 
     def test_expiry_matches_settings(self, rsa_key_pair, patch_settings):
         _, public_pem = rsa_key_pair
         patch_settings.refresh_token_expiry_days = 3
-        token = create_refresh_token("u")
+        token, _ = create_refresh_token("u")
         payload = jwt.decode(token, public_pem, algorithms=["RS256"])
         now = datetime.now(timezone.utc)
         exp = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
@@ -100,7 +106,7 @@ class TestDecodeToken:
         assert payload["type"] == "access"
 
     def test_decodes_valid_refresh_token(self):
-        token = create_refresh_token("u2")
+        token, _ = create_refresh_token("u2")
         payload = decode_token(token)
         assert payload["sub"] == "u2"
         assert payload["type"] == "refresh"
