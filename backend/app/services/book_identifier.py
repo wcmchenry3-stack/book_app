@@ -1,6 +1,5 @@
-"""Abstract interface for book identification from images."""
+"""Shared types for book identification."""
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 
@@ -15,9 +14,3 @@ class BookCandidate:
 
 class ScanUnavailableError(Exception):
     """Raised when the vision API is unreachable or times out."""
-
-
-class BookIdentifierService(ABC):
-    @abstractmethod
-    async def identify(self, image_bytes: bytes) -> list[BookCandidate]:
-        """Identify books from a cover image. Returns up to 3 candidates ranked by confidence."""

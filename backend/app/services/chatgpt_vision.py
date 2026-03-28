@@ -7,11 +7,7 @@ import logging
 import httpx
 
 from app.core.config import settings
-from app.services.book_identifier import (
-    BookCandidate,
-    BookIdentifierService,
-    ScanUnavailableError,
-)
+from app.services.book_identifier import BookCandidate, ScanUnavailableError
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +27,7 @@ Return ONLY a valid JSON array, no other text. Example:
 [{"title":"Dune","author":"Frank Herbert","confidence":0.97,"isbn_13":"9780441013593","isbn_10":null}]"""
 
 
-class ChatGPTVisionIdentifier(BookIdentifierService):
+class ChatGPTVisionIdentifier:
     async def identify(self, image_bytes: bytes) -> list[BookCandidate]:
         b64 = base64.standard_b64encode(image_bytes).decode()
 
