@@ -89,21 +89,32 @@ export default function MyBooksScreen() {
   async function handleAdvanceStatus(item: UserBook) {
     const next = NEXT_STATUS[item.status];
     if (!next) return;
+    // Optimistic: on "all" tab update status in-place; on filtered tabs remove the item
+    setBooks((prev) =>
+      activeTab === 'all'
+        ? prev.map((b) => (b.id === item.id ? { ...b, status: next } : b))
+        : prev.filter((b) => b.id !== item.id)
+    );
+    setSelected(null);
     try {
       await api.patch(`/user-books/${item.id}`, { status: next });
-      setSelected(null);
-      fetchBooks();
     } catch {
+      setBooks((prev) =>
+        activeTab === 'all'
+          ? prev.map((b) => (b.id === item.id ? { ...b, status: item.status } : b))
+          : [...prev, item]
+      );
       Alert.alert(t('errorTitle', { ns: 'common' }), t('errorUpdateStatus'));
     }
   }
 
   async function handleRemove(item: UserBook) {
+    setBooks((prev) => prev.filter((b) => b.id !== item.id));
+    setSelected(null);
     try {
       await api.delete(`/user-books/${item.id}`);
-      setSelected(null);
-      setBooks((prev) => prev.filter((b) => b.id !== item.id));
     } catch {
+      setBooks((prev) => [...prev, item]);
       Alert.alert(t('errorTitle', { ns: 'common' }), t('errorRemoveBook'));
     }
   }
