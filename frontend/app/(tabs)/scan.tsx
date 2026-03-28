@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { isAxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +11,7 @@ import { api } from '../../lib/api';
 
 type InputMode = 'camera' | 'search';
 type ScreenState = 'idle' | 'loading' | 'picker';
+type CameraFacing = 'back' | 'front';
 
 export default function ScanScreen() {
   const { theme } = useTheme();
@@ -20,6 +21,7 @@ export default function ScanScreen() {
   const [screenState, setScreenState] = useState<ScreenState>('idle');
   const [candidates, setCandidates] = useState<EnrichedBook[]>([]);
   const [query, setQuery] = useState('');
+  const [facing, setFacing] = useState<CameraFacing>('back');
   const cameraRef = useRef<CameraView>(null);
 
   async function handleCapture() {
@@ -38,11 +40,16 @@ export default function ScanScreen() {
       }
 
       const formData = new FormData();
-      formData.append('file', {
-        uri: photo.uri,
-        name: 'scan.jpg',
-        type: 'image/jpeg',
-      } as unknown as Blob);
+      if (Platform.OS === 'web') {
+        const blob = await fetch(photo.uri).then((r) => r.blob());
+        formData.append('file', blob, 'scan.jpg');
+      } else {
+        formData.append('file', {
+          uri: photo.uri,
+          name: 'scan.jpg',
+          type: 'image/jpeg',
+        } as unknown as Blob);
+      }
 
       const response = await api.post<EnrichedBook[]>('/scan', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -106,14 +113,6 @@ export default function ScanScreen() {
     setScreenState('idle');
   }
 
-  if (screenState === 'loading') {
-    return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <LoadingSpinner message={t('loading')} />
-      </View>
-    );
-  }
-
   const modeToggle = (
     <View
       style={[
@@ -163,6 +162,13 @@ export default function ScanScreen() {
   );
 
   if (inputMode === 'search') {
+    if (screenState === 'loading') {
+      return (
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+          <LoadingSpinner message={t('loading')} />
+        </View>
+      );
+    }
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         {modeToggle}
@@ -205,7 +211,7 @@ export default function ScanScreen() {
     );
   }
 
-  // Camera mode
+  // Camera mode — permission checks
   if (!permission) {
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -240,21 +246,40 @@ export default function ScanScreen() {
     );
   }
 
+  // Keep CameraView always mounted during loading to prevent iOS re-permission prompt
   return (
     <View style={styles.container}>
-      <CameraView ref={cameraRef} style={styles.camera} facing="back">
+      <CameraView ref={cameraRef} style={styles.camera} facing={facing}>
         <View style={styles.overlay}>
           {modeToggle}
-          <View style={[styles.frame, { borderColor: theme.colors.primary }]} />
-          <Pressable
-            style={[styles.captureButton, { backgroundColor: theme.colors.primary }]}
-            onPress={handleCapture}
-            accessibilityRole="button"
-            accessibilityLabel={t('captureA11y')}
-            accessibilityHint={t('captureHint')}
-          >
-            <View style={[styles.captureInner, { backgroundColor: theme.colors.background }]} />
-          </Pressable>
+          {screenState === 'loading' ? (
+            <LoadingSpinner message={t('loading')} />
+          ) : (
+            <>
+              <View style={[styles.frame, { borderColor: theme.colors.primary }]} />
+              <View style={styles.cameraControls}>
+                <Pressable
+                  style={styles.flipButton}
+                  onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('flipCameraA11y')}
+                >
+                  <Text style={styles.flipButtonText}>{t('flipCamera')}</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.captureButton, { backgroundColor: theme.colors.primary }]}
+                  onPress={handleCapture}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('captureA11y')}
+                  accessibilityHint={t('captureHint')}
+                >
+                  <View
+                    style={[styles.captureInner, { backgroundColor: theme.colors.background }]}
+                  />
+                </Pressable>
+              </View>
+            </>
+          )}
         </View>
       </CameraView>
 
@@ -300,6 +325,25 @@ const styles = StyleSheet.create({
     height: 340,
     borderWidth: 2,
     borderRadius: 8,
+  },
+  cameraControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 24,
+  },
+  flipButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  flipButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 12,
   },
   captureButton: {
     width: 72,

@@ -129,5 +129,15 @@
     "description": "Alert message for a wishlist save failure",
     "tone": "friendly",
     "characterLimit": 70
+  },
+  "flipCamera": {
+    "description": "Short label on the button that flips between front and back camera",
+    "tone": "action",
+    "characterLimit": 10
+  },
+  "flipCameraA11y": {
+    "description": "Accessibility label for the flip camera button",
+    "tone": "neutral",
+    "characterLimit": 30
   }
 }
