@@ -56,6 +56,8 @@ services:
     envVars:
       - key: EXPO_PUBLIC_API_URL
         value: https://bookshelf-api-rxp3.onrender.com
+      - key: EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID
+        sync: false
 
 databases:
   - name: bookshelf-db
