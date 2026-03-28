@@ -3,12 +3,14 @@ export const LOCALES = [
   { code: 'fr-CA', label: 'French (Canadian)', nativeLabel: 'Français', flag: '🇨🇦', dir: 'ltr' },
   { code: 'es', label: 'Spanish', nativeLabel: 'Español', flag: '🇪🇸', dir: 'ltr' },
   { code: 'hi', label: 'Hindi', nativeLabel: 'हिन्दी', flag: '🇮🇳', dir: 'ltr' },
-  { code: 'ar', label: 'Arabic', nativeLabel: 'العربية', flag: '🇸🇦', dir: 'rtl' },
+  // ar — translations complete; re-enable once RTL layout mirroring is implemented
+  // { code: 'ar', label: 'Arabic', nativeLabel: 'العربية', flag: '🇸🇦', dir: 'rtl' },
   { code: 'zh', label: 'Chinese', nativeLabel: '中文', flag: '🇨🇳', dir: 'ltr' },
   { code: 'ja', label: 'Japanese', nativeLabel: '日本語', flag: '🇯🇵', dir: 'ltr' },
   { code: 'ko', label: 'Korean', nativeLabel: '한국어', flag: '🇰🇷', dir: 'ltr' },
   { code: 'pt', label: 'Portuguese', nativeLabel: 'Português', flag: '🇧🇷', dir: 'ltr' },
-  { code: 'he', label: 'Hebrew', nativeLabel: 'עברית', flag: '🇮🇱', dir: 'rtl' },
+  // he — translations complete; re-enable once RTL layout mirroring is implemented
+  // { code: 'he', label: 'Hebrew', nativeLabel: 'עברית', flag: '🇮🇱', dir: 'rtl' },
   { code: 'de', label: 'German', nativeLabel: 'Deutsch', flag: '🇩🇪', dir: 'ltr' },
   { code: 'nl', label: 'Dutch', nativeLabel: 'Nederlands', flag: '🇳🇱', dir: 'ltr' },
   { code: 'ru', label: 'Russian', nativeLabel: 'Русский', flag: '🇷🇺', dir: 'ltr' },
