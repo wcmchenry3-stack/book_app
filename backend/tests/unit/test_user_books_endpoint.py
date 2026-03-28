@@ -417,8 +417,8 @@ class TestAddPurchasedSuccess:
             db = AsyncMock()
             db.execute = AsyncMock(
                 side_effect=[
-                    _scalar_result(book),   # verify book exists
-                    _none_result(),          # no existing user_book → create
+                    _scalar_result(book),  # verify book exists
+                    _none_result(),  # no existing user_book → create
                     _scalar_one_result(ub),  # re-fetch after commit
                 ]
             )
@@ -442,9 +442,9 @@ class TestAddPurchasedSuccess:
             db = AsyncMock()
             db.execute = AsyncMock(
                 side_effect=[
-                    _scalar_result(book),   # verify book exists
-                    _scalar_result(ub),     # existing user_book found → update
-                    _scalar_one_result(ub), # re-fetch after commit
+                    _scalar_result(book),  # verify book exists
+                    _scalar_result(ub),  # existing user_book found → update
+                    _scalar_one_result(ub),  # re-fetch after commit
                 ]
             )
             db.commit = AsyncMock()
@@ -471,10 +471,10 @@ class TestAddPurchasedSuccess:
             db = AsyncMock()
             db.execute = AsyncMock(
                 side_effect=[
-                    _scalar_result(book),       # verify book exists
-                    _scalar_result(edition),    # resolve edition by ISBN
-                    _none_result(),             # no existing user_book → create
-                    _scalar_one_result(ub),     # re-fetch after commit
+                    _scalar_result(book),  # verify book exists
+                    _scalar_result(edition),  # resolve edition by ISBN
+                    _none_result(),  # no existing user_book → create
+                    _scalar_one_result(ub),  # re-fetch after commit
                 ]
             )
             db.add = MagicMock()
