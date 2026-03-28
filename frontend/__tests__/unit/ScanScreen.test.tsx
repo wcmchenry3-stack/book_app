@@ -139,7 +139,11 @@ describe('ScanScreen — search mode', () => {
 
   it('shows loading spinner while searching', async () => {
     let resolveGet!: (v: unknown) => void;
-    mockGet.mockReturnValue(new Promise((res) => { resolveGet = res; }));
+    mockGet.mockReturnValue(
+      new Promise((res) => {
+        resolveGet = res;
+      })
+    );
     const { getByLabelText, getByTestId } = renderInSearchMode();
     fireEvent.changeText(getByLabelText('Book title or author search'), 'Dune');
     fireEvent.press(getByLabelText('Search for book'));
@@ -237,7 +241,11 @@ describe('ScanScreen — native camera facing toggle', () => {
 describe('ScanScreen — native capture flow', () => {
   it('shows loading spinner during capture (camera stays mounted)', async () => {
     let resolveTake!: (v: unknown) => void;
-    mockTakePictureAsync.mockReturnValue(new Promise((res) => { resolveTake = res; }));
+    mockTakePictureAsync.mockReturnValue(
+      new Promise((res) => {
+        resolveTake = res;
+      })
+    );
     const { getByLabelText, getByTestId } = render(<ScanScreen />);
     fireEvent.press(getByLabelText('Capture book cover'));
     // Loading spinner visible while camera processes
@@ -302,9 +310,7 @@ describe('ScanScreen — web camera mode', () => {
   // RNTL's getByTestId doesn't traverse host string elements (e.g. <input>).
   // Use UNSAFE_getAllByType to find the raw HTML input in the test renderer tree.
   function getWebInput(utils: ReturnType<typeof render>) {
-    const [input] = utils.UNSAFE_getAllByType(
-      'input' as unknown as React.ComponentType
-    );
+    const [input] = utils.UNSAFE_getAllByType('input' as unknown as React.ComponentType);
     return input;
   }
 
@@ -321,16 +327,18 @@ describe('ScanScreen — web camera mode', () => {
     mockPost.mockResolvedValue({ data: [{ title: 'Dune', author: 'Herbert' }] });
     const utils = render(<ScanScreen />);
     const input = getWebInput(utils);
-    await act(async () =>
-      fireEvent(input, 'change', { target: { files: [mockFile] } })
-    );
+    await act(async () => fireEvent(input, 'change', { target: { files: [mockFile] } }));
     await waitFor(() => expect(utils.getByTestId('dismiss-picker')).toBeTruthy());
     expect(mockPost).toHaveBeenCalledWith('/scan', expect.any(FormData), expect.any(Object));
   });
 
   it('shows loading spinner during web file processing', async () => {
     let resolvePost!: (v: unknown) => void;
-    mockPost.mockReturnValue(new Promise((res) => { resolvePost = res; }));
+    mockPost.mockReturnValue(
+      new Promise((res) => {
+        resolvePost = res;
+      })
+    );
     const mockFile = new File(['img'], 'scan.jpg', { type: 'image/jpeg' });
     const utils = render(<ScanScreen />);
     const input = getWebInput(utils);
@@ -346,9 +354,7 @@ describe('ScanScreen — web camera mode', () => {
     mockPost.mockResolvedValue({ data: [] });
     const utils = render(<ScanScreen />);
     const input = getWebInput(utils);
-    await act(async () =>
-      fireEvent(input, 'change', { target: { files: [mockFile] } })
-    );
+    await act(async () => fireEvent(input, 'change', { target: { files: [mockFile] } }));
     expect(Alert.alert).toHaveBeenCalledWith('No books found', expect.any(String));
   });
 
@@ -357,9 +363,7 @@ describe('ScanScreen — web camera mode', () => {
     mockPost.mockRejectedValue(makeAxiosError(503));
     const utils = render(<ScanScreen />);
     const input = getWebInput(utils);
-    await act(async () =>
-      fireEvent(input, 'change', { target: { files: [mockFile] } })
-    );
+    await act(async () => fireEvent(input, 'change', { target: { files: [mockFile] } }));
     expect(Alert.alert).toHaveBeenCalledWith('Scan unavailable', expect.any(String));
   });
 
@@ -368,18 +372,14 @@ describe('ScanScreen — web camera mode', () => {
     mockPost.mockRejectedValue(new Error('network'));
     const utils = render(<ScanScreen />);
     const input = getWebInput(utils);
-    await act(async () =>
-      fireEvent(input, 'change', { target: { files: [mockFile] } })
-    );
+    await act(async () => fireEvent(input, 'change', { target: { files: [mockFile] } }));
     expect(Alert.alert).toHaveBeenCalledWith('Scan failed', expect.any(String));
   });
 
   it('does nothing when change fires with no file selected', async () => {
     const utils = render(<ScanScreen />);
     const input = getWebInput(utils);
-    await act(async () =>
-      fireEvent(input, 'change', { target: { files: [] } })
-    );
+    await act(async () => fireEvent(input, 'change', { target: { files: [] } }));
     expect(mockPost).not.toHaveBeenCalled();
     expect(Alert.alert).not.toHaveBeenCalled();
   });
