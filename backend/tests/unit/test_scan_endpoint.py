@@ -24,8 +24,14 @@ ENRICHED_BOOK = EnrichedBook(
 )
 
 
+_JPEG_MAGIC = b"\xff\xd8\xff\xe0"
+
+
 def _image_file(size_bytes: int = 100, content_type: str = "image/jpeg"):
-    return ("scan.jpg", io.BytesIO(b"x" * size_bytes), content_type)
+    # Prepend valid JPEG magic bytes so the file passes magic bytes validation.
+    # Pad to the requested size with neutral bytes.
+    padding = b"x" * max(0, size_bytes - len(_JPEG_MAGIC))
+    return ("scan.jpg", io.BytesIO(_JPEG_MAGIC + padding), content_type)
 
 
 @pytest.fixture

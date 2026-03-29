@@ -19,6 +19,7 @@ class Settings(BaseSettings):
 
     # External APIs
     openai_api_key: str = ""
+    openai_max_tokens: int = 512
     google_books_api_key: str = ""
     open_library_base_url: str = "https://openlibrary.org"
 
