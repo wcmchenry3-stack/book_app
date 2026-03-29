@@ -80,11 +80,11 @@ describe('WishlistScreen', () => {
   it('renders book titles and authors when data loaded', async () => {
     mockGet.mockResolvedValue({ data: [BOOK_1, BOOK_2] });
     const { getByText } = render(<WishlistScreen />);
-    // await act flushes the async fetchWishlist call and resulting state updates
-    await act(async () => {});
-    expect(getByText('Dune')).toBeTruthy();
-    expect(getByText('Frank Herbert')).toBeTruthy();
-    expect(getByText('Foundation')).toBeTruthy();
+    await waitFor(() => {
+      expect(getByText('Dune')).toBeTruthy();
+      expect(getByText('Frank Herbert')).toBeTruthy();
+      expect(getByText('Foundation')).toBeTruthy();
+    });
   });
 
   it('renders publish year when edition has one', async () => {
