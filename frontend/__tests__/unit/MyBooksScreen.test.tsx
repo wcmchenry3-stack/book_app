@@ -87,7 +87,11 @@ describe('MyBooksScreen', () => {
   it('shows empty state when no books', async () => {
     mockGet.mockResolvedValue({ data: [] });
     const { getByText } = render(<MyBooksScreen />);
-    await waitFor(() => expect(getByText('No books here yet.')).toBeTruthy());
+    // act() yields to the microtask queue so the mocked api.get resolves and
+    // flushes state updates deterministically — waitFor polls via setInterval
+    // which races against the 5s timeout on slow Linux CI runners.
+    await act(async () => {});
+    expect(getByText('No books here yet.')).toBeTruthy();
   });
 
   it('renders all filter tabs', async () => {
