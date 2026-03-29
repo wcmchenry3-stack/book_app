@@ -4,6 +4,10 @@
 # Pods/ is gitignored, so pod install must run before xcodebuild archive.
 set -e
 
+# Allow Sentry source-map upload to fail gracefully in CI
+# (org/project/auth token must be configured as Xcode Cloud env vars)
+export SENTRY_ALLOW_FAILURE=true
+
 # Install Node.js
 brew install node
 
