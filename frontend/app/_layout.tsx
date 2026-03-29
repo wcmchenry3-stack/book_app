@@ -5,9 +5,12 @@ import { Stack } from 'expo-router';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { ThemeToggleButton } from '../components/ThemeToggleButton';
 import { AuthProvider } from '../contexts/AuthContext';
+import { initSentry, Sentry } from '../lib/sentry';
 import { ThemeProvider } from '../theme';
 
-export default function RootLayout() {
+initSentry();
+
+function RootLayout() {
   return (
     <ErrorBoundary>
       <ThemeProvider>
@@ -22,3 +25,5 @@ export default function RootLayout() {
     </ErrorBoundary>
   );
 }
+
+export default Sentry.wrap(RootLayout);

@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
+    "@sentry/react-native": "^8.6.0",
     "@tanstack/react-query": "^5.59.0",
     "axios": "^1.14.0",
     "expo": "~51.0.28",
@@ -65,7 +66,7 @@
       "!src/i18n/glossary.ts"
     ],
     "transformIgnorePatterns": [
-      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|i18next|react-i18next|i18next-resources-to-backend)"
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|@sentry/.*|native-base|react-native-svg|i18next|react-i18next|i18next-resources-to-backend)"
     ]
   },
   "prettier": {

@@ -1,8 +1,11 @@
 import logging
 
+import sentry_sdk
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy import text
@@ -20,6 +23,18 @@ from app.core.limiter import limiter
 from app.core.logging import configure_logging, new_request_id, request_id_var
 
 configure_logging()
+
+if settings.sentry_dsn:
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        environment=settings.environment,
+        integrations=[
+            StarletteIntegration(transaction_style="endpoint"),
+            FastApiIntegration(transaction_style="endpoint"),
+        ],
+        traces_sample_rate=0.2 if settings.environment == "production" else 1.0,
+        send_default_pii=False,
+    )
 
 logger = logging.getLogger(__name__)
 

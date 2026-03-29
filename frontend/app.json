@@ -49,7 +49,8 @@
         {
           "cameraPermission": "Allow Bookshelf to use the camera to scan book covers."
         }
-      ]
+      ],
+      "@sentry/react-native/expo"
     ],
     "scheme": "bookshelf"
   }
