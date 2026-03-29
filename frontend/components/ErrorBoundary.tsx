@@ -9,16 +9,17 @@ interface Props {
 
 interface State {
   hasError: boolean;
+  error: Error | null;
 }
 
 export class ErrorBoundary extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(): State {
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
@@ -32,6 +33,13 @@ export class ErrorBoundary extends React.Component<Props, State> {
         <View style={styles.container}>
           <Text style={styles.title}>Something went wrong</Text>
           <Text style={styles.body}>The app ran into an unexpected error.</Text>
+          {__DEV__ && this.state.error && (
+            <Text style={styles.errorDetail} selectable>
+              {this.state.error.name}: {this.state.error.message}
+              {'\n\n'}
+              {this.state.error.stack?.slice(0, 500)}
+            </Text>
+          )}
           <Pressable
             style={styles.button}
             onPress={() => this.setState({ hasError: false })}
@@ -68,6 +76,17 @@ const styles = StyleSheet.create({
     color: '#555',
     textAlign: 'center',
     marginBottom: 24,
+  },
+  errorDetail: {
+    fontSize: 12,
+    color: '#c00',
+    fontFamily: 'Courier',
+    textAlign: 'left',
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: '#fff0f0',
+    borderRadius: 6,
+    width: '100%',
   },
   button: {
     paddingHorizontal: 24,
