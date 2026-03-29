@@ -34,7 +34,7 @@ class ChatGPTVisionIdentifier:
 
         payload = {
             "model": "gpt-4o-mini",
-            "max_tokens": 512,
+            "max_tokens": settings.openai_max_tokens,
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {

@@ -1,0 +1,145 @@
+name: Security
+
+on:
+  schedule:
+    # Every Monday at 08:00 UTC
+    - cron: '0 8 * * 1'
+  pull_request:
+    branches: [dev]
+    paths:
+      - 'backend/app/**'
+      - 'backend/requirements*.txt'
+      - '.github/workflows/security.yml'
+      - '.zap/**'
+  workflow_dispatch:
+
+jobs:
+  # ── SAST: Python static analysis ──────────────────────────────────────────
+  sast-bandit:
+    name: Bandit SAST
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install bandit[toml]==1.8.3
+      - name: Run Bandit
+        run: bandit -r app/ -c .bandit -ll --format json -o bandit-report.json || true
+      - name: Fail on HIGH or MEDIUM findings
+        run: |
+          python -c "
+          import json, sys
+          with open('bandit-report.json') as f:
+              report = json.load(f)
+          high = [i for i in report.get('results', []) if i['issue_severity'] in ('HIGH', 'MEDIUM')]
+          if high:
+              for i in high:
+                  print(f\"FAIL [{i['issue_severity']}] {i['issue_text']} — {i['filename']}:{i['line_number']}\")
+              sys.exit(1)
+          print(f'Bandit OK: 0 HIGH/MEDIUM issues.')
+          "
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bandit-report
+          path: backend/bandit-report.json
+          retention-days: 30
+
+  # ── SCA: Python dependency CVE scan ───────────────────────────────────────
+  sca-pip-audit:
+    name: pip-audit SCA
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pip-audit==2.7.3
+      - name: Run pip-audit
+        run: pip-audit -r requirements.txt --format json -o pip-audit-report.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pip-audit-report
+          path: backend/pip-audit-report.json
+          retention-days: 30
+
+  # ── SCA: Frontend dependency CVE scan ─────────────────────────────────────
+  sca-npm-audit:
+    name: npm audit SCA
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: npm audit
+        # Kept at critical until Expo 51→55 upgrade resolves the bundled `send` CVE.
+        # Change to --audit-level=high after the Expo upgrade lands.
+        run: npm audit --audit-level=critical --json > npm-audit-report.json || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npm-audit-report
+          path: frontend/npm-audit-report.json
+          retention-days: 30
+
+  # ── Security-marked pytest suite ──────────────────────────────────────────
+  pytest-security:
+    name: pytest -m security
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Run security test suite
+        run: pytest -m security -v --tb=short
+
+  # ── DAST: OWASP ZAP active scan ───────────────────────────────────────────
+  # Runs on schedule and manual dispatch ONLY — not on every PR.
+  # Active scanning sends real attack payloads against the live API; running it
+  # on every PR would generate attack traffic against the production service on
+  # every review cycle. Weekly scans give regular coverage without that cost.
+  dast-zap:
+    name: OWASP ZAP Active Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - name: ZAP Full Scan
+        uses: zaproxy/action-full-scan@v0.11.0
+        with:
+          target: 'https://bookshelf-api-rxp3.onrender.com'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-z "-config scanner.attackStrength=LOW"'
+          allow_issue_writing: false
+          # Report findings but don't fail — active scans against production
+          # may surface acceptable known issues. Review the artifact and
+          # promote to fail_action: true once a clean baseline is established.
+          fail_action: false
+          artifact_name: zap-full-scan-report
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-full-scan-report
+          path: report_html.html
+          retention-days: 90

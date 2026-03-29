@@ -19,6 +19,7 @@ class Settings(BaseSettings):
 
     # External APIs
     openai_api_key: str = ""
+    openai_max_tokens: int = 512
     google_books_api_key: str = ""
     open_library_base_url: str = "https://openlibrary.org"
 
@@ -30,6 +31,10 @@ class Settings(BaseSettings):
     rate_limit_books_search: str = "30/minute"
     rate_limit_writes: str = "60/minute"
     rate_limit_reads: str = "120/minute"
+    rate_limit_health: str = "60/minute"
+    # Allowlist of Host header values accepted in production.
+    # Override via TRUSTED_HOSTS env var: '["api.example.com"]'
+    trusted_hosts: list[str] = ["*"]
 
     @field_validator("cors_origins")
     @classmethod
