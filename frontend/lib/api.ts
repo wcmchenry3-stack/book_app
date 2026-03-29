@@ -2,7 +2,7 @@ import axios from 'axios';
 
 import * as storage from './storage';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8001';
 
 export const ACCESS_TOKEN_KEY = 'bookshelf_access_token';
 export const REFRESH_TOKEN_KEY = 'bookshelf_refresh_token';

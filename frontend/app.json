@@ -13,6 +13,7 @@
     },
     "ios": {
       "supportsTablet": true,
+      "deploymentTarget": "16.0",
       "bundleIdentifier": "com.buffingchi.bookshelf",
       "buildNumber": "1",
       "infoPlist": {
@@ -49,7 +50,8 @@
         {
           "cameraPermission": "Allow Bookshelf to use the camera to scan book covers."
         }
-      ]
+      ],
+      "@sentry/react-native/expo"
     ],
     "scheme": "bookshelf"
   }

@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     google_books_api_key: str = ""
     open_library_base_url: str = "https://openlibrary.org"
 
+    # Observability
+    sentry_dsn: str = ""
+
     # App
     environment: str = "development"
     cors_origins: list[str] = []

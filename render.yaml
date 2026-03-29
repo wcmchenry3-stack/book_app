@@ -17,13 +17,14 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: CORS_ORIGINS
-        value: '["https://bookshelf-web-vw0s.onrender.com"]'
+        value: '["https://bookshelfai.buffingchi.com"]'
 
   - type: web
     name: bookshelf-web
     env: static
     region: oregon
-    buildCommand: npm ci && printf "EXPO_PUBLIC_API_URL=%s\nEXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=%s\n" "$EXPO_PUBLIC_API_URL" "$EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID" > .env && npx expo export --platform web --clear
+    branch: dev
+    buildCommand: npm ci && printf "EXPO_PUBLIC_API_URL=%s\nEXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=%s\nEXPO_PUBLIC_SENTRY_DSN=%s\nEXPO_PUBLIC_ENVIRONMENT=%s\n" "$EXPO_PUBLIC_API_URL" "$EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID" "$EXPO_PUBLIC_SENTRY_DSN" "$EXPO_PUBLIC_ENVIRONMENT" > .env && npx expo export --platform web --clear
     staticPublishPath: dist
     rootDir: frontend
     pullRequestPreviewsEnabled: false
@@ -34,7 +35,7 @@ services:
     headers:
       - path: /*
         name: Cross-Origin-Opener-Policy
-        value: unsafe-none
+        value: same-origin-allow-popups
       - path: /*
         name: X-Frame-Options
         value: DENY
@@ -49,7 +50,7 @@ services:
         value: 'max-age=31536000; includeSubDomains'
       - path: /*
         name: Content-Security-Policy
-        value: "default-src 'self'; img-src 'self' https: data:; connect-src 'self' https://bookshelf-api-rxp3.onrender.com; style-src 'self' 'unsafe-inline'; script-src 'self'"
+        value: "default-src 'self'; img-src 'self' https: data:; connect-src 'self' https://bookshelfapi.buffingchi.com; style-src 'self' 'unsafe-inline'; script-src 'self'"
       - path: /*
         name: Cache-Control
         value: no-cache
@@ -58,9 +59,13 @@ services:
         value: 'public, max-age=31536000, immutable'
     envVars:
       - key: EXPO_PUBLIC_API_URL
-        value: https://bookshelf-api-rxp3.onrender.com
+        value: https://bookshelfapi.buffingchi.com
       - key: EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID
         sync: false
+      - key: EXPO_PUBLIC_SENTRY_DSN
+        sync: false
+      - key: EXPO_PUBLIC_ENVIRONMENT
+        value: production
 
 databases:
   - name: bookshelf-db
