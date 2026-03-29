@@ -54,6 +54,68 @@ class TestSearch:
         assert result is None
 
 
+class TestSearchWithApiKey:
+    async def test_includes_key_param_when_api_key_set(self, service):
+        with (
+            patch("app.services.google_books.httpx.AsyncClient") as mock_cls,
+            patch("app.services.google_books.settings") as mock_settings,
+        ):
+            mock_settings.google_books_api_key = "MY_KEY"
+            mock_cls.return_value = _mock_client({"items": [VOLUME]})
+            await service.search("Dune", "Frank Herbert")
+
+        _, kwargs = mock_cls.return_value.get.call_args
+        params = kwargs.get("params") or mock_cls.return_value.get.call_args[0][1]
+        assert params.get("key") == "MY_KEY"
+
+    async def test_omits_key_param_when_api_key_not_set(self, service):
+        with (
+            patch("app.services.google_books.httpx.AsyncClient") as mock_cls,
+            patch("app.services.google_books.settings") as mock_settings,
+        ):
+            mock_settings.google_books_api_key = None
+            mock_cls.return_value = _mock_client({"items": [VOLUME]})
+            await service.search("Dune", "Frank Herbert")
+
+        _, kwargs = mock_cls.return_value.get.call_args
+        params = kwargs.get("params") or mock_cls.return_value.get.call_args[0][1]
+        assert "key" not in params
+
+
+class TestSearchQuery:
+    async def test_returns_list_of_volumes(self, service):
+        with patch("app.services.google_books.httpx.AsyncClient") as mock_cls:
+            mock_cls.return_value = _mock_client({"items": [VOLUME, VOLUME]})
+            result = await service.search_query("Frank Herbert sci-fi", limit=3)
+        assert result == [VOLUME, VOLUME]
+
+    async def test_returns_empty_list_when_no_items(self, service):
+        with patch("app.services.google_books.httpx.AsyncClient") as mock_cls:
+            mock_cls.return_value = _mock_client({})
+            result = await service.search_query("zzz")
+        assert result == []
+
+    async def test_respects_limit(self, service):
+        volumes = [VOLUME] * 5
+        with patch("app.services.google_books.httpx.AsyncClient") as mock_cls:
+            mock_cls.return_value = _mock_client({"items": volumes})
+            result = await service.search_query("anything", limit=2)
+        assert len(result) == 2
+
+    async def test_includes_key_param_when_api_key_set(self, service):
+        with (
+            patch("app.services.google_books.httpx.AsyncClient") as mock_cls,
+            patch("app.services.google_books.settings") as mock_settings,
+        ):
+            mock_settings.google_books_api_key = "MY_KEY"
+            mock_cls.return_value = _mock_client({"items": [VOLUME]})
+            await service.search_query("Dune", limit=1)
+
+        _, kwargs = mock_cls.return_value.get.call_args
+        params = kwargs.get("params") or mock_cls.return_value.get.call_args[0][1]
+        assert params.get("key") == "MY_KEY"
+
+
 class TestSearchByIsbn:
     async def test_returns_first_item_when_found(self, service):
         with patch("app.services.google_books.httpx.AsyncClient") as mock_cls:
