@@ -59,3 +59,10 @@ secrets/
 # Local Claude Code files
 .claude/
 bookshelf-project-plan.md
+
+# iOS bare workflow — commit the project, ignore build artifacts
+frontend/ios/Pods/
+frontend/ios/build/
+frontend/ios/DerivedData/
+frontend/ios/*.xcarchive
+frontend/ios/Bookshelf.xcworkspace/xcuserdata/

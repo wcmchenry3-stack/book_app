@@ -13,7 +13,22 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.bookshelf.app"
+      "bundleIdentifier": "com.buffingchi.bookshelf",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          }
+        ],
+        "NSPrivacyCollectedDataTypes": [],
+        "NSPrivacyTracking": false,
+        "NSPrivacyTrackingDomains": []
+      }
     },
     "android": {
       "adaptiveIcon": {
