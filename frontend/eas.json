@@ -7,19 +7,19 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://bookshelfai.buffingchi.com"
+        "EXPO_PUBLIC_API_URL": "https://bookshelfapi.buffingchi.com"
       }
     },
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://bookshelfai.buffingchi.com"
+        "EXPO_PUBLIC_API_URL": "https://bookshelfapi.buffingchi.com"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://bookshelfai.buffingchi.com"
+        "EXPO_PUBLIC_API_URL": "https://bookshelfapi.buffingchi.com"
       }
     }
   }
