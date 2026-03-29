@@ -86,12 +86,27 @@ export default function WishlistScreen() {
     );
   }
 
+  if (books.length === 0) {
+    return (
+      <View style={[styles.container, styles.emptyContainer, { backgroundColor: theme.colors.background }]}>
+        <Text
+          style={[
+            styles.emptyText,
+            { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeBase },
+          ]}
+        >
+          {t('empty')}
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <FlatList
         data={books}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={books.length === 0 ? styles.emptyContainer : styles.list}
+        contentContainerStyle={styles.list}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -101,16 +116,6 @@ export default function WishlistScreen() {
             }}
             tintColor={theme.colors.primary}
           />
-        }
-        ListEmptyComponent={
-          <Text
-            style={[
-              styles.emptyText,
-              { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeBase },
-            ]}
-          >
-            {t('empty')}
-          </Text>
         }
         renderItem={({ item }) => (
           <View

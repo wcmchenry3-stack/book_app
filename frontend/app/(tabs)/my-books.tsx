@@ -169,10 +169,22 @@ export default function MyBooksScreen() {
         })}
       </ScrollView>
 
+      {books.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text
+            style={[
+              styles.emptyText,
+              { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeBase },
+            ]}
+          >
+            {t('noBooksYet')}
+          </Text>
+        </View>
+      ) : (
       <FlatList
         data={books}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={books.length === 0 ? styles.emptyContainer : styles.list}
+        contentContainerStyle={styles.list}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -182,16 +194,6 @@ export default function MyBooksScreen() {
             }}
             tintColor={theme.colors.primary}
           />
-        }
-        ListEmptyComponent={
-          <Text
-            style={[
-              styles.emptyText,
-              { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeBase },
-            ]}
-          >
-            {t('noBooksYet')}
-          </Text>
         }
         renderItem={({ item }) => (
           <Pressable
@@ -248,6 +250,7 @@ export default function MyBooksScreen() {
           </Pressable>
         )}
       />
+      )}
 
       {/* Detail sheet */}
       <Modal
