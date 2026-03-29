@@ -10,6 +10,7 @@ Monorepo: `backend/` · `frontend/` · `.github/` · `docs/`
 - [Backend](docs/claude/backend.md)
 - [Frontend](docs/claude/frontend.md)
 - [Testing](docs/claude/testing.md)
+- [iOS CI/CD](docs/claude/ios-ci.md)      ← Xcode Cloud build setup (NOT EAS)
 
 ## Hard Rules (no exceptions)
 1. NEVER push to `dev` or `main` directly.
