@@ -24,7 +24,7 @@ services:
     env: static
     region: oregon
     branch: dev
-    buildCommand: npm ci && printf "EXPO_PUBLIC_API_URL=%s\nEXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=%s\n" "$EXPO_PUBLIC_API_URL" "$EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID" > .env && npx expo export --platform web --clear
+    buildCommand: npm ci && printf "EXPO_PUBLIC_API_URL=%s\nEXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=%s\nEXPO_PUBLIC_SENTRY_DSN=%s\nEXPO_PUBLIC_ENVIRONMENT=%s\n" "$EXPO_PUBLIC_API_URL" "$EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID" "$EXPO_PUBLIC_SENTRY_DSN" "$EXPO_PUBLIC_ENVIRONMENT" > .env && npx expo export --platform web --clear
     staticPublishPath: dist
     rootDir: frontend
     pullRequestPreviewsEnabled: false
@@ -62,6 +62,10 @@ services:
         value: https://bookshelfapi.buffingchi.com
       - key: EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID
         sync: false
+      - key: EXPO_PUBLIC_SENTRY_DSN
+        sync: false
+      - key: EXPO_PUBLIC_ENVIRONMENT
+        value: production
 
 databases:
   - name: bookshelf-db
