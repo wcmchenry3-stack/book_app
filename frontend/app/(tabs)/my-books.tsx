@@ -181,75 +181,80 @@ export default function MyBooksScreen() {
           </Text>
         </View>
       ) : (
-      <FlatList
-        data={books}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => {
-              setRefreshing(true);
-              fetchBooks();
-            }}
-            tintColor={theme.colors.primary}
-          />
-        }
-        renderItem={({ item }) => (
-          <Pressable
-            style={[
-              styles.card,
-              { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-            ]}
-            onPress={() => setSelected(item)}
-            accessibilityRole="button"
-            accessibilityLabel={t('bookCardA11y', { title: item.book.title, status: item.status })}
-            accessibilityHint={t('bookCardHint')}
-          >
-            {item.book.cover_url ? (
-              <Image
-                source={{ uri: item.book.cover_url }}
-                style={styles.cover}
-                accessibilityLabel={t('coverAlt', { ns: 'common', title: item.book.title })}
-              />
-            ) : (
-              <View
-                style={[
-                  styles.cover,
-                  styles.coverPlaceholder,
-                  { backgroundColor: theme.colors.border },
-                ]}
-                accessibilityLabel={t('noCoverAvailable', { ns: 'common' })}
-              />
-            )}
+        <FlatList
+          data={books}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => {
+                setRefreshing(true);
+                fetchBooks();
+              }}
+              tintColor={theme.colors.primary}
+            />
+          }
+          renderItem={({ item }) => (
+            <Pressable
+              style={[
+                styles.card,
+                { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+              ]}
+              onPress={() => setSelected(item)}
+              accessibilityRole="button"
+              accessibilityLabel={t('bookCardA11y', {
+                title: item.book.title,
+                status: item.status,
+              })}
+              accessibilityHint={t('bookCardHint')}
+            >
+              {item.book.cover_url ? (
+                <Image
+                  source={{ uri: item.book.cover_url }}
+                  style={styles.cover}
+                  accessibilityLabel={t('coverAlt', { ns: 'common', title: item.book.title })}
+                />
+              ) : (
+                <View
+                  style={[
+                    styles.cover,
+                    styles.coverPlaceholder,
+                    { backgroundColor: theme.colors.border },
+                  ]}
+                  accessibilityLabel={t('noCoverAvailable', { ns: 'common' })}
+                />
+              )}
 
-            <View style={styles.info}>
-              <Text
-                style={[
-                  styles.bookTitle,
-                  { color: theme.colors.text, fontSize: theme.typography.fontSizeBase },
-                ]}
-                numberOfLines={2}
-              >
-                {item.book.title}
-              </Text>
-              <Text
-                style={[
-                  { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeSM },
-                ]}
-                numberOfLines={1}
-              >
-                {item.book.author}
-              </Text>
-              <View style={[styles.statusBadge, { backgroundColor: theme.colors.primary + '22' }]}>
-                <Text style={[styles.statusText, { color: theme.colors.primary, fontSize: 11 }]}>
-                  {t(`status.${item.status}`, item.status)}
+              <View style={styles.info}>
+                <Text
+                  style={[
+                    styles.bookTitle,
+                    { color: theme.colors.text, fontSize: theme.typography.fontSizeBase },
+                  ]}
+                  numberOfLines={2}
+                >
+                  {item.book.title}
                 </Text>
+                <Text
+                  style={[
+                    { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeSM },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {item.book.author}
+                </Text>
+                <View
+                  style={[styles.statusBadge, { backgroundColor: theme.colors.primary + '22' }]}
+                >
+                  <Text style={[styles.statusText, { color: theme.colors.primary, fontSize: 11 }]}>
+                    {t(`status.${item.status}`, item.status)}
+                  </Text>
+                </View>
               </View>
-            </View>
-          </Pressable>
-        )}
-      />
+            </Pressable>
+          )}
+        />
       )}
 
       {/* Detail sheet */}

@@ -88,7 +88,13 @@ export default function WishlistScreen() {
 
   if (books.length === 0) {
     return (
-      <View style={[styles.container, styles.emptyContainer, { backgroundColor: theme.colors.background }]}>
+      <View
+        style={[
+          styles.container,
+          styles.emptyContainer,
+          { backgroundColor: theme.colors.background },
+        ]}
+      >
         <Text
           style={[
             styles.emptyText,
