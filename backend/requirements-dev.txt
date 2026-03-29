@@ -6,3 +6,4 @@ pytest-benchmark==4.0.0
 black==24.10.0
 ruff==0.6.9
 pip-audit==2.7.3
+bandit[toml]==1.8.3

@@ -1,0 +1,54 @@
+{
+  "name": "Protect main and dev",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "include": ["refs/heads/main", "refs/heads/dev"],
+      "exclude": []
+    }
+  },
+  "rules": [
+    {
+      "type": "deletion"
+    },
+    {
+      "type": "non_fast_forward"
+    },
+    {
+      "type": "creation"
+    },
+    {
+      "type": "required_linear_history"
+    },
+    {
+      "type": "pull_request",
+      "parameters": {
+        "required_approving_review_count": 1,
+        "dismiss_stale_reviews_on_push": true,
+        "require_code_owner_review": true,
+        "require_last_push_approval": false,
+        "allowed_merge_methods": ["squash", "merge"]
+      }
+    },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": true,
+        "do_not_enforce_on_create": false,
+        "required_status_checks": [
+          { "context": "secret-scan" },
+          { "context": "lint-python" },
+          { "context": "lint-frontend" },
+          { "context": "test-python" },
+          { "context": "test-frontend" },
+          { "context": "cve-python" },
+          { "context": "cve-frontend" },
+          { "context": "test-migrations" },
+          { "context": "sast-python" }
+        ]
+      }
+    }
+  ],
+  "bypass_actors": []
+}

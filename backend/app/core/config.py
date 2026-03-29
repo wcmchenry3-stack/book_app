@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     rate_limit_books_search: str = "30/minute"
     rate_limit_writes: str = "60/minute"
     rate_limit_reads: str = "120/minute"
+    rate_limit_health: str = "60/minute"
+    # Allowlist of Host header values accepted in production.
+    # Override via TRUSTED_HOSTS env var: '["api.example.com"]'
+    trusted_hosts: list[str] = ["*"]
 
     @field_validator("cors_origins")
     @classmethod

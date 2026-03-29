@@ -62,6 +62,41 @@ jobs:
       audit-level: critical
     secrets: inherit
 
+  sast-python:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install bandit
+        run: pip install bandit[toml]==1.8.3
+      - name: Run Bandit SAST
+        run: bandit -r app/ -c .bandit -ll --format json -o bandit-report.json || true
+      - name: Fail on HIGH or MEDIUM severity findings
+        run: |
+          python -c "
+          import json, sys
+          with open('bandit-report.json') as f:
+              report = json.load(f)
+          issues = report.get('results', [])
+          high = [i for i in issues if i['issue_severity'] in ('HIGH', 'MEDIUM')]
+          if high:
+              for i in high:
+                  print(f\"FAIL [{i['issue_severity']}] {i['issue_text']} — {i['filename']}:{i['line_number']}\")
+              sys.exit(1)
+          print(f'Bandit OK: {len(issues)} total issues, 0 HIGH/MEDIUM.')
+          "
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bandit-report
+          path: backend/bandit-report.json
+          retention-days: 30
+
   test-migrations:
     runs-on: ubuntu-latest
     defaults:

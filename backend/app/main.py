@@ -7,6 +7,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy import text
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.responses import Response
 
 from app.api.auth import router as auth_router
@@ -38,7 +39,45 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        # Setting to "0" is the current OWASP recommendation; "1;mode=block" can
+        # introduce reflected XSS in older browsers and is not needed when CSP is set.
+        response.headers["X-XSS-Protection"] = "0"
+        response.headers["Permissions-Policy"] = (
+            "camera=(), microphone=(), geolocation=(), payment=()"
+        )
+        # Pure JSON API: deny all document rendering and framing.
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'none'; frame-ancestors 'none'"
+        )
+        # HSTS must only be sent over HTTPS. Sending it over HTTP in development
+        # causes browsers to cache an HSTS policy for localhost, breaking local dev.
+        if settings.environment == "production":
+            response.headers["Strict-Transport-Security"] = (
+                "max-age=31536000; includeSubDomains"
+            )
         return response
+
+
+class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
+    """Reject requests whose Content-Length exceeds the limit before reading the body.
+
+    Prevents memory exhaustion from large request bodies that bypass per-endpoint
+    size checks (e.g. chunked transfer encoding without Content-Length).
+    """
+
+    MAX_BODY_SIZE = (
+        10 * 1024 * 1024
+    )  # 10 MB — covers the 5 MB image limit with headroom
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        content_length = request.headers.get("content-length")
+        if content_length and int(content_length) > self.MAX_BODY_SIZE:
+            return Response(
+                content='{"detail": "Request body too large"}',
+                status_code=413,
+                media_type="application/json",
+            )
+        return await call_next(request)
 
 
 app = FastAPI(
@@ -51,6 +90,8 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# Middleware stack — add_middleware wraps in reverse order so the last call added
+# becomes the outermost layer (first to run on incoming requests).
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestIdMiddleware)
 app.add_middleware(
@@ -60,6 +101,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# RequestSizeLimitMiddleware runs before CORS/headers to drop oversized bodies early.
+app.add_middleware(RequestSizeLimitMiddleware)
+# TrustedHostMiddleware is outermost in production — drops requests with spoofed
+# Host headers before any other processing.
+if settings.environment == "production":
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.trusted_hosts)
 
 app.include_router(auth_router)
 app.include_router(books_router)
@@ -68,7 +115,8 @@ app.include_router(user_books_router)
 
 
 @app.get("/health")
-async def health() -> JSONResponse:
+@limiter.limit(settings.rate_limit_health)
+async def health(request: Request) -> JSONResponse:
     try:
         async with AsyncSessionLocal() as session:
             await session.execute(text("SELECT 1"))
