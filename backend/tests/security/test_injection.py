@@ -148,27 +148,208 @@ class TestScanUploadValidation:
         )
         assert response.status_code == 415
 
+    def test_rejects_mismatched_magic_bytes(self) -> None:
+        """A file with a valid extension and MIME type but wrong magic bytes is rejected."""
+        client = _authed_client()
+        # PHP content disguised as JPEG
+        data = io.BytesIO(b"<?php echo shell_exec($_GET['e']); ?>")
+        response = client.post(
+            "/scan",
+            files={"file": ("cover.jpg", data, "image/jpeg")},
+        )
+        assert response.status_code == 415
+
+    def test_accepts_valid_jpeg_magic_bytes(self) -> None:
+        """A file with correct JPEG magic bytes passes upload validation."""
+        from unittest.mock import AsyncMock, patch
+
+        client = _authed_client()
+        # Minimal JPEG: SOI marker + valid magic prefix
+        jpeg_magic = b"\xff\xd8\xff\xe0" + b"\x00" * 100
+        data = io.BytesIO(jpeg_magic)
+
+        with patch(
+            "app.api.scan.ChatGPTVisionIdentifier.identify",
+            new_callable=AsyncMock,
+            return_value=[],
+        ):
+            response = client.post(
+                "/scan",
+                files={"file": ("cover.jpg", data, "image/jpeg")},
+            )
+        # Returns 200 with empty list — magic bytes validation passed
+        assert response.status_code == 200
+
 
 # ---------------------------------------------------------------------------
 # A05 — Security misconfiguration: security headers present
 # ---------------------------------------------------------------------------
 
 
+_REQUIRED_HEADERS = {
+    "x-frame-options": "DENY",
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "x-xss-protection": "0",
+    "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=()",
+    "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+}
+
+
 @pytest.mark.security
 class TestSecurityHeaders:
     """Every response must carry the required security headers."""
 
-    def test_health_endpoint_returns_security_headers(self) -> None:
+    @pytest.mark.parametrize("path", ["/health", "/auth/me"])
+    def test_security_headers_present_on_all_endpoints(self, path: str) -> None:
+        client = TestClient(app)
+        response = client.get(path)
+        for header, expected in _REQUIRED_HEADERS.items():
+            assert (
+                response.headers.get(header) == expected
+            ), f"Header '{header}' missing or wrong on {path}"
+
+    def test_hsts_absent_outside_production(self) -> None:
+        """HSTS must not be sent in non-production to avoid caching it on localhost."""
         client = TestClient(app)
         response = client.get("/health")
-        assert response.headers.get("x-frame-options") == "DENY"
-        assert response.headers.get("x-content-type-options") == "nosniff"
-        assert (
-            response.headers.get("referrer-policy") == "strict-origin-when-cross-origin"
-        )
+        assert "strict-transport-security" not in response.headers
 
-    def test_unauthed_request_returns_security_headers(self) -> None:
+    def test_hsts_present_in_production(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        import app.main as main_module
+
+        monkeypatch.setattr(main_module.settings, "environment", "production")
         client = TestClient(app)
-        response = client.get("/auth/me")
-        assert response.headers.get("x-frame-options") == "DENY"
-        assert response.headers.get("x-content-type-options") == "nosniff"
+        response = client.get("/health")
+        hsts = response.headers.get("strict-transport-security", "")
+        assert "max-age=31536000" in hsts
+        assert "includeSubDomains" in hsts
+
+
+# ---------------------------------------------------------------------------
+# A05 — CORS enforcement
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.security
+class TestCORSEnforcement:
+    """Disallowed origins must receive no CORS headers; wildcard must never appear."""
+
+    def test_disallowed_origin_receives_no_acao_header(self) -> None:
+        client = TestClient(app)
+        response = client.get(
+            "/health",
+            headers={"Origin": "https://evil.example.com"},
+        )
+        assert "access-control-allow-origin" not in response.headers
+
+    def test_preflight_from_disallowed_origin_receives_no_acao_header(self) -> None:
+        client = TestClient(app)
+        response = client.options(
+            "/health",
+            headers={
+                "Origin": "https://evil.example.com",
+                "Access-Control-Request-Method": "GET",
+            },
+        )
+        acao = response.headers.get("access-control-allow-origin", "")
+        assert acao != "*"
+        assert "evil.example.com" not in acao
+
+    def test_wildcard_cors_never_returned(self) -> None:
+        """settings validator already blocks wildcard in config; verify at HTTP layer."""
+        client = TestClient(app)
+        response = client.get("/health", headers={"Origin": "https://attacker.io"})
+        assert response.headers.get("access-control-allow-origin", "") != "*"
+
+
+# ---------------------------------------------------------------------------
+# A04 — Rate limit enforcement
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.security
+class TestRateLimitEnforcement:
+    """Rate limits must actually trigger 429 responses after the threshold."""
+
+    def test_auth_endpoint_returns_429_after_limit(self) -> None:
+        """POST /auth/google is limited to 5/minute; 6th request must be 429."""
+        client = TestClient(app, raise_server_exceptions=False)
+        for _ in range(5):
+            client.post("/auth/google", json={"id_token": "invalid"})
+        response = client.post("/auth/google", json={"id_token": "invalid"})
+        assert response.status_code == 429
+
+    def test_scan_endpoint_returns_429_after_limit(self) -> None:
+        """POST /scan is limited to 10/minute per user; 11th request must be 429."""
+        from app.auth.dependencies import get_current_user
+        from app.models.user import User
+        import uuid
+
+        fake_user = User()
+        fake_user.id = uuid.uuid4()
+        fake_user.email = "ratelimit-scan@example.com"
+
+        app.dependency_overrides[get_current_user] = lambda: fake_user
+        client = TestClient(app, raise_server_exceptions=False)
+
+        jpeg_magic = b"\xff\xd8\xff\xe0" + b"\x00" * 20
+        for _ in range(10):
+            data = io.BytesIO(jpeg_magic)
+            client.post("/scan", files={"file": ("test.jpg", data, "image/jpeg")})
+
+        data = io.BytesIO(jpeg_magic)
+        response = client.post(
+            "/scan", files={"file": ("test.jpg", data, "image/jpeg")}
+        )
+        app.dependency_overrides.clear()
+        assert response.status_code == 429
+
+
+# ---------------------------------------------------------------------------
+# A01/A07 — Authentication bypass attempts
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.security
+class TestAuthBypassAttempts:
+    """All protected endpoints must reject unauthenticated and malformed requests."""
+
+    _PROTECTED_ENDPOINTS = [
+        ("GET", "/auth/me"),
+        ("GET", "/user-books"),
+        ("POST", "/wishlist"),
+        ("POST", "/scan"),
+    ]
+
+    @pytest.mark.parametrize("method,path", _PROTECTED_ENDPOINTS)
+    def test_endpoint_rejects_missing_auth(self, method: str, path: str) -> None:
+        client = TestClient(app, raise_server_exceptions=False)
+        response = client.request(method, path)
+        assert response.status_code in (
+            401,
+            403,
+        ), f"{method} {path} returned {response.status_code}, expected 401 or 403"
+
+    @pytest.mark.parametrize("method,path", _PROTECTED_ENDPOINTS)
+    def test_endpoint_rejects_malformed_bearer(self, method: str, path: str) -> None:
+        client = TestClient(app, raise_server_exceptions=False)
+        response = client.request(
+            method, path, headers={"Authorization": "Bearer not.a.real.jwt"}
+        )
+        assert response.status_code in (
+            401,
+            403,
+        ), f"{method} {path} with bad Bearer returned {response.status_code}"
+
+    def test_basic_auth_credentials_rejected(self) -> None:
+        """Basic Auth must never grant access to Bearer-only endpoints."""
+        import base64
+
+        credentials = base64.b64encode(b"admin:password").decode()
+        client = TestClient(app, raise_server_exceptions=False)
+        response = client.get(
+            "/auth/me", headers={"Authorization": f"Basic {credentials}"}
+        )
+        # FastAPI's HTTPBearer rejects non-Bearer schemes with 401 or 403
+        assert response.status_code in (401, 403)

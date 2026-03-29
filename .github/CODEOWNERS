@@ -1,0 +1,23 @@
+# CODEOWNERS — every PR requires a review from the matching owner.
+# Lines are evaluated top-to-bottom; the last matching rule wins.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global fallback — all files not matched below
+* @wcmchenry3
+
+# Backend Python
+/backend/ @wcmchenry3
+
+# Frontend Expo / React Native
+/frontend/ @wcmchenry3
+
+# Security-sensitive paths — tighter review gate
+/backend/app/auth/ @wcmchenry3
+/backend/app/core/ @wcmchenry3
+/backend/tests/security/ @wcmchenry3
+
+# CI/CD workflows — any change requires explicit review
+/.github/ @wcmchenry3
+
+# Security policy
+/SECURITY.md @wcmchenry3

@@ -1,0 +1,33 @@
+# ZAP scan rules configuration for Bookshelf API
+# Format: rule_id<TAB>IGNORE|WARN|FAIL<TAB>description
+# Reference: https://www.zaproxy.org/docs/alerts/
+#
+# This is a JSON API (no HTML rendering). Rules that produce false positives for
+# pure JSON APIs are set to IGNORE; critical injection/execution rules are FAIL.
+
+# ── IGNORE: false positives for a JSON API ────────────────────────────────────
+10015	IGNORE	Incomplete or No Cache-control Header — JSON API responses intentionally omit Cache-Control
+10027	IGNORE	Information Disclosure - Suspicious Comments — source comments not present post-deploy
+90001	IGNORE	Charset Mismatch (Header Versus Meta Charset) — not applicable to JSON responses
+10096	IGNORE	Timestamp Disclosure — ISO timestamps in JSON responses are intentional
+10050	IGNORE	Retrieved from Cache — informational only
+
+# ── WARN: track but do not fail the build ─────────────────────────────────────
+10055	WARN	CSP Scanner — CSP is set; warnings are for review only
+10202	WARN	Absence of Anti-CSRF Tokens — API uses JWT Bearer tokens, not cookie-based sessions
+
+# ── FAIL: hard failures — any finding blocks the pipeline ─────────────────────
+40012	FAIL	Cross-Site Scripting (Reflected)
+40014	FAIL	Cross-Site Scripting (Persistent)
+40016	FAIL	Cross-Site Scripting (Persistent) - Prime
+40017	FAIL	Cross-Site Scripting (Persistent) - Spider
+90019	FAIL	Server Side Code Injection
+90020	FAIL	Remote OS Command Injection
+40018	FAIL	SQL Injection
+40019	FAIL	SQL Injection - MySQL
+40020	FAIL	SQL Injection - Hypersonic SQL
+40021	FAIL	SQL Injection - Oracle
+40022	FAIL	SQL Injection - PostgreSQL
+40023	FAIL	Possible Username Enumeration
+6	FAIL	Path Traversal
+7	FAIL	Remote File Inclusion
