@@ -35,7 +35,7 @@ services:
     headers:
       - path: /*
         name: Cross-Origin-Opener-Policy
-        value: unsafe-none
+        value: same-origin-allow-popups
       - path: /*
         name: X-Frame-Options
         value: DENY
