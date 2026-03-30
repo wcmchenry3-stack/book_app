@@ -20,6 +20,8 @@ services:
         value: '["https://bookshelfai.buffingchi.com"]'
       - key: TRUSTED_HOSTS
         value: '["bookshelfapi.buffingchi.com"]'
+      - key: TURNSTILE_SECRET_KEY
+        sync: false
 
   - type: web
     name: bookshelf-web
