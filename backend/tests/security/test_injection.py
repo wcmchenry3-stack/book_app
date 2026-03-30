@@ -262,6 +262,20 @@ class TestCORSEnforcement:
         response = client.get("/health", headers={"Origin": "https://attacker.io"})
         assert response.headers.get("access-control-allow-origin", "") != "*"
 
+    def test_preflight_disallows_put_method(self) -> None:
+        """PUT is not in the explicit allow_methods list; must not appear in the
+        Access-Control-Allow-Methods response header for a cross-origin preflight."""
+        client = TestClient(app)
+        response = client.options(
+            "/health",
+            headers={
+                "Origin": "https://bookshelfai.buffingchi.com",
+                "Access-Control-Request-Method": "PUT",
+            },
+        )
+        allowed = response.headers.get("access-control-allow-methods", "")
+        assert "PUT" not in allowed.upper()
+
 
 # ---------------------------------------------------------------------------
 # A04 — Rate limit enforcement

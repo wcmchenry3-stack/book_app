@@ -44,7 +44,7 @@ async def google_auth(
         logger.error("Google token verification failed: %s", exc, exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid Google token: {exc}",
+            detail="Invalid Google token",
         )
 
     email: str = claims.get("email", "")

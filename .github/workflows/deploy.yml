@@ -6,12 +6,12 @@ on:
 
 jobs:
   ci:
-    uses: wcmchenry3-stack/book_app/.github/workflows/ci.yml@main
+    uses: wcmchenry3-stack/book_app/.github/workflows/ci.yml@a973bcce934fef46e22d40123430ad2594d5bada
     secrets: inherit
 
   deploy:
     needs: ci
-    uses: wcmchenry3-stack/.github/.github/workflows/called-deploy-render.yml@main
+    uses: wcmchenry3-stack/.github/.github/workflows/called-deploy-render.yml@a973bcce934fef46e22d40123430ad2594d5bada
     with:
       service-name: 'bookshelf-api'
       service-id: 'srv-d6vkel7fte5s73du7fc0'

@@ -1,6 +1,7 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, status
+import httpx
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_current_user
@@ -21,6 +22,26 @@ router = APIRouter(tags=["scan"])
 
 MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5MB
 ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"}
+TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+
+
+async def _verify_turnstile(token: str) -> bool:
+    """Verify a Cloudflare Turnstile token against the siteverify endpoint.
+
+    Returns True if the token is valid, False otherwise.
+    A 5-second timeout prevents a Turnstile outage from blocking the endpoint.
+    """
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(5.0)) as client:
+            resp = await client.post(
+                TURNSTILE_VERIFY_URL,
+                data={"secret": settings.turnstile_secret_key, "response": token},
+            )
+            resp.raise_for_status()
+            return bool(resp.json().get("success"))
+    except Exception as exc:
+        logger.warning("Turnstile verification failed: %s", exc)
+        return False
 
 
 @router.post("/scan", response_model=list[EnrichedBook])
@@ -30,7 +51,21 @@ async def scan(
     file: UploadFile,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    cf_turnstile_response: str | None = Form(None, alias="cf-turnstile-response"),
 ) -> list[EnrichedBook]:
+    # --- Cloudflare Turnstile bot check (when TURNSTILE_SECRET_KEY is configured) ---
+    if settings.turnstile_secret_key:
+        if not cf_turnstile_response:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing Turnstile token",
+            )
+        if not await _verify_turnstile(cf_turnstile_response):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Turnstile verification failed",
+            )
+
     # --- Validate extension and Content-Type BEFORE reading the body ---
     filename = file.filename or ""
     ext = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""

@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     google_books_api_key: str = ""
     open_library_base_url: str = "https://openlibrary.org"
 
+    # Cloudflare Turnstile — bot protection on /scan
+    # When set, every /scan request must include a valid cf-turnstile-response form field.
+    # Leave empty in development to skip the check.
+    turnstile_secret_key: str = ""
+
     # Observability
     sentry_dsn: str = ""
 

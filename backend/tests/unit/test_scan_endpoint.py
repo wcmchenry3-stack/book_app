@@ -111,3 +111,86 @@ class TestScanEndpoint:
         assert data[0]["title"] == "Dune"
         assert data[0]["author"] == "Frank Herbert"
         assert data[0]["open_library_work_id"] == "OL45804W"
+
+
+class TestTurnstileProtection:
+    """When TURNSTILE_SECRET_KEY is configured, /scan requires a valid Turnstile token."""
+
+    @pytest.fixture
+    def client_with_turnstile(self):
+        from app.auth.dependencies import get_current_user
+        from app.core.database import get_db
+
+        async def _fake_db():
+            yield AsyncMock()
+
+        app.dependency_overrides[get_current_user] = lambda: FAKE_USER
+        app.dependency_overrides[get_db] = _fake_db
+
+        with patch("app.api.scan.settings") as mock_settings:
+            mock_settings.rate_limit_scan = "10/minute"
+            mock_settings.turnstile_secret_key = (
+                "0x0000000000000000000000000000000000000000"
+            )
+            yield TestClient(app), mock_settings
+
+        app.dependency_overrides.clear()
+
+    def test_returns_400_when_token_missing(self, client_with_turnstile):
+        client, _ = client_with_turnstile
+        resp = client.post("/scan", files={"file": _image_file()})
+        assert resp.status_code == 400
+        assert "Turnstile" in resp.json()["detail"]
+
+    def test_returns_403_when_token_invalid(self, client_with_turnstile):
+        client, _ = client_with_turnstile
+        with patch("app.api.scan._verify_turnstile", new=AsyncMock(return_value=False)):
+            resp = client.post(
+                "/scan",
+                files={"file": _image_file()},
+                data={"cf-turnstile-response": "bad-token"},
+            )
+        assert resp.status_code == 403
+        assert "Turnstile" in resp.json()["detail"]
+
+    def test_proceeds_when_token_valid(self, client_with_turnstile):
+        client, _ = client_with_turnstile
+        with (
+            patch("app.api.scan._verify_turnstile", new=AsyncMock(return_value=True)),
+            patch("app.api.scan.ChatGPTVisionIdentifier") as mock_id_cls,
+            patch("app.api.scan.EnrichmentService"),
+            patch("app.api.scan.DeduplicationService"),
+        ):
+            mock_id_cls.return_value.identify = AsyncMock(return_value=[])
+            resp = client.post(
+                "/scan",
+                files={"file": _image_file()},
+                data={"cf-turnstile-response": "valid-token"},
+            )
+        assert resp.status_code == 200
+
+    def test_skipped_when_secret_key_absent(self):
+        """When TURNSTILE_SECRET_KEY is not set, the check is skipped entirely."""
+        from app.auth.dependencies import get_current_user
+        from app.core.database import get_db
+
+        async def _fake_db():
+            yield AsyncMock()
+
+        app.dependency_overrides[get_current_user] = lambda: FAKE_USER
+        app.dependency_overrides[get_db] = _fake_db
+
+        with (
+            patch("app.api.scan.settings") as mock_settings,
+            patch("app.api.scan.ChatGPTVisionIdentifier") as mock_id_cls,
+            patch("app.api.scan.EnrichmentService"),
+            patch("app.api.scan.DeduplicationService"),
+        ):
+            mock_settings.rate_limit_scan = "10/minute"
+            mock_settings.turnstile_secret_key = ""  # key not configured
+            mock_id_cls.return_value.identify = AsyncMock(return_value=[])
+            client = TestClient(app)
+            resp = client.post("/scan", files={"file": _image_file()})
+
+        app.dependency_overrides.clear()
+        assert resp.status_code == 200
