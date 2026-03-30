@@ -118,6 +118,7 @@ app = FastAPI(
     redoc_url=None,
 )
 
+
 def _rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> Response:
     logger.warning("rate_limit_exceeded path=%s", request.url.path)
     return _slowapi_429(request, exc)

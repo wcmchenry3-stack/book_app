@@ -99,7 +99,9 @@ class TestVerifyGoogleIdToken:
 
         with patch("app.auth.google.httpx.AsyncClient") as mock_cls:
             timeout_client = AsyncMock()
-            timeout_client.get = AsyncMock(side_effect=httpx.TimeoutException("timed out"))
+            timeout_client.get = AsyncMock(
+                side_effect=httpx.TimeoutException("timed out")
+            )
             timeout_client.__aenter__ = AsyncMock(return_value=timeout_client)
             timeout_client.__aexit__ = AsyncMock(return_value=False)
             mock_cls.return_value = timeout_client

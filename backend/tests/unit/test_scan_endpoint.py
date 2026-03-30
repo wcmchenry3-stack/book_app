@@ -129,7 +129,9 @@ class TestTurnstileProtection:
 
         with patch("app.api.scan.settings") as mock_settings:
             mock_settings.rate_limit_scan = "10/minute"
-            mock_settings.turnstile_secret_key = "0x0000000000000000000000000000000000000000"
+            mock_settings.turnstile_secret_key = (
+                "0x0000000000000000000000000000000000000000"
+            )
             yield TestClient(app), mock_settings
 
         app.dependency_overrides.clear()
