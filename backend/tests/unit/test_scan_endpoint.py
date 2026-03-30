@@ -1,7 +1,7 @@
 """Unit tests for POST /scan — services mocked, no real DB or HTTP."""
 
 import io
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
