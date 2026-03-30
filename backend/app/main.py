@@ -167,3 +167,11 @@ async def health(request: Request) -> JSONResponse:
         status_code=200 if healthy else 503,
         content={"status": "ok" if healthy else "degraded", "db": db_status},
     )
+
+
+if settings.environment != "production":
+
+    @app.get("/debug/sentry-test")
+    @limiter.limit("5/minute")
+    async def sentry_test(request: Request) -> JSONResponse:
+        1 / 0  # intentional — triggers Sentry capture
