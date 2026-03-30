@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from app.auth.google import verify_google_id_token
 
 FAKE_JWKS = {"keys": [{"kty": "RSA", "kid": "key1"}]}
@@ -90,6 +92,20 @@ class TestVerifyGoogleIdToken:
         claims_options = kwargs.get("claims_options") or mock_decode.call_args[0][2]
         assert claims_options["aud"]["value"] == "test-client-id"
         assert "https://accounts.google.com" in claims_options["iss"]["values"]
+
+    async def test_raises_on_jwks_timeout(self):
+        """A timeout fetching Google JWKS must propagate as httpx.TimeoutException."""
+        import httpx
+
+        with patch("app.auth.google.httpx.AsyncClient") as mock_cls:
+            timeout_client = AsyncMock()
+            timeout_client.get = AsyncMock(side_effect=httpx.TimeoutException("timed out"))
+            timeout_client.__aenter__ = AsyncMock(return_value=timeout_client)
+            timeout_client.__aexit__ = AsyncMock(return_value=False)
+            mock_cls.return_value = timeout_client
+
+            with pytest.raises(httpx.TimeoutException):
+                await verify_google_id_token("any.token")
 
     async def test_calls_validate_on_claims(self):
         fake_claims = _FakeClaims(FAKE_CLAIMS_DATA)

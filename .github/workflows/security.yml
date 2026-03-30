@@ -97,6 +97,22 @@ jobs:
           path: frontend/npm-audit-report.json
           retention-days: 30
 
+  # ── SCA: Trivy filesystem scan (OSV + NVD, complements pip-audit/npm audit) ─
+  sca-trivy:
+    name: Trivy filesystem scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run Trivy in filesystem mode
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+          format: 'table'
+
   # ── Security-marked pytest suite ──────────────────────────────────────────
   pytest-security:
     name: pytest -m security

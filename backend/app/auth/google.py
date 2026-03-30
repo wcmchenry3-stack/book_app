@@ -12,7 +12,7 @@ GOOGLE_CERTS_URL = "https://www.googleapis.com/oauth2/v3/certs"
 async def verify_google_id_token(id_token: str) -> dict:
     """Verify a Google ID token against Google's JWKS and return its claims."""
     logger.info("Fetching Google JWKS from %s", GOOGLE_CERTS_URL)
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=httpx.Timeout(5.0)) as client:
         resp = await client.get(GOOGLE_CERTS_URL)
         resp.raise_for_status()
         jwks = resp.json()

@@ -8,52 +8,52 @@ on:
 
 jobs:
   gate-main-source:
-    uses: wcmchenry3-stack/.github/.github/workflows/called-gate-main-source.yml@main
+    uses: wcmchenry3-stack/.github/.github/workflows/called-gate-main-source.yml@a973bcce934fef46e22d40123430ad2594d5bada
     secrets: inherit
 
   openai-policy:
-    uses: wcmchenry3-stack/.github/.github/workflows/called-openai-policy.yml@main
+    uses: wcmchenry3-stack/.github/.github/workflows/called-openai-policy.yml@a973bcce934fef46e22d40123430ad2594d5bada
     secrets: inherit
 
   secret-scan:
-    uses: wcmchenry3-stack/.github/.github/workflows/called-secret-scan.yml@main
+    uses: wcmchenry3-stack/.github/.github/workflows/called-secret-scan.yml@a973bcce934fef46e22d40123430ad2594d5bada
     secrets: inherit
 
   lint-python:
-    uses: wcmchenry3-stack/.github/.github/workflows/called-lint-python.yml@main
+    uses: wcmchenry3-stack/.github/.github/workflows/called-lint-python.yml@a973bcce934fef46e22d40123430ad2594d5bada
     with:
       working-directory: backend
     secrets: inherit
 
   lint-frontend:
-    uses: wcmchenry3-stack/.github/.github/workflows/called-lint-frontend.yml@main
+    uses: wcmchenry3-stack/.github/.github/workflows/called-lint-frontend.yml@a973bcce934fef46e22d40123430ad2594d5bada
     with:
       working-directory: frontend
       run-a11y: true
     secrets: inherit
 
   test-python:
-    uses: wcmchenry3-stack/.github/.github/workflows/called-test-python.yml@main
+    uses: wcmchenry3-stack/.github/.github/workflows/called-test-python.yml@a973bcce934fef46e22d40123430ad2594d5bada
     with:
       working-directory: backend
       coverage-threshold: 80
     secrets: inherit
 
   test-frontend:
-    uses: wcmchenry3-stack/.github/.github/workflows/called-test-frontend.yml@main
+    uses: wcmchenry3-stack/.github/.github/workflows/called-test-frontend.yml@a973bcce934fef46e22d40123430ad2594d5bada
     with:
       working-directory: frontend
       coverage-threshold: 80
     secrets: inherit
 
   cve-python:
-    uses: wcmchenry3-stack/.github/.github/workflows/called-cve-python.yml@main
+    uses: wcmchenry3-stack/.github/.github/workflows/called-cve-python.yml@a973bcce934fef46e22d40123430ad2594d5bada
     with:
       working-directory: backend
     secrets: inherit
 
   cve-frontend:
-    uses: wcmchenry3-stack/.github/.github/workflows/called-cve-frontend.yml@main
+    uses: wcmchenry3-stack/.github/.github/workflows/called-cve-frontend.yml@a973bcce934fef46e22d40123430ad2594d5bada
     with:
       working-directory: frontend
       # Expo 51 bundles a vulnerable version of `send` inside @expo/cli.

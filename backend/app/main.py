@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
-from slowapi import _rate_limit_exceeded_handler
+from slowapi import _rate_limit_exceeded_handler as _slowapi_429
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy import text
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -73,6 +73,22 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
+class CloudflareRealIPMiddleware(BaseHTTPMiddleware):
+    """Restore the real client IP from the CF-Connecting-IP header set by Cloudflare.
+
+    Without this, slowapi keys unauthenticated rate limits by Cloudflare's edge IP
+    rather than the real client IP, effectively disabling per-IP rate limiting.
+    The production guard prevents a locally supplied CF-Connecting-IP header from
+    being trusted in dev/staging environments.
+    """
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        cf_ip = request.headers.get("CF-Connecting-IP")
+        if cf_ip and settings.environment == "production":
+            request.scope["client"] = (cf_ip, 0)
+        return await call_next(request)
+
+
 class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
     """Reject requests whose Content-Length exceeds the limit before reading the body.
 
@@ -102,6 +118,11 @@ app = FastAPI(
     redoc_url=None,
 )
 
+def _rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> Response:
+    logger.warning("rate_limit_exceeded path=%s", request.url.path)
+    return _slowapi_429(request, exc)
+
+
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
@@ -109,12 +130,13 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # becomes the outermost layer (first to run on incoming requests).
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestIdMiddleware)
+app.add_middleware(CloudflareRealIPMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Request-ID"],
 )
 # RequestSizeLimitMiddleware runs before CORS/headers to drop oversized bodies early.
 app.add_middleware(RequestSizeLimitMiddleware)
