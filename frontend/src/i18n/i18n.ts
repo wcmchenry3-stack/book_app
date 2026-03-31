@@ -175,6 +175,8 @@ export const i18nReady = i18n
     react: {
       useSuspense: false,
     },
-  });
+  })
+  // Prevent unhandled promise rejection — fatal in React Native.
+  .catch((err: unknown) => console.error('[i18n] init failed:', err));
 
 export default i18n;
