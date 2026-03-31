@@ -11,7 +11,13 @@
   // Initialise native Sentry BEFORE the React Native bridge starts so that
   // crashes during JS bundle loading / module evaluation are captured.
   // Configuration is read from sentry.options.json bundled as an app resource.
-  [RNSentrySDK start];
+  // Wrapped in @try/@catch so a misconfigured or missing SDK can never
+  // prevent the app from launching.
+  @try {
+    [RNSentrySDK start];
+  } @catch (NSException *exception) {
+    NSLog(@"[Sentry] native init failed: %@", exception);
+  }
 
   self.moduleName = @"main";
 
