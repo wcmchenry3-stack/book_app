@@ -20,7 +20,7 @@
     "expo": "~51.0.28",
     "expo-auth-session": "~5.5.2",
     "expo-camera": "~15.0.16",
-    "expo-router": "~3.5.23",
+    "expo-router": "~55.0.8",
     "expo-secure-store": "~13.0.2",
     "expo-status-bar": "~1.12.1",
     "expo-web-browser": "~13.0.3",
