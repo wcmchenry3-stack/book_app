@@ -1,7 +1,0 @@
-{
-  "dsn": "https://8d7985b74e3df0be133eb2d78d27a8c3@o4511129011093504.ingest.us.sentry.io/4511129213927424",
-  "environment": "production",
-  "tracesSampleRate": 0.2,
-  "sendDefaultPii": false,
-  "enableAutoSessionTracking": true
-}
