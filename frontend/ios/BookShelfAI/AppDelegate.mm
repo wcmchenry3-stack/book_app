@@ -2,11 +2,17 @@
 
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTLinkingManager.h>
+#import <RNSentry/RNSentrySDK.h>
 
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+  // Initialise native Sentry BEFORE the React Native bridge starts so that
+  // crashes during JS bundle loading / module evaluation are captured.
+  // Configuration is read from sentry.options.json bundled as an app resource.
+  [RNSentrySDK start];
+
   self.moduleName = @"main";
 
   // You can add your custom initial props in the dictionary below.

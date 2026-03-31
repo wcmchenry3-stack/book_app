@@ -16,6 +16,7 @@
 		B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		D7A7F0290DD646D1801C9C00 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D2B58053770444BF952B66F8 /* PrivacyInfo.xcprivacy */; };
+		E1A2B3C4D5E6F708A9B0C1D2 /* sentry.options.json in Resources */ = {isa = PBXBuildFile; fileRef = F0E1D2C3B4A596870FEDCBA9 /* sentry.options.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,6 +35,7 @@
 		D2B58053770444BF952B66F8 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = PrivacyInfo.xcprivacy; path = BookShelfAI/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F6B72321766C4777B9B8F4E7 /* BookShelfAI-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "BookShelfAI-Bridging-Header.h"; path = "BookShelfAI/BookShelfAI-Bridging-Header.h"; sourceTree = "<group>"; };
+		F0E1D2C3B4A596870FEDCBA9 /* sentry.options.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = "sentry.options.json"; path = "BookShelfAI/sentry.options.json"; sourceTree = "<group>"; };
 		FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-BookShelfAI/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -60,6 +62,7 @@
 				13B07FB71A68108700A75B9A /* main.m */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
 				D2B58053770444BF952B66F8 /* PrivacyInfo.xcprivacy */,
+				F0E1D2C3B4A596870FEDCBA9 /* sentry.options.json */,
 				105040C63B12418DB7A2E56A /* noop-file.swift */,
 				F6B72321766C4777B9B8F4E7 /* BookShelfAI-Bridging-Header.h */,
 			);
@@ -205,6 +208,7 @@
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
 				D7A7F0290DD646D1801C9C00 /* PrivacyInfo.xcprivacy in Resources */,
+				E1A2B3C4D5E6F708A9B0C1D2 /* sentry.options.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
