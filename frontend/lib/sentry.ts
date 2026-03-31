@@ -5,11 +5,13 @@ const DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
 /**
  * Initialise Sentry (both JS and native layers).
  *
- * In @sentry/react-native v7, Sentry.init() handles native SDK
- * initialisation via the RN bridge — no separate native call needed.
+ * @sentry/react-native v8 auto-initialises the native SDK via the RN
+ * bridge (autoInitializeNativeSdk defaults to true) — no separate native
+ * call in AppDelegate is needed.
  *
- * Wrapped in try/catch so a native-module error during init can never
- * escalate to RCTFatal and crash the app before anything renders.
+ * Wrapped in try/catch so a synchronous init error can never crash the
+ * app before anything renders. Async bridge errors are handled by the
+ * ErrorBoundary in _layout.tsx.
  */
 export function initSentry(): void {
   if (!DSN) return;
