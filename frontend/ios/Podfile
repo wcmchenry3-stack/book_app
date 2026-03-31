@@ -57,15 +57,50 @@ target 'BookShelfAI' do
       :ccache_enabled => podfile_properties['apple.ccacheEnabled'] == 'true',
     )
 
-    # Fix fmt 9.1.0 consteval compilation error with newer Apple Clang.
-    # Apple Clang advertises __cpp_consteval but has bugs evaluating
-    # consteval expressions, causing build failures in format-inl.h.
-    installer.pods_project.targets.each do |target|
-      if target.name == 'fmt'
-        target.build_configurations.each do |config|
-          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
-          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'FMT_CONSTEVAL='
-        end
+    # Fix fmt consteval compilation error with Xcode 26 Apple Clang.
+    # Apple Clang advertises __cpp_consteval but cannot evaluate consteval
+    # expressions in format-inl.h. Patch the header to force consteval off.
+    # Supports both fmt 11.x (base.h / FMT_USE_CONSTEVAL) and 9.x (core.h).
+    fmt_dir = File.join(installer.sandbox.root, 'fmt', 'include', 'fmt')
+    fmt_base = File.join(fmt_dir, 'base.h')
+    fmt_core = File.join(fmt_dir, 'core.h')
+    if File.exist?(fmt_base)
+      # fmt >= 11: force FMT_CONSTEVAL=constexpr and keep FMT_CONSTEXPR20=constexpr
+      # while setting FMT_USE_CONSTEVAL=0 to skip consteval validation paths.
+      File.chmod(0644, fmt_base)
+      content = File.read(fmt_base)
+      patched = content.sub(
+        "#if FMT_USE_CONSTEVAL\n" \
+        "#  define FMT_CONSTEVAL consteval\n" \
+        "#  define FMT_CONSTEXPR20 constexpr\n" \
+        "#else\n" \
+        "#  define FMT_CONSTEVAL\n" \
+        "#  define FMT_CONSTEXPR20\n" \
+        "#endif",
+        "// Patched: force constexpr to work around Apple Clang consteval bugs.\n" \
+        "#define FMT_USE_CONSTEVAL 0\n" \
+        "#define FMT_CONSTEVAL constexpr\n" \
+        "#define FMT_CONSTEXPR20 constexpr"
+      )
+      if patched != content
+        File.write(fmt_base, patched)
+        Pod::UI.puts "Patched fmt/base.h: forced FMT_CONSTEVAL=constexpr"
+      end
+    elsif File.exist?(fmt_core)
+      # fmt 9.x: replace the FMT_CONSTEVAL detection block.
+      File.chmod(0644, fmt_core)
+      content = File.read(fmt_core)
+      patched = content.sub(
+        /^#ifndef FMT_CONSTEVAL\n.*?^#endif\n/m,
+        <<~PATCH
+          #ifndef FMT_CONSTEVAL
+          #  define FMT_CONSTEVAL constexpr
+          #endif
+        PATCH
+      )
+      if patched != content
+        File.write(fmt_core, patched)
+        Pod::UI.puts "Patched fmt/core.h: forced FMT_CONSTEVAL=constexpr"
       end
     end
 
