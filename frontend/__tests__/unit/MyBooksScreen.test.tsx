@@ -87,7 +87,11 @@ describe('MyBooksScreen', () => {
   it('shows empty state when no books', async () => {
     mockGet.mockResolvedValue({ data: [] });
     const { getByText } = render(<MyBooksScreen />);
-    await waitFor(() => expect(getByText('No books here yet.')).toBeTruthy());
+    // Flush the resolved API promise and resulting state updates.
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0));
+    });
+    expect(getByText('No books here yet.')).toBeTruthy();
   });
 
   it('renders all filter tabs', async () => {
