@@ -57,15 +57,25 @@ target 'BookShelfAI' do
       :ccache_enabled => podfile_properties['apple.ccacheEnabled'] == 'true',
     )
 
-    # Fix fmt 9.1.0 consteval compilation error with newer Apple Clang.
-    # Apple Clang advertises __cpp_consteval but has bugs evaluating
-    # consteval expressions, causing build failures in format-inl.h.
-    installer.pods_project.targets.each do |target|
-      if target.name == 'fmt'
-        target.build_configurations.each do |config|
-          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
-          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'FMT_CONSTEVAL='
-        end
+    # Fix fmt consteval compilation error with Xcode 26 Apple Clang.
+    # Apple Clang advertises __cpp_consteval but cannot evaluate consteval
+    # expressions in fmt's format-inl.h. The GCC_PREPROCESSOR_DEFINITIONS
+    # approach (-DFMT_CONSTEVAL=) is unreliable with Xcode's response-file
+    # build system, so we patch the header directly to force constexpr.
+    fmt_core = File.join(installer.sandbox.root, 'fmt', 'include', 'fmt', 'core.h')
+    if File.exist?(fmt_core)
+      content = File.read(fmt_core)
+      patched = content.gsub(
+        /^#ifndef FMT_CONSTEVAL\n.*?^#endif\n/m,
+        <<~PATCH
+          #ifndef FMT_CONSTEVAL
+          #  define FMT_CONSTEVAL constexpr
+          #endif
+        PATCH
+      )
+      if patched != content
+        File.write(fmt_core, patched)
+        Pod::UI.puts "Patched fmt/core.h: forced FMT_CONSTEVAL=constexpr"
       end
     end
 
