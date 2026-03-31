@@ -77,22 +77,18 @@ describe('WishlistScreen', () => {
     await waitFor(() => expect(getByText(/Your wishlist is empty/)).toBeTruthy());
   });
 
-  it(
-    'renders book titles and authors when data loaded',
-    async () => {
-      mockGet.mockResolvedValue({ data: [BOOK_1, BOOK_2] });
-      const { getByText } = render(<WishlistScreen />);
-      await waitFor(
-        () => {
-          expect(getByText('Dune')).toBeTruthy();
-          expect(getByText('Frank Herbert')).toBeTruthy();
-          expect(getByText('Foundation')).toBeTruthy();
-        },
-        { timeout: 10_000 }
-      );
-    },
-    15_000
-  );
+  it('renders book titles and authors when data loaded', async () => {
+    mockGet.mockResolvedValue({ data: [BOOK_1, BOOK_2] });
+    const { getByText } = render(<WishlistScreen />);
+    await waitFor(
+      () => {
+        expect(getByText('Dune')).toBeTruthy();
+        expect(getByText('Frank Herbert')).toBeTruthy();
+        expect(getByText('Foundation')).toBeTruthy();
+      },
+      { timeout: 10_000 }
+    );
+  }, 15_000);
 
   it('renders publish year when edition has one', async () => {
     mockGet.mockResolvedValue({ data: [BOOK_1] });
