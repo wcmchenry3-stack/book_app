@@ -17,4 +17,8 @@ npm ci
 
 # Install CocoaPods dependencies
 cd ios
+# Remove stale Podfile.lock — it was generated with an older react-native version
+# and the fmt/hermes-engine checksums no longer match RN 0.83.
+# pod install will regenerate a correct lock file.
+rm -f Podfile.lock
 pod install
