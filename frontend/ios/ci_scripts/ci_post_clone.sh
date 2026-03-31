@@ -8,8 +8,12 @@ set -e
 # (org/project/auth token must be configured as Xcode Cloud env vars)
 export SENTRY_ALLOW_FAILURE=true
 
-# Install Node.js
-brew install node
+# Install Node.js 22 LTS — pinned away from latest (25.x) because npm 11.x
+# (which ships with Node 25) has a known crash: "Exit handler never called!"
+# that fires on our package-lock.json tree. Node 22 LTS ships npm 10.x and
+# satisfies react-native's ">= 20.19.4" engine requirement.
+brew install node@22
+export PATH="$(brew --prefix node@22)/bin:$PATH"
 
 # Install Node.js dependencies (required for React Native pod scripts)
 cd "$CI_PRIMARY_REPOSITORY_PATH/frontend"
