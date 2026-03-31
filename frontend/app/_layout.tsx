@@ -1,3 +1,7 @@
+// Sentry MUST be the first import — its module self-initialises so the
+// native crash reporter is ready before any other module can throw.
+import { Sentry } from '../lib/sentry';
+
 import '../src/i18n/i18n';
 
 import { Stack } from 'expo-router';
@@ -5,10 +9,7 @@ import { Stack } from 'expo-router';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { ThemeToggleButton } from '../components/ThemeToggleButton';
 import { AuthProvider } from '../contexts/AuthContext';
-import { initSentry, Sentry } from '../lib/sentry';
 import { ThemeProvider } from '../theme';
-
-initSentry();
 
 function RootLayout() {
   return (
