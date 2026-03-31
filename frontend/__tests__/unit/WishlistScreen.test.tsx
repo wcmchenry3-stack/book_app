@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, fireEvent, render, renderAsync, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 
 import WishlistScreen from '../../app/(tabs)/wishlist';
 
@@ -79,12 +79,12 @@ describe('WishlistScreen', () => {
 
   it('renders book titles and authors when data loaded', async () => {
     mockGet.mockResolvedValue({ data: [BOOK_1, BOOK_2] });
-    // renderAsync uses async act(), which flushes the mock-resolved API promise
-    // and resulting state updates before returning — avoids waitFor timeout on CI.
-    const { getByText } = await renderAsync(<WishlistScreen />);
-    expect(getByText('Dune')).toBeTruthy();
-    expect(getByText('Frank Herbert')).toBeTruthy();
-    expect(getByText('Foundation')).toBeTruthy();
+    const { getByText } = render(<WishlistScreen />);
+    await waitFor(() => {
+      expect(getByText('Dune')).toBeTruthy();
+      expect(getByText('Frank Herbert')).toBeTruthy();
+      expect(getByText('Foundation')).toBeTruthy();
+    });
   });
 
   it('renders publish year when edition has one', async () => {

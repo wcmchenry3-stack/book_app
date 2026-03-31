@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, fireEvent, render, renderAsync, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 
 import MyBooksScreen from '../../app/(tabs)/my-books';
 
@@ -86,10 +86,8 @@ describe('MyBooksScreen', () => {
 
   it('shows empty state when no books', async () => {
     mockGet.mockResolvedValue({ data: [] });
-    // renderAsync uses async act(), which flushes the mock-resolved API promise
-    // and resulting state updates before returning — avoids waitFor timeout on CI.
-    const { getByText } = await renderAsync(<MyBooksScreen />);
-    expect(getByText('No books here yet.')).toBeTruthy();
+    const { getByText } = render(<MyBooksScreen />);
+    await waitFor(() => expect(getByText('No books here yet.')).toBeTruthy());
   });
 
   it('renders all filter tabs', async () => {
