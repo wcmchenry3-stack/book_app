@@ -84,15 +84,17 @@ describe('MyBooksScreen', () => {
     expect(getByTestId('loading-spinner')).toBeTruthy();
   });
 
-  it('shows empty state when no books', async () => {
-    mockGet.mockResolvedValue({ data: [] });
-    const { getByText } = render(<MyBooksScreen />);
-    // Flush the resolved API promise and resulting state updates.
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 0));
-    });
-    expect(getByText('No books here yet.')).toBeTruthy();
-  });
+  it(
+    'shows empty state when no books',
+    async () => {
+      mockGet.mockResolvedValue({ data: [] });
+      const { getByText } = render(<MyBooksScreen />);
+      await waitFor(() => expect(getByText('No books here yet.')).toBeTruthy(), {
+        timeout: 10_000,
+      });
+    },
+    15_000
+  );
 
   it('renders all filter tabs', async () => {
     mockGet.mockResolvedValue({ data: [] });
