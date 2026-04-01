@@ -38,6 +38,16 @@ retry() {
 brew install node@22
 export PATH="$(brew --prefix node@22)/bin:$PATH"
 
+# Persist NODE_BINARY for Xcode build phases (which run in separate processes).
+# Without this, .xcode.env falls back to `command -v node` which returns empty
+# on Xcode Cloud (node@22 is keg-only and not on the default PATH).
+# An empty NODE_BINARY causes the "Bundle React Native code" phase to fail
+# silently (masked by SENTRY_ALLOW_FAILURE=true), producing an archive
+# without main.jsbundle → handleBundleLoadingError crash at launch.
+NODE22_BIN="$(brew --prefix node@22)/bin/node"
+echo "export NODE_BINARY=\"$NODE22_BIN\"" > "$CI_PRIMARY_REPOSITORY_PATH/frontend/ios/.xcode.env.local"
+echo "INFO: wrote .xcode.env.local → NODE_BINARY=$NODE22_BIN"
+
 # Install Node.js dependencies (required for React Native pod scripts)
 cd "$CI_PRIMARY_REPOSITORY_PATH/frontend"
 retry 3 10 npm ci
