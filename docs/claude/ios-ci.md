@@ -44,6 +44,26 @@ via `core.fileMode` — verify with `git ls-files --stage frontend/ios/ci_script
 locally regenerates it; Xcode Cloud does NOT run prebuild — it uses the
 committed `ios/` directory directly.
 
+## JS bundle validation (GitHub Actions)
+
+The `js-bundle-check` CI job runs `react-native bundle --platform ios` on every
+PR to verify the JS bundle can be created. This catches silent bundling failures
+before they reach Xcode Cloud.
+
+The Xcode build CI check (`ios-build-check`) only compiles in Debug mode, which
+sets `SKIP_BUNDLING=1` — it cannot detect bundler or entry-point issues.
+
+## Sentry bundling fallback
+
+The "Bundle React Native code" build phase runs through `sentry-xcode.sh`, which
+wraps `react-native-xcode.sh`. If `sentry-cli` fails (e.g. missing `SENTRY_ORG`)
+before invoking the bundler, `SENTRY_ALLOW_FAILURE=true` masks the failure as
+exit 0 — and `main.jsbundle` is never created.
+
+A fallback in the build phase detects this and runs `react-native-xcode.sh`
+directly. The `ci_post_xcodebuild.sh` script also validates the bundle exists
+in the archive as a final safety net.
+
 ## Key paths on the Xcode Cloud worker
 
 | Path | What it is |
