@@ -67,3 +67,4 @@ frontend/ios/build/
 frontend/ios/DerivedData/
 frontend/ios/*.xcarchive
 frontend/ios/Bookshelf.xcworkspace/xcuserdata/
+frontend/ios/.xcode.env.local
