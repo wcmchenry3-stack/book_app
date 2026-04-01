@@ -1,7 +1,6 @@
 """Sentry integration tests for book_app backend."""
 
 import os
-import sys
 from pathlib import Path
 
 import pytest
