@@ -5,7 +5,7 @@ const DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
 /**
  * Initialise Sentry (both JS and native layers).
  *
- * @sentry/react-native v8 auto-initialises the native SDK via the RN
+ * @sentry/react-native v7 auto-initialises the native SDK via the RN
  * bridge (autoInitializeNativeSdk defaults to true) — no separate native
  * call in AppDelegate is needed.
  *
