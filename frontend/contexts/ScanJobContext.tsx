@@ -1,0 +1,332 @@
+import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Platform } from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
+import { v4 as uuidv4 } from 'uuid';
+import { useTranslation } from 'react-i18next';
+
+import type { EnrichedBook } from '../components/BookCandidatePicker';
+import { useBanner } from '../hooks/useBanner';
+import { api } from '../lib/api';
+import type { ScanJob, ScanJobType } from '../lib/scanJob';
+import { loadJobs, saveJobs } from '../lib/scanJobStorage';
+
+const MAX_RETRIES = 3;
+const QUEUE_DRAIN_DELAY = 2000;
+
+export interface ScanJobContextValue {
+  jobs: ScanJob[];
+  reviewingJob: ScanJob | null;
+  startScan: (type: ScanJobType, imageUri?: string, query?: string) => void;
+  retryScan: (jobId: string) => void;
+  queueForLater: (jobId: string) => void;
+  reviewJob: (jobId: string) => void;
+  dismissReview: () => void;
+  dismissJob: (jobId: string) => void;
+  handleSelectBook: (book: EnrichedBook) => Promise<void>;
+}
+
+export const ScanJobContext = createContext<ScanJobContextValue>({
+  jobs: [],
+  reviewingJob: null,
+  startScan: () => {},
+  retryScan: () => {},
+  queueForLater: () => {},
+  reviewJob: () => {},
+  dismissReview: () => {},
+  dismissJob: () => {},
+  handleSelectBook: async () => {},
+});
+
+export function ScanJobProvider({ children }: { children: React.ReactNode }) {
+  const [jobs, setJobs] = useState<ScanJob[]>([]);
+  const [reviewingJobId, setReviewingJobId] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const drainingRef = useRef(false);
+  const executeScanRef = useRef<(job: ScanJob) => Promise<void>>(async () => {});
+  const { showBanner } = useBanner();
+  const { t } = useTranslation('scan');
+
+  // Persist jobs whenever they change (after initial load).
+  useEffect(() => {
+    if (loaded) {
+      saveJobs(jobs);
+    }
+  }, [jobs, loaded]);
+
+  // Load persisted jobs on mount. Reset interrupted searches to pending.
+  useEffect(() => {
+    (async () => {
+      const persisted = await loadJobs();
+      const restored = persisted.map((j) =>
+        j.status === 'searching' ? { ...j, status: 'pending' as const } : j,
+      );
+      setJobs(restored);
+      setLoaded(true);
+    })();
+  }, []);
+
+  // Listen for connectivity changes and drain queued jobs.
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      if (state.isConnected && !drainingRef.current) {
+        drainQueue();
+      }
+    });
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded]);
+
+  function updateJob(jobId: string, updates: Partial<ScanJob>) {
+    setJobs((prev) => prev.map((j) => (j.id === jobId ? { ...j, ...updates } : j)));
+  }
+
+  // Keep executeScan in a ref so useCallbacks always call the latest version.
+  executeScanRef.current = async function executeScan(job: ScanJob) {
+    updateJob(job.id, { status: 'searching' });
+
+    try {
+      let results: EnrichedBook[];
+
+      if (job.type === 'text') {
+        const response = await api.get<EnrichedBook[]>('/books/search', {
+          params: { q: job.query },
+        });
+        results = response.data ?? [];
+      } else {
+        const formData = new FormData();
+        if (Platform.OS === 'web') {
+          // On web, imageUri is a blob URL or the File was already lost.
+          // For web, we store the File object reference separately — but since
+          // web doesn't persist the queue, this path only runs for live scans.
+          formData.append('file', job.imageUri as unknown as Blob, 'scan.jpg');
+        } else {
+          formData.append('file', {
+            uri: job.imageUri,
+            name: 'scan.jpg',
+            type: 'image/jpeg',
+          } as unknown as Blob);
+        }
+        const response = await api.post<EnrichedBook[]>('/scan', formData, {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          transformRequest: [
+            (data: FormData, headers: any) => {
+              if (Platform.OS === 'web') {
+                headers.delete('Content-Type');
+              } else {
+                headers.set('Content-Type', 'multipart/form-data');
+              }
+              return data;
+            },
+          ],
+        });
+        results = response.data ?? [];
+      }
+
+      if (results.length === 0) {
+        updateJob(job.id, { status: 'failed', error: 'no_results' });
+        showBanner({
+          message: t('noBooksFoundTitle'),
+          type: 'info',
+          duration: 4000,
+        });
+        return;
+      }
+
+      updateJob(job.id, { status: 'complete', results });
+      showBanner({
+        message: t('bookFound', { title: results[0].title }),
+        type: 'success',
+        actions: [
+          {
+            label: t('viewResults'),
+            onPress: () => setReviewingJobId(job.id),
+          },
+        ],
+      });
+    } catch {
+      updateJob(job.id, { status: 'failed', error: 'network_or_server' });
+      showBanner({
+        message: t('scanFailedTitle'),
+        type: 'error',
+        actions: [
+          { label: t('retryNow'), onPress: () => retryScan(job.id) },
+          { label: t('saveForLater'), onPress: () => queueForLater(job.id) },
+        ],
+        duration: 8000,
+      });
+    }
+  }
+
+  async function drainQueue() {
+    drainingRef.current = true;
+    try {
+      // Read the latest jobs from state via a callback to avoid stale closures.
+      let queuedJobs: ScanJob[] = [];
+      setJobs((prev) => {
+        queuedJobs = prev.filter((j) => j.status === 'queued' || j.status === 'pending');
+        return prev;
+      });
+
+      for (const job of queuedJobs) {
+        const netState = await NetInfo.fetch();
+        if (!netState.isConnected) break;
+        await executeScanRef.current(job);
+        // Delay between jobs to avoid API burst.
+        if (queuedJobs.indexOf(job) < queuedJobs.length - 1) {
+          await new Promise((r) => setTimeout(r, QUEUE_DRAIN_DELAY));
+        }
+      }
+    } finally {
+      drainingRef.current = false;
+    }
+  }
+
+  const startScan = useCallback(
+    async (type: ScanJobType, imageUri?: string, query?: string) => {
+      const job: ScanJob = {
+        id: uuidv4(),
+        type,
+        status: 'pending',
+        createdAt: Date.now(),
+        query,
+        imageUri,
+        retryCount: 0,
+      };
+
+      setJobs((prev) => [job, ...prev]);
+
+      const netState = await NetInfo.fetch();
+      if (!netState.isConnected) {
+        updateJob(job.id, { status: 'queued' });
+        showBanner({
+          message: t('savedOffline'),
+          type: 'info',
+          duration: 4000,
+        });
+        return;
+      }
+
+      await executeScanRef.current(job);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [showBanner, t],
+  );
+
+  // Keep jobs in a ref so retryScan can read the latest state synchronously.
+  const jobsRef = useRef(jobs);
+  jobsRef.current = jobs;
+
+  const retryScan = useCallback(
+    async (jobId: string) => {
+      const job = jobsRef.current.find((j) => j.id === jobId);
+      if (!job) return;
+
+      if (job.retryCount >= MAX_RETRIES) {
+        showBanner({
+          message: t('maxRetries'),
+          type: 'info',
+          duration: 4000,
+        });
+        updateJob(jobId, { status: 'queued' });
+        return;
+      }
+
+      const updated: ScanJob = {
+        ...job,
+        retryCount: job.retryCount + 1,
+        status: 'pending' as const,
+        error: undefined,
+      };
+      setJobs((prev) => prev.map((j) => (j.id === jobId ? updated : j)));
+      await executeScanRef.current(updated);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [showBanner, t],
+  );
+
+  const queueForLater = useCallback((jobId: string) => {
+    updateJob(jobId, { status: 'queued' });
+  }, []);
+
+  const reviewJob = useCallback((jobId: string) => {
+    setReviewingJobId(jobId);
+  }, []);
+
+  const dismissReview = useCallback(() => {
+    setReviewingJobId(null);
+  }, []);
+
+  const dismissJob = useCallback(
+    (jobId: string) => {
+      setJobs((prev) => prev.filter((j) => j.id !== jobId));
+      if (reviewingJobId === jobId) setReviewingJobId(null);
+
+      // Clean up persisted image if it exists.
+      if (Platform.OS !== 'web') {
+        const job = jobs.find((j) => j.id === jobId);
+        if (job?.imageUri) {
+          import('expo-file-system').then((fs) => {
+            fs.deleteAsync(job.imageUri!, { idempotent: true }).catch(() => {});
+          });
+        }
+      }
+    },
+    [jobs, reviewingJobId],
+  );
+
+  const handleSelectBook = useCallback(
+    async (book: EnrichedBook) => {
+      try {
+        await api.post('/wishlist', book);
+        if (reviewingJobId) {
+          dismissJob(reviewingJobId);
+        }
+        setReviewingJobId(null);
+        showBanner({
+          message: t('addedMessage', { title: book.title }),
+          type: 'success',
+          duration: 4000,
+        });
+      } catch {
+        showBanner({
+          message: t('couldNotSaveMessage'),
+          type: 'error',
+          duration: 4000,
+        });
+      }
+    },
+    [reviewingJobId, dismissJob, showBanner, t],
+  );
+
+  const reviewingJob = useMemo(
+    () => (reviewingJobId ? jobs.find((j) => j.id === reviewingJobId) ?? null : null),
+    [reviewingJobId, jobs],
+  );
+
+  const value = useMemo(
+    () => ({
+      jobs,
+      reviewingJob,
+      startScan,
+      retryScan,
+      queueForLater,
+      reviewJob,
+      dismissReview,
+      dismissJob,
+      handleSelectBook,
+    }),
+    [
+      jobs,
+      reviewingJob,
+      startScan,
+      retryScan,
+      queueForLater,
+      reviewJob,
+      dismissReview,
+      dismissJob,
+      handleSelectBook,
+    ],
+  );
+
+  return <ScanJobContext.Provider value={value}>{children}</ScanJobContext.Provider>;
+}
