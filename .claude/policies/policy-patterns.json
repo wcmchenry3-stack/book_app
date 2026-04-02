@@ -1,7 +1,8 @@
 {
   "openai": {
     "detect": "from openai|import openai|openai\\.com|OpenAI\\(|client\\.chat\\.completions|client\\.completions\\.create|OPENAI_API_KEY",
-    "skip": "^\\.env"
+    "skip": "^\\.env",
+    "required_handling": "429|RateLimitError|rate_limit|retry|backoff"
   },
   "wikipedia": {
     "detect": "wikipedia\\.org|mediawiki|wikimedia",
