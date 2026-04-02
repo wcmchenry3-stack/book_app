@@ -46,7 +46,7 @@ class TestVerifyGoogleIdToken:
             patch("app.auth.google.authlib_jwt.decode") as mock_decode,
             patch("app.auth.google.settings") as mock_settings,
         ):
-            mock_settings.google_client_id = "fake-client-id"
+            mock_settings.google_client_ids = ["fake-client-id"]
             mock_cls.return_value = _mock_httpx_client(FAKE_JWKS)
             mock_decode.return_value = fake_claims
 
@@ -64,7 +64,7 @@ class TestVerifyGoogleIdToken:
             patch("app.auth.google.authlib_jwt.decode", return_value=fake_claims),
             patch("app.auth.google.settings") as mock_settings,
         ):
-            mock_settings.google_client_id = "fake-client-id"
+            mock_settings.google_client_ids = ["fake-client-id"]
             mock_client = _mock_httpx_client(FAKE_JWKS)
             mock_cls.return_value = mock_client
 
@@ -82,7 +82,7 @@ class TestVerifyGoogleIdToken:
             patch("app.auth.google.authlib_jwt.decode") as mock_decode,
             patch("app.auth.google.settings") as mock_settings,
         ):
-            mock_settings.google_client_id = "test-client-id"
+            mock_settings.google_client_ids = ["test-client-id"]
             mock_cls.return_value = _mock_httpx_client(FAKE_JWKS)
             mock_decode.return_value = fake_claims
 
@@ -90,7 +90,7 @@ class TestVerifyGoogleIdToken:
 
         _, kwargs = mock_decode.call_args
         claims_options = kwargs.get("claims_options") or mock_decode.call_args[0][2]
-        assert claims_options["aud"]["value"] == "test-client-id"
+        assert claims_options["aud"]["values"] == ["test-client-id"]
         assert "https://accounts.google.com" in claims_options["iss"]["values"]
 
     async def test_raises_on_jwks_timeout(self):
@@ -118,7 +118,7 @@ class TestVerifyGoogleIdToken:
             patch("app.auth.google.authlib_jwt.decode", return_value=fake_claims),
             patch("app.auth.google.settings") as mock_settings,
         ):
-            mock_settings.google_client_id = "fake-client-id"
+            mock_settings.google_client_ids = ["fake-client-id"]
             mock_cls.return_value = _mock_httpx_client(FAKE_JWKS)
 
             await verify_google_id_token("fake.id.token")
