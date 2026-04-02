@@ -58,7 +58,7 @@ export function ScanJobProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       const persisted = await loadJobs();
       const restored = persisted.map((j) =>
-        j.status === 'searching' ? { ...j, status: 'pending' as const } : j,
+        j.status === 'searching' ? { ...j, status: 'pending' as const } : j
       );
       setJobs(restored);
       setLoaded(true);
@@ -155,7 +155,7 @@ export function ScanJobProvider({ children }: { children: React.ReactNode }) {
         duration: 8000,
       });
     }
-  }
+  };
 
   async function drainQueue() {
     drainingRef.current = true;
@@ -209,7 +209,7 @@ export function ScanJobProvider({ children }: { children: React.ReactNode }) {
       await executeScanRef.current(job);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [showBanner, t],
+    [showBanner, t]
   );
 
   // Keep jobs in a ref so retryScan can read the latest state synchronously.
@@ -241,7 +241,7 @@ export function ScanJobProvider({ children }: { children: React.ReactNode }) {
       await executeScanRef.current(updated);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [showBanner, t],
+    [showBanner, t]
   );
 
   const queueForLater = useCallback((jobId: string) => {
@@ -271,7 +271,7 @@ export function ScanJobProvider({ children }: { children: React.ReactNode }) {
         }
       }
     },
-    [jobs, reviewingJobId],
+    [jobs, reviewingJobId]
   );
 
   const handleSelectBook = useCallback(
@@ -295,12 +295,12 @@ export function ScanJobProvider({ children }: { children: React.ReactNode }) {
         });
       }
     },
-    [reviewingJobId, dismissJob, showBanner, t],
+    [reviewingJobId, dismissJob, showBanner, t]
   );
 
   const reviewingJob = useMemo(
-    () => (reviewingJobId ? jobs.find((j) => j.id === reviewingJobId) ?? null : null),
-    [reviewingJobId, jobs],
+    () => (reviewingJobId ? (jobs.find((j) => j.id === reviewingJobId) ?? null) : null),
+    [reviewingJobId, jobs]
   );
 
   const value = useMemo(
@@ -325,7 +325,7 @@ export function ScanJobProvider({ children }: { children: React.ReactNode }) {
       dismissReview,
       dismissJob,
       handleSelectBook,
-    ],
+    ]
   );
 
   return <ScanJobContext.Provider value={value}>{children}</ScanJobContext.Provider>;

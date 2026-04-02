@@ -182,7 +182,10 @@ describe('ScanScreen — native capture flow', () => {
     mockTakePictureAsync.mockResolvedValue({ uri: 'file://test.jpg' });
     const { getByLabelText } = render(<ScanScreen />);
     await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
-    expect(mockStartScan).toHaveBeenCalledWith('image', expect.stringContaining('file:///docs/scan-queue/'));
+    expect(mockStartScan).toHaveBeenCalledWith(
+      'image',
+      expect.stringContaining('file:///docs/scan-queue/')
+    );
   });
 
   it('copies photo to document directory before starting scan', async () => {

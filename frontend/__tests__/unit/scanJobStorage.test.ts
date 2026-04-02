@@ -42,7 +42,16 @@ describe('scanJobStorage', () => {
     const jobWithResults: ScanJob = {
       ...sampleJob,
       status: 'complete',
-      results: [{ title: 'Dune', author: 'Herbert', subjects: [], confidence: 0.9, already_in_library: false, editions: [] }],
+      results: [
+        {
+          title: 'Dune',
+          author: 'Herbert',
+          subjects: [],
+          confidence: 0.9,
+          already_in_library: false,
+          editions: [],
+        },
+      ],
     };
     await saveJobs([jobWithResults]);
     const loaded = await loadJobs();
@@ -57,10 +66,7 @@ describe('scanJobStorage', () => {
   });
 
   it('handles multiple jobs', async () => {
-    const jobs = [
-      sampleJob,
-      { ...sampleJob, id: 'test-2', query: 'Foundation' },
-    ];
+    const jobs = [sampleJob, { ...sampleJob, id: 'test-2', query: 'Foundation' }];
     await saveJobs(jobs);
     const loaded = await loadJobs();
     expect(loaded).toHaveLength(2);

@@ -37,7 +37,7 @@ export function BannerProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo(
     () => ({ banner, showBanner, hideBanner }),
-    [banner, showBanner, hideBanner],
+    [banner, showBanner, hideBanner]
   );
 
   return <BannerContext.Provider value={value}>{children}</BannerContext.Provider>;

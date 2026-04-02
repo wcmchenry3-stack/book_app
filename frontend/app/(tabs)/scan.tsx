@@ -246,9 +246,7 @@ export default function ScanScreen() {
               accessibilityLabel={t('captureA11y')}
               accessibilityHint={t('captureHint')}
             >
-              <View
-                style={[styles.captureInner, { backgroundColor: theme.colors.background }]}
-              />
+              <View style={[styles.captureInner, { backgroundColor: theme.colors.background }]} />
             </Pressable>
           </View>
         </View>
