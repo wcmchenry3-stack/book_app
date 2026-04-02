@@ -109,4 +109,15 @@ describe('LoginScreen', () => {
     render(<LoginScreen />);
     await waitFor(() => expect(mockLogin).not.toHaveBeenCalled());
   });
+
+  it('logs error when login fails', async () => {
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    setupGoogleAuth({
+      response: { type: 'success', params: { id_token: 'bad-token' } },
+    });
+    mockLogin.mockRejectedValue(new Error('401 Unauthorized'));
+    render(<LoginScreen />);
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+    spy.mockRestore();
+  });
 });
