@@ -14,22 +14,46 @@ import '../src/i18n/i18n';
 
 import { Stack } from 'expo-router';
 
+import { BookCandidatePicker } from '../components/BookCandidatePicker';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { InAppBanner } from '../components/InAppBanner';
 import { ThemeToggleButton } from '../components/ThemeToggleButton';
 import { AuthProvider } from '../contexts/AuthContext';
+import { BannerProvider } from '../contexts/BannerContext';
+import { ScanJobProvider } from '../contexts/ScanJobContext';
+import { useScanJobs } from '../hooks/useScanJobs';
 import { ThemeProvider } from '../theme';
+
+function GlobalBookPicker() {
+  const { reviewingJob, dismissReview, handleSelectBook } = useScanJobs();
+
+  return (
+    <BookCandidatePicker
+      visible={reviewingJob !== null}
+      candidates={reviewingJob?.results ?? []}
+      onSelect={handleSelectBook}
+      onDismiss={dismissReview}
+    />
+  );
+}
 
 function RootLayout() {
   return (
     <ErrorBoundary>
       <ThemeProvider>
-        <AuthProvider>
-          <Stack
-            screenOptions={{
-              headerRight: () => <ThemeToggleButton />,
-            }}
-          />
-        </AuthProvider>
+        <BannerProvider>
+          <AuthProvider>
+            <ScanJobProvider>
+              <InAppBanner />
+              <Stack
+                screenOptions={{
+                  headerRight: () => <ThemeToggleButton />,
+                }}
+              />
+              <GlobalBookPicker />
+            </ScanJobProvider>
+          </AuthProvider>
+        </BannerProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );
