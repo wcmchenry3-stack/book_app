@@ -25,7 +25,13 @@ jest.mock('expo-router', () => {
   const React = require('react');
   const { View, Text } = require('react-native');
 
-  function MockTabs({ children, screenOptions }: { children: React.ReactNode; screenOptions: Record<string, unknown> }) {
+  function MockTabs({
+    children,
+    screenOptions,
+  }: {
+    children: React.ReactNode;
+    screenOptions: Record<string, unknown>;
+  }) {
     return (
       <View testID="tabs-container" accessibilityHint={JSON.stringify(screenOptions)}>
         {children}
@@ -36,9 +42,10 @@ jest.mock('expo-router', () => {
   function MockScreen(props: { name: string; options: Record<string, unknown> }) {
     mockScreenProps.push({ name: props.name, options: props.options });
     // Invoke tabBarIcon to exercise the icon render callback
-    const icon = typeof props.options?.tabBarIcon === 'function'
-      ? props.options.tabBarIcon({ color: '#000', size: 24 })
-      : null;
+    const icon =
+      typeof props.options?.tabBarIcon === 'function'
+        ? props.options.tabBarIcon({ color: '#000', size: 24 })
+        : null;
     return (
       <View testID={`tab-${props.name}`}>
         <Text>{props.options?.title as string}</Text>

@@ -30,6 +30,32 @@ def test_allowed_emails_list_empty():
     assert s.allowed_emails_list == []
 
 
+class TestGoogleClientIds:
+    def test_returns_all_configured_ids(self):
+        s = Settings(
+            database_url="postgresql+asyncpg://u:p@localhost/db",
+            google_client_id="web-id",
+            google_ios_client_id="ios-id",
+            google_android_client_id="android-id",
+        )
+        assert s.google_client_ids == ["web-id", "ios-id", "android-id"]
+
+    def test_excludes_empty_ids(self):
+        s = Settings(
+            database_url="postgresql+asyncpg://u:p@localhost/db",
+            google_client_id="web-id",
+            google_ios_client_id="",
+            google_android_client_id="",
+        )
+        assert s.google_client_ids == ["web-id"]
+
+    def test_returns_empty_when_none_set(self):
+        s = Settings(
+            database_url="postgresql+asyncpg://u:p@localhost/db",
+        )
+        assert s.google_client_ids == []
+
+
 class TestCorsOriginsValidator:
     def test_accepts_valid_origins(self):
         s = Settings(

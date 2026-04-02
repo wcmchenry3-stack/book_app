@@ -61,7 +61,9 @@ class TestValidateMagicBytes:
         data = b"\x00\x00\x00\x18ftypmif1" + b"\x00" * 100
         assert validate_magic_bytes(".heif", data) is True
 
-    @pytest.mark.parametrize("brand", [b"heic", b"heix", b"mif1", b"msf1", b"hevc", b"hevx"])
+    @pytest.mark.parametrize(
+        "brand", [b"heic", b"heix", b"mif1", b"msf1", b"hevc", b"hevx"]
+    )
     def test_heic_all_valid_brands(self, brand):
         data = b"\x00\x00\x00\x18ftyp" + brand + b"\x00" * 100
         assert validate_magic_bytes(".heic", data) is True

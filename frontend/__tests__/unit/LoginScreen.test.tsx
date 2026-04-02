@@ -1,4 +1,5 @@
 import React from 'react';
+import { Alert } from 'react-native';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 
 import LoginScreen from '../../app/(auth)/login';
@@ -110,14 +111,16 @@ describe('LoginScreen', () => {
     await waitFor(() => expect(mockLogin).not.toHaveBeenCalled());
   });
 
-  it('logs error when login fails', async () => {
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  it('shows error alert when login fails', async () => {
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
     setupGoogleAuth({
       response: { type: 'success', params: { id_token: 'bad-token' } },
     });
     mockLogin.mockRejectedValue(new Error('401 Unauthorized'));
     render(<LoginScreen />);
-    await waitFor(() => expect(spy).toHaveBeenCalled());
-    spy.mockRestore();
+    await waitFor(() =>
+      expect(alertSpy).toHaveBeenCalledWith('Error', 'Sign-in failed. Please try again.')
+    );
+    alertSpy.mockRestore();
   });
 });
