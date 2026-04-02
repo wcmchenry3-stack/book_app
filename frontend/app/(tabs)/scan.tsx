@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import * as FileSystem from 'expo-file-system';
+import { copyAsync, documentDirectory, getInfoAsync, makeDirectoryAsync } from 'expo-file-system';
 import { useTranslation } from 'react-i18next';
 
 import { useTheme } from '../../hooks/useTheme';
@@ -52,13 +52,13 @@ export default function ScanScreen() {
       if (!photo?.uri) return;
 
       // Copy temp file to persistent document directory.
-      const destDir = `${FileSystem.documentDirectory}scan-queue/`;
-      const info = await FileSystem.getInfoAsync(destDir);
+      const destDir = `${documentDirectory}scan-queue/`;
+      const info = await getInfoAsync(destDir);
       if (!info.exists) {
-        await FileSystem.makeDirectoryAsync(destDir, { intermediates: true });
+        await makeDirectoryAsync(destDir, { intermediates: true });
       }
       const destUri = `${destDir}${Date.now()}.jpg`;
-      await FileSystem.copyAsync({ from: photo.uri, to: destUri });
+      await copyAsync({ from: photo.uri, to: destUri });
 
       startScan('image', destUri);
     } finally {
