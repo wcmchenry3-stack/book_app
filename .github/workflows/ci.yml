@@ -164,6 +164,29 @@ jobs:
           DATABASE_URL: postgresql://test:test@localhost:5432/test
         run: alembic downgrade -1
 
+  # --- Podfile.lock staleness check -------------------------------------------
+  # If Podfile was modified but Podfile.lock was not, the developer forgot to
+  # run `pod install` locally. A stale lock file causes pod version drift and
+  # runtime crashes on Xcode Cloud.
+
+  podfile-lock-check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Check Podfile.lock is updated when Podfile changes
+        run: |
+          CHANGED_FILES=$(git diff --name-only "${{ github.event.pull_request.base.sha }}"...HEAD)
+          if echo "$CHANGED_FILES" | grep -q 'frontend/ios/Podfile$'; then
+            if ! echo "$CHANGED_FILES" | grep -q 'frontend/ios/Podfile.lock'; then
+              echo "::error::Podfile was modified but Podfile.lock was not updated. Run 'pod install' locally and commit the lock file."
+              exit 1
+            fi
+          fi
+          echo "Podfile.lock check passed"
+
   # --- Phase 5: JS bundle validation (Linux, fast) ---------------------------
   # Catches silent bundling failures BEFORE they reach Xcode Cloud.
   # The Xcode build check below only compiles in Debug mode (SKIP_BUNDLING=1),

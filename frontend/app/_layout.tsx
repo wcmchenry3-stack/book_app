@@ -2,6 +2,14 @@
 // native crash reporter is ready before any other module can throw.
 import { Sentry } from '../lib/sentry';
 
+// Record that the root layout module has evaluated — helps diagnose
+// crashes that happen between Sentry init and first render.
+Sentry.addBreadcrumb({
+  category: 'app.lifecycle',
+  message: 'Root layout module evaluated',
+  level: 'info',
+});
+
 import '../src/i18n/i18n';
 
 import { Stack } from 'expo-router';

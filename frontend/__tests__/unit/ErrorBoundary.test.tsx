@@ -1,7 +1,15 @@
 import React from 'react';
 import { fireEvent, render } from '@testing-library/react-native';
+import { Sentry } from '../../lib/sentry';
 
 import { ErrorBoundary } from '../../components/ErrorBoundary';
+
+jest.mock('@sentry/react-native', () => ({
+  init: jest.fn(),
+  addBreadcrumb: jest.fn(),
+  captureException: jest.fn(),
+  wrap: jest.fn((c: unknown) => c),
+}));
 
 function Bomb({ shouldThrow }: { shouldThrow: boolean }) {
   if (shouldThrow) throw new Error('test error');
@@ -50,6 +58,17 @@ describe('ErrorBoundary', () => {
       expect.any(Error),
       expect.anything()
     );
+  });
+
+  it('reports error to Sentry via captureException', () => {
+    render(
+      <ErrorBoundary>
+        <Bomb shouldThrow={true} />
+      </ErrorBoundary>
+    );
+    expect(Sentry.captureException).toHaveBeenCalledWith(expect.any(Error), {
+      extra: { componentStack: expect.any(String) },
+    });
   });
 
   it('resets error state when Try again is pressed', () => {
