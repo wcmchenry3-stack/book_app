@@ -58,13 +58,17 @@ describe('initSentry', () => {
   it('catches and logs init errors without propagating', () => {
     process.env.EXPO_PUBLIC_SENTRY_DSN = 'https://example@sentry.io/123';
     const error = new Error('init boom');
-    mockInit.mockImplementation(() => { throw error; });
+    mockInit.mockImplementation(() => {
+      throw error;
+    });
 
     const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     const { initSentry } = require('../../lib/sentry');
     mockInit.mockClear();
-    mockInit.mockImplementation(() => { throw error; });
+    mockInit.mockImplementation(() => {
+      throw error;
+    });
 
     expect(() => initSentry()).not.toThrow();
     expect(consoleError).toHaveBeenCalledWith('[Sentry] init failed:', error);
@@ -80,9 +84,7 @@ describe('initSentry', () => {
 
     initSentry();
 
-    expect(mockInit).toHaveBeenCalledWith(
-      expect.objectContaining({ tracesSampleRate: 0.2 }),
-    );
+    expect(mockInit).toHaveBeenCalledWith(expect.objectContaining({ tracesSampleRate: 0.2 }));
   });
 
   it('uses tracesSampleRate 1.0 in non-production', () => {
@@ -94,9 +96,7 @@ describe('initSentry', () => {
 
     initSentry();
 
-    expect(mockInit).toHaveBeenCalledWith(
-      expect.objectContaining({ tracesSampleRate: 1.0 }),
-    );
+    expect(mockInit).toHaveBeenCalledWith(expect.objectContaining({ tracesSampleRate: 1.0 }));
   });
 
   it('adds lifecycle breadcrumb after successful init', () => {
@@ -121,9 +121,7 @@ describe('import order guard', () => {
   it('_layout.tsx imports sentry before any other module', () => {
     const layoutPath = path.resolve(__dirname, '../../app/_layout.tsx');
     const content = fs.readFileSync(layoutPath, 'utf-8');
-    const importLines = content
-      .split('\n')
-      .filter((line) => /^import\s/.test(line));
+    const importLines = content.split('\n').filter((line) => /^import\s/.test(line));
 
     expect(importLines.length).toBeGreaterThan(0);
     expect(importLines[0]).toMatch(/from\s+['"]\.\.\/lib\/sentry['"]/);

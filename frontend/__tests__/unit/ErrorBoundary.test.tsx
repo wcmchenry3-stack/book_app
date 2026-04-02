@@ -66,10 +66,9 @@ describe('ErrorBoundary', () => {
         <Bomb shouldThrow={true} />
       </ErrorBoundary>
     );
-    expect(Sentry.captureException).toHaveBeenCalledWith(
-      expect.any(Error),
-      { extra: { componentStack: expect.any(String) } }
-    );
+    expect(Sentry.captureException).toHaveBeenCalledWith(expect.any(Error), {
+      extra: { componentStack: expect.any(String) },
+    });
   });
 
   it('resets error state when Try again is pressed', () => {
