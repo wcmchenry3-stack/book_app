@@ -9,27 +9,27 @@ tags:
 
 # Navigate to scan tab
 - tapOn:
-    text: "Camera"
+    text: 'Camera'
 
 # Should see permission prompt instead of camera
 - assertVisible:
-    text: "Camera access is required to scan books."
+    text: 'Camera access is required to scan books.'
 - assertVisible:
-    label: "Grant camera permission"
+    label: 'Grant camera permission'
 
 # Tap allow — iOS system dialog will appear
 - tapOn:
-    label: "Grant camera permission"
+    label: 'Grant camera permission'
 
 # Accept the iOS system permission dialog
 - tapOn:
-    text: "Allow"
+    text: 'Allow'
     optional: true
     timeout: 3000
 
 # After granting, camera controls should appear
 - assertVisible:
-    label: "Capture book cover"
+    label: 'Capture book cover'
     timeout: 5000
 - assertVisible:
-    label: "Flip camera"
+    label: 'Flip camera'

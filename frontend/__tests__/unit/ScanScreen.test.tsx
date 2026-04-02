@@ -47,7 +47,9 @@ jest.mock('expo-file-system', () => ({
   Paths: { document: 'file:///docs' },
   File: jest.fn().mockImplementation((...args: unknown[]) => {
     // Mimic expo-file-system File: resolve uri from parent (string or File) + name
-    const parts = args.map((a) => (typeof a === 'object' && a !== null && 'uri' in a ? (a as { uri: string }).uri : String(a)));
+    const parts = args.map((a) =>
+      typeof a === 'object' && a !== null && 'uri' in a ? (a as { uri: string }).uri : String(a)
+    );
     return {
       uri: parts.join('/'),
       exists: true,
@@ -398,9 +400,7 @@ describe('ScanScreen — scan-queue directory handling', () => {
     FileSystem.File.mockImplementation((...args: unknown[]) => {
       callCount++;
       const parts = args.map((a: unknown) =>
-        typeof a === 'object' && a !== null && 'uri' in a
-          ? (a as { uri: string }).uri
-          : String(a)
+        typeof a === 'object' && a !== null && 'uri' in a ? (a as { uri: string }).uri : String(a)
       );
       return {
         uri: parts.join('/'),

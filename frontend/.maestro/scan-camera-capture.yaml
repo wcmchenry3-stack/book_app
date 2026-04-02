@@ -9,29 +9,29 @@ tags:
 
 # Navigate to scan tab
 - tapOn:
-    text: "Camera"
+    text: 'Camera'
 
 # Verify camera view is visible with capture controls
 - assertVisible:
-    text: "Camera"
+    text: 'Camera'
 - assertVisible:
-    label: "Capture book cover"
+    label: 'Capture book cover'
 - assertVisible:
-    label: "Flip camera"
+    label: 'Flip camera'
 
 # Tap the capture button — on a real device this takes a photo;
 # on simulator it captures a still from the simulated camera feed.
 - tapOn:
-    label: "Capture book cover"
+    label: 'Capture book cover'
 
 # After capture, the controls should remain visible (no blocking spinner)
 - assertVisible:
-    label: "Capture book cover"
+    label: 'Capture book cover'
 - assertVisible:
-    label: "Flip camera"
+    label: 'Flip camera'
 
 # Background search banner should appear
 - assertVisible:
-    text: "Searching in background.*"
+    text: 'Searching in background.*'
     optional: true
     timeout: 5000
