@@ -10,6 +10,8 @@ class Settings(BaseSettings):
 
     # Auth
     google_client_id: str = ""
+    google_ios_client_id: str = ""
+    google_android_client_id: str = ""
     google_client_secret: str = ""
     jwt_private_key: str = ""
     jwt_public_key: str = ""
@@ -57,6 +59,19 @@ class Settings(BaseSettings):
         import re
 
         return re.sub(r"^postgres(ql)?://", "postgresql+asyncpg://", self.database_url)
+
+    @property
+    def google_client_ids(self) -> list[str]:
+        """All valid Google OAuth client IDs (web, iOS, Android)."""
+        return [
+            cid
+            for cid in [
+                self.google_client_id,
+                self.google_ios_client_id,
+                self.google_android_client_id,
+            ]
+            if cid
+        ]
 
     @property
     def allowed_emails_list(self) -> list[str]:

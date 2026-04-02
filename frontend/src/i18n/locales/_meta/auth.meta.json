@@ -14,5 +14,10 @@
     "description": "Accessibility hint describing what the sign-in button does",
     "tone": "informative",
     "characterLimit": 80
+  },
+  "signInError": {
+    "description": "Alert message shown when Google sign-in fails",
+    "tone": "reassuring",
+    "characterLimit": 60
   }
 }

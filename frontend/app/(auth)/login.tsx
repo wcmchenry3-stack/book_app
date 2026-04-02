@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { useTranslation } from 'react-i18next';
@@ -23,9 +23,11 @@ export default function LoginScreen() {
   useEffect(() => {
     if (response?.type === 'success') {
       const { id_token } = response.params;
-      login(id_token).catch(console.error);
+      login(id_token).catch(() => {
+        Alert.alert(t('errorTitle', { ns: 'common' }), t('signInError'));
+      });
     }
-  }, [response, login]);
+  }, [response, login, t]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
