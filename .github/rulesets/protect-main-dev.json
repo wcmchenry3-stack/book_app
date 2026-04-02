@@ -45,7 +45,12 @@
           { "context": "cve-python" },
           { "context": "cve-frontend" },
           { "context": "test-migrations" },
-          { "context": "sast-python" }
+          { "context": "sast-python" },
+          { "context": "js-bundle-check" },
+          { "context": "ios-build-check" },
+          { "context": "expo-compat" },
+          { "context": "local-path-check" },
+          { "context": "podfile-lock-check" }
         ]
       }
     }

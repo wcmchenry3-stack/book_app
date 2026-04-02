@@ -14,7 +14,10 @@ const DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
  * ErrorBoundary in _layout.tsx.
  */
 export function initSentry(): void {
-  if (!DSN) return;
+  if (!DSN) {
+    console.warn('[Sentry] No DSN configured, skipping init');
+    return;
+  }
 
   try {
     Sentry.init({
@@ -23,6 +26,13 @@ export function initSentry(): void {
       tracesSampleRate: process.env.EXPO_PUBLIC_ENVIRONMENT === 'production' ? 0.2 : 1.0,
       sendDefaultPii: false,
       enabled: !!DSN,
+    });
+
+    Sentry.addBreadcrumb({
+      category: 'app.lifecycle',
+      message: 'Sentry init completed',
+      level: 'info',
+      data: { environment: process.env.EXPO_PUBLIC_ENVIRONMENT ?? 'development' },
     });
   } catch (e) {
     // Log but never crash — the app must boot even if Sentry is broken.
