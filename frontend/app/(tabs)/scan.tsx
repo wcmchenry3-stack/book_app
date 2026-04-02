@@ -1,9 +1,10 @@
 import React, { useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { copyAsync, documentDirectory, getInfoAsync, makeDirectoryAsync } from 'expo-file-system';
+import { File, Paths } from 'expo-file-system';
 import { useTranslation } from 'react-i18next';
 
+import { Sentry } from '../../lib/sentry';
 import { useTheme } from '../../hooks/useTheme';
 import { useScanJobs } from '../../hooks/useScanJobs';
 
@@ -44,23 +45,46 @@ export default function ScanScreen() {
   async function handleCapture() {
     if (!cameraRef.current || capturing) return;
     setCapturing(true);
+    Sentry.addBreadcrumb({
+      category: 'scan',
+      message: 'Camera capture started',
+      level: 'info',
+    });
     try {
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.7,
         base64: false,
       });
-      if (!photo?.uri) return;
+      if (!photo?.uri) {
+        Sentry.addBreadcrumb({
+          category: 'scan',
+          message: 'takePictureAsync returned no URI',
+          level: 'warning',
+        });
+        return;
+      }
 
       // Copy temp file to persistent document directory.
-      const destDir = `${documentDirectory}scan-queue/`;
-      const info = await getInfoAsync(destDir);
-      if (!info.exists) {
-        await makeDirectoryAsync(destDir, { intermediates: true });
+      const destDir = new File(Paths.document, 'scan-queue');
+      if (!destDir.exists) {
+        destDir.create();
       }
-      const destUri = `${destDir}${Date.now()}.jpg`;
-      await copyAsync({ from: photo.uri, to: destUri });
+      const destFile = new File(destDir, `${Date.now()}.jpg`);
+      const sourceFile = new File(photo.uri);
+      sourceFile.copy(destFile);
 
-      startScan('image', destUri);
+      Sentry.addBreadcrumb({
+        category: 'scan',
+        message: 'Photo saved, starting scan',
+        level: 'info',
+        data: { destUri: destFile.uri },
+      });
+      startScan('image', destFile.uri);
+    } catch (error) {
+      Sentry.captureException(error, {
+        tags: { feature: 'camera-capture' },
+        extra: { facing },
+      });
     } finally {
       setCapturing(false);
     }
@@ -225,32 +249,31 @@ export default function ScanScreen() {
   // ── Native camera view ────────────────────────────────────────────────────
   return (
     <View style={styles.container}>
-      <CameraView ref={cameraRef} style={styles.camera} facing={facing}>
-        <View style={styles.overlay}>
-          {modeToggle}
-          <View style={[styles.frame, { borderColor: theme.colors.primary }]} />
-          <View style={styles.cameraControls}>
-            <Pressable
-              style={styles.flipButton}
-              onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
-              accessibilityRole="button"
-              accessibilityLabel={t('flipCameraA11y')}
-            >
-              <Text style={styles.flipButtonText}>{t('flipCamera')}</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.captureButton, { backgroundColor: theme.colors.primary }]}
-              onPress={handleCapture}
-              disabled={capturing}
-              accessibilityRole="button"
-              accessibilityLabel={t('captureA11y')}
-              accessibilityHint={t('captureHint')}
-            >
-              <View style={[styles.captureInner, { backgroundColor: theme.colors.background }]} />
-            </Pressable>
-          </View>
+      <CameraView ref={cameraRef} style={styles.camera} facing={facing} />
+      <View style={styles.overlay}>
+        {modeToggle}
+        <View style={[styles.frame, { borderColor: theme.colors.primary }]} />
+        <View style={styles.cameraControls}>
+          <Pressable
+            style={styles.flipButton}
+            onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
+            accessibilityRole="button"
+            accessibilityLabel={t('flipCameraA11y')}
+          >
+            <Text style={styles.flipButtonText}>{t('flipCamera')}</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.captureButton, { backgroundColor: theme.colors.primary }]}
+            onPress={handleCapture}
+            disabled={capturing}
+            accessibilityRole="button"
+            accessibilityLabel={t('captureA11y')}
+            accessibilityHint={t('captureHint')}
+          >
+            <View style={[styles.captureInner, { backgroundColor: theme.colors.background }]} />
+          </Pressable>
         </View>
-      </CameraView>
+      </View>
     </View>
   );
 }
@@ -259,8 +282,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   camera: { flex: 1, width: '100%' },
   overlay: {
-    flex: 1,
-    width: '100%',
+    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 60,

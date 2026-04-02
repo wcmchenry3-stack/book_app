@@ -40,11 +40,31 @@ jest.mock('expo-camera', () => {
   };
 });
 
+const mockFileCopy = jest.fn();
+const mockFileCreate = jest.fn();
+
 jest.mock('expo-file-system', () => ({
-  documentDirectory: 'file:///docs/',
-  getInfoAsync: jest.fn().mockResolvedValue({ exists: true }),
-  makeDirectoryAsync: jest.fn().mockResolvedValue(undefined),
-  copyAsync: jest.fn().mockResolvedValue(undefined),
+  Paths: { document: 'file:///docs' },
+  File: jest.fn().mockImplementation((...args: unknown[]) => {
+    // Mimic expo-file-system File: resolve uri from parent (string or File) + name
+    const parts = args.map((a) => (typeof a === 'object' && a !== null && 'uri' in a ? (a as { uri: string }).uri : String(a)));
+    return {
+      uri: parts.join('/'),
+      exists: true,
+      create: mockFileCreate,
+      copy: mockFileCopy,
+    };
+  }),
+}));
+
+const mockCaptureException = jest.fn();
+const mockAddBreadcrumb = jest.fn();
+
+jest.mock('../../lib/sentry', () => ({
+  Sentry: {
+    captureException: (...args: unknown[]) => mockCaptureException(...args),
+    addBreadcrumb: (...args: unknown[]) => mockAddBreadcrumb(...args),
+  },
 }));
 
 jest.mock('../../hooks/useTheme', () => ({
@@ -189,13 +209,10 @@ describe('ScanScreen — native capture flow', () => {
   });
 
   it('copies photo to document directory before starting scan', async () => {
-    const FileSystem = require('expo-file-system');
     mockTakePictureAsync.mockResolvedValue({ uri: 'file://tmp/photo.jpg' });
     const { getByLabelText } = render(<ScanScreen />);
     await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
-    expect(FileSystem.copyAsync).toHaveBeenCalledWith(
-      expect.objectContaining({ from: 'file://tmp/photo.jpg' })
-    );
+    expect(mockFileCopy).toHaveBeenCalled();
   });
 
   it('does not show loading spinner (search runs in background)', async () => {
@@ -298,5 +315,113 @@ describe('ScanScreen — mode switch hides camera controls (web)', () => {
     fireEvent.press(utils.getByLabelText('Text search mode'));
     fireEvent.press(utils.getByLabelText('Camera scan mode'));
     expect(utils.getByLabelText('Capture book cover')).toBeTruthy();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Sentry logging
+// ---------------------------------------------------------------------------
+describe('ScanScreen — Sentry logging', () => {
+  it('adds breadcrumb when capture starts', async () => {
+    mockTakePictureAsync.mockResolvedValue({ uri: 'file://test.jpg' });
+    const { getByLabelText } = render(<ScanScreen />);
+    await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
+    expect(mockAddBreadcrumb).toHaveBeenCalledWith(
+      expect.objectContaining({ category: 'scan', message: 'Camera capture started' })
+    );
+  });
+
+  it('adds breadcrumb when photo is saved successfully', async () => {
+    mockTakePictureAsync.mockResolvedValue({ uri: 'file://test.jpg' });
+    const { getByLabelText } = render(<ScanScreen />);
+    await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
+    expect(mockAddBreadcrumb).toHaveBeenCalledWith(
+      expect.objectContaining({ category: 'scan', message: 'Photo saved, starting scan' })
+    );
+  });
+
+  it('adds warning breadcrumb when takePictureAsync returns no URI', async () => {
+    mockTakePictureAsync.mockResolvedValue({ uri: null });
+    const { getByLabelText } = render(<ScanScreen />);
+    await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
+    expect(mockAddBreadcrumb).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: 'scan',
+        message: 'takePictureAsync returned no URI',
+        level: 'warning',
+      })
+    );
+  });
+
+  it('captures exception to Sentry when file copy fails', async () => {
+    const copyError = new Error('File copy failed');
+    mockTakePictureAsync.mockResolvedValue({ uri: 'file://test.jpg' });
+    mockFileCopy.mockImplementationOnce(() => {
+      throw copyError;
+    });
+    const { getByLabelText } = render(<ScanScreen />);
+    await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
+    expect(mockCaptureException).toHaveBeenCalledWith(
+      copyError,
+      expect.objectContaining({ tags: { feature: 'camera-capture' } })
+    );
+  });
+
+  it('does not call startScan when capture throws', async () => {
+    mockTakePictureAsync.mockResolvedValue({ uri: 'file://test.jpg' });
+    mockFileCopy.mockImplementationOnce(() => {
+      throw new Error('disk full');
+    });
+    const { getByLabelText } = render(<ScanScreen />);
+    await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
+    expect(mockStartScan).not.toHaveBeenCalled();
+  });
+
+  it('re-enables capture button after an error', async () => {
+    mockTakePictureAsync.mockRejectedValueOnce(new Error('camera error'));
+    const { getByLabelText } = render(<ScanScreen />);
+    await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
+    expect(getByLabelText('Capture book cover').props.accessibilityState).not.toEqual(
+      expect.objectContaining({ disabled: true })
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// File system — directory creation
+// ---------------------------------------------------------------------------
+describe('ScanScreen — scan-queue directory handling', () => {
+  it('creates scan-queue directory when it does not exist', async () => {
+    const FileSystem = require('expo-file-system');
+    // Override File mock to return exists: false for directory
+    let callCount = 0;
+    FileSystem.File.mockImplementation((...args: unknown[]) => {
+      callCount++;
+      const parts = args.map((a: unknown) =>
+        typeof a === 'object' && a !== null && 'uri' in a
+          ? (a as { uri: string }).uri
+          : String(a)
+      );
+      return {
+        uri: parts.join('/'),
+        // First File() call is the destDir — simulate it not existing
+        exists: callCount !== 1,
+        create: mockFileCreate,
+        copy: mockFileCopy,
+      };
+    });
+
+    mockTakePictureAsync.mockResolvedValue({ uri: 'file://test.jpg' });
+    const { getByLabelText } = render(<ScanScreen />);
+    await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
+    expect(mockFileCreate).toHaveBeenCalled();
+  });
+
+  it('skips directory creation when scan-queue already exists', async () => {
+    mockTakePictureAsync.mockResolvedValue({ uri: 'file://test.jpg' });
+    const { getByLabelText } = render(<ScanScreen />);
+    await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
+    // Default mock returns exists: true, so create should not be called
+    expect(mockFileCreate).not.toHaveBeenCalled();
   });
 });
