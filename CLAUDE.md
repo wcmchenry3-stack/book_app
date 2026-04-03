@@ -11,6 +11,7 @@ Monorepo: `backend/` · `frontend/` · `.github/` · `docs/`
 - [Frontend](docs/claude/frontend.md)
 - [Testing](docs/claude/testing.md)
 - [iOS CI/CD](docs/claude/ios-ci.md)      ← READ BEFORE touching ios/ or ci_scripts/
+- [Android CI/CD](docs/claude/android-ci.md) ← READ BEFORE touching android/ or EAS config
 
 ## Hard Rules (no exceptions)
 1. NEVER push to `dev` or `main` directly.
@@ -30,6 +31,14 @@ Monorepo: `backend/` · `frontend/` · `.github/` · `docs/`
 13. First import in `app/_layout.tsx` must always be `from '../lib/sentry'` — Sentry must self-init before any other module.
 14. Read `docs/claude/ios-ci.md` before modifying `ci_post_clone.sh`, `ci_post_xcodebuild.sh`, or anything in `ci_scripts/`.
 15. After any change to Podfile, `.xcode.env`, or `ci_scripts/*`, verify `js-bundle-check` and `ios-build-check` CI jobs pass before merging.
+
+## Android / Native File Rules
+16. Before modifying files under `frontend/android/`: verify the change builds locally with `cd frontend/android && ./gradlew assembleDebug`.
+17. Never commit `upload-keystore.jks`, `debug.keystore`, or `local.properties` — these are gitignored for security.
+18. Never change the Gradle wrapper version (`gradle-wrapper.properties`) without verifying compatibility with current AGP and React Native Gradle Plugin.
+19. Read `docs/claude/android-ci.md` before modifying `build.gradle`, `settings.gradle`, `gradle.properties`, or EAS build configuration.
+20. After any change to `build.gradle`, `settings.gradle`, `gradle.properties`, or `eas.json`, verify `android-bundle-check` and `android-build-check` CI jobs pass before merging.
+21. `sentry.properties` must use environment variables for org/project/token — never hardcode Sentry credentials.
 
 ## Quick Commands
 ```
