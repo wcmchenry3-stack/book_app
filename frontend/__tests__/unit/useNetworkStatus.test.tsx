@@ -1,7 +1,6 @@
 import { renderHook, act } from '@testing-library/react-native';
 
-let capturedListener: ((state: { isConnected: boolean | null }) => void) | null =
-  null;
+let capturedListener: ((state: { isConnected: boolean | null }) => void) | null = null;
 const mockUnsubscribe = jest.fn();
 
 jest.mock('@react-native-community/netinfo', () => ({

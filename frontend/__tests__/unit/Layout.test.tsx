@@ -18,16 +18,20 @@ jest.mock('../../lib/sentry', () => ({
 jest.mock('expo-router', () => {
   const { View } = require('react-native');
   return {
-    Stack: ({ children }: { children?: React.ReactNode }) => (
-      <View testID="stack">{children}</View>
-    ),
+    Stack: ({ children }: { children?: React.ReactNode }) => <View testID="stack">{children}</View>,
   };
 });
 
 jest.mock('../../hooks/useTheme', () => ({
   useTheme: () => ({
     theme: {
-      colors: { background: '#fff', text: '#000', iconActive: '#000', iconInactive: '#999', surface: '#fff' },
+      colors: {
+        background: '#fff',
+        text: '#000',
+        iconActive: '#000',
+        iconInactive: '#999',
+        surface: '#fff',
+      },
       spacing: { md: 16 },
     },
     mode: 'light',
@@ -57,7 +61,11 @@ jest.mock('../../contexts/AuthContext', () => ({
 
 jest.mock('../../contexts/BannerContext', () => ({
   BannerProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  BannerContext: require('react').createContext({ banner: null, showBanner: jest.fn(), hideBanner: jest.fn() }),
+  BannerContext: require('react').createContext({
+    banner: null,
+    showBanner: jest.fn(),
+    hideBanner: jest.fn(),
+  }),
 }));
 
 jest.mock('../../contexts/ScanJobContext', () => ({

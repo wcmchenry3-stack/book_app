@@ -95,7 +95,9 @@ class TestWishlistDb:
         with pytest.raises(Exception):  # IntegrityError
             await db_session.flush()
 
-    async def test_cascade_delete_book_removes_editions_and_user_books(self, db_session):
+    async def test_cascade_delete_book_removes_editions_and_user_books(
+        self, db_session
+    ):
         """Deleting a Book cascades to its Editions and UserBooks."""
         user = User(email="carol@example.com", google_id="google_carol_001")
         book = Book(title="1984", author="George Orwell")

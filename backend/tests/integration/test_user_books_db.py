@@ -64,9 +64,7 @@ class TestUserBookStatusTransitions:
         db_session.add_all([user, book])
         await db_session.flush()
 
-        ub = UserBook(
-            user_id=user.id, book_id=book.id, status="read", rating=6
-        )
+        ub = UserBook(user_id=user.id, book_id=book.id, status="read", rating=6)
         db_session.add(ub)
         with pytest.raises(Exception):  # IntegrityError from check constraint
             await db_session.flush()

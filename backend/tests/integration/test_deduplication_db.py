@@ -18,15 +18,11 @@ class TestDeduplicationDb:
         db_session.add(book)
         await db_session.flush()
 
-        ed1 = Edition(
-            book_id=book.id, isbn_13="9780441013593", format="paperback"
-        )
+        ed1 = Edition(book_id=book.id, isbn_13="9780441013593", format="paperback")
         db_session.add(ed1)
         await db_session.flush()
 
-        ed2 = Edition(
-            book_id=book.id, isbn_13="9780441013593", format="hardcover"
-        )
+        ed2 = Edition(book_id=book.id, isbn_13="9780441013593", format="hardcover")
         db_session.add(ed2)
         with pytest.raises(Exception):  # IntegrityError
             await db_session.flush()
@@ -37,12 +33,8 @@ class TestDeduplicationDb:
         db_session.add(book)
         await db_session.flush()
 
-        ed1 = Edition(
-            book_id=book.id, isbn_13="9780441013593", format="paperback"
-        )
-        ed2 = Edition(
-            book_id=book.id, isbn_13="9780441172719", format="hardcover"
-        )
+        ed1 = Edition(book_id=book.id, isbn_13="9780441013593", format="paperback")
+        ed2 = Edition(book_id=book.id, isbn_13="9780441172719", format="hardcover")
         db_session.add_all([ed1, ed2])
         await db_session.flush()
 

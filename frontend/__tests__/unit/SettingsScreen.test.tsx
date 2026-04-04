@@ -33,9 +33,7 @@ describe('SettingsScreen', () => {
     const tree = toJSON();
     // Root View should have the mocked background color
     expect(tree).toBeTruthy();
-    const rootStyle = Array.isArray(tree.props.style)
-      ? tree.props.style
-      : [tree.props.style];
+    const rootStyle = Array.isArray(tree.props.style) ? tree.props.style : [tree.props.style];
     const hasBackground = rootStyle.some(
       (s: Record<string, unknown>) => s?.backgroundColor === '#fff'
     );

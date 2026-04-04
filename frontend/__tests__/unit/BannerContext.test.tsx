@@ -1,11 +1,7 @@
 import React from 'react';
 import { renderHook, act } from '@testing-library/react-native';
 
-import {
-  BannerProvider,
-  BannerContext,
-  BannerConfig,
-} from '../../contexts/BannerContext';
+import { BannerProvider, BannerContext, BannerConfig } from '../../contexts/BannerContext';
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <BannerProvider>{children}</BannerProvider>

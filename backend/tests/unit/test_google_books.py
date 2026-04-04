@@ -187,6 +187,7 @@ class TestExtractInfo:
 # Error path helpers
 # ---------------------------------------------------------------------------
 
+
 def _mock_error_client(exc: Exception):
     """Create a mock httpx.AsyncClient whose .get() raises the given exception."""
     client = AsyncMock()
@@ -200,9 +201,7 @@ def _mock_status_error(status_code: int) -> httpx.HTTPStatusError:
     """Build an HTTPStatusError with the given status code."""
     resp = MagicMock()
     resp.status_code = status_code
-    return httpx.HTTPStatusError(
-        f"{status_code}", request=MagicMock(), response=resp
-    )
+    return httpx.HTTPStatusError(f"{status_code}", request=MagicMock(), response=resp)
 
 
 class TestSearchErrorPaths:

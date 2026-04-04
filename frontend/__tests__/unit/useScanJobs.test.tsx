@@ -22,9 +22,7 @@ describe('useScanJobs', () => {
   it('returns the ScanJobContext value when wrapped in provider', () => {
     const { ScanJobContext } = require('../../contexts/ScanJobContext');
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ScanJobContext.Provider value={mockContextValue}>
-        {children}
-      </ScanJobContext.Provider>
+      <ScanJobContext.Provider value={mockContextValue}>{children}</ScanJobContext.Provider>
     );
     const { result } = renderHook(() => useScanJobs(), { wrapper });
     expect(result.current).toBe(mockContextValue);

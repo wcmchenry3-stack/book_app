@@ -44,12 +44,8 @@ class TestConcurrentUsers:
         db_session.add_all([user1, user2, book])
         await db_session.flush()
 
-        ub1 = UserBook(
-            user_id=user1.id, book_id=book.id, status="reading", rating=4
-        )
-        ub2 = UserBook(
-            user_id=user2.id, book_id=book.id, status="wishlisted"
-        )
+        ub1 = UserBook(user_id=user1.id, book_id=book.id, status="reading", rating=4)
+        ub2 = UserBook(user_id=user2.id, book_id=book.id, status="wishlisted")
         db_session.add_all([ub1, ub2])
         await db_session.flush()
 

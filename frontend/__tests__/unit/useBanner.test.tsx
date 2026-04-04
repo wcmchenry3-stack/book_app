@@ -17,9 +17,7 @@ describe('useBanner', () => {
   it('returns the BannerContext value when wrapped in provider', () => {
     const { BannerContext } = require('../../contexts/BannerContext');
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <BannerContext.Provider value={mockContextValue}>
-        {children}
-      </BannerContext.Provider>
+      <BannerContext.Provider value={mockContextValue}>{children}</BannerContext.Provider>
     );
     const { result } = renderHook(() => useBanner(), { wrapper });
     expect(result.current).toBe(mockContextValue);
