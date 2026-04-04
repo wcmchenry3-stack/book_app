@@ -6,6 +6,11 @@
  * real HTTP calls.
  */
 
+// The refresh-retry tests invoke api(original) which triggers the async
+// request interceptor chain (token lookup + Sentry breadcrumb) before
+// failing with a network error. This takes ~8s locally.
+jest.setTimeout(15000);
+
 const mockGetItem = jest.fn();
 const mockSetItem = jest.fn();
 const mockDeleteItem = jest.fn();
@@ -14,6 +19,14 @@ jest.mock('../../lib/storage', () => ({
   getItem: (...args: unknown[]) => mockGetItem(...args),
   setItem: (...args: unknown[]) => mockSetItem(...args),
   deleteItem: (...args: unknown[]) => mockDeleteItem(...args),
+}));
+
+jest.mock('../../lib/sentry', () => ({
+  Sentry: {
+    addBreadcrumb: jest.fn(),
+    captureException: jest.fn(),
+  },
+  initSentry: jest.fn(),
 }));
 
 // Mock axios.post used in the refresh leg of the interceptor.

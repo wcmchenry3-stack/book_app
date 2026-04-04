@@ -1,20 +1,34 @@
 appId: com.buffingchi.bookshelf
-name: Happy path — text search → select book → verify wishlist
+name: Happy path — test login → text search → select book → verify wishlist
 tags:
   - e2e
   - happy-path
   - wishlist
   - scan
 ---
-# FULL HAPPY PATH: search for a book, select from results, confirm it's in the wishlist.
+# FULL HAPPY PATH: log in via dev bypass, search for a book, select from
+# results, confirm it's in the wishlist.
 #
 # Prerequisites:
-#   - App is launched and user is logged in
-#   - Backend is running with valid Google Books + OpenLibrary API keys
-#   - Network connectivity available
+#   - App is running in dev mode (Expo Go or dev build)
+#   - Backend has TEST_AUTH_SECRET and ALLOWED_EMAILS configured
+#   - Frontend .env has EXPO_PUBLIC_TEST_AUTH_SECRET and EXPO_PUBLIC_TEST_EMAIL
+#   - Backend is reachable with valid Google Books + OpenLibrary API keys
 #
 # Uses text search (not camera) for deterministic, CI-friendly results.
 # For the camera-capture variant see scan-to-wishlist-camera.yaml.
+
+# ── Step 0: Log in via dev-only test login button ────────────────────────────
+- assertVisible:
+    text: 'Test Login'
+- tapOn:
+    text: 'Test Login'
+
+# Wait for auth to complete and redirect to main screen
+- extendedWaitUntil:
+    visible:
+      text: 'Camera'
+    timeout: 10000
 
 # ── Step 1: Navigate to scan tab ─────────────────────────────────────────────
 - tapOn:
@@ -37,31 +51,33 @@ tags:
 # ── Step 4: Wait for results banner ──────────────────────────────────────────
 # The API call chain (Google Books + OpenLibrary enrichment) can take several
 # seconds. Wait up to 15s for the "Book found" success banner.
-- assertVisible:
-    text: '.*Dune.*'
+- extendedWaitUntil:
+    visible:
+      text: '.*Dune.*'
     timeout: 15000
 
 # ── Step 5: Tap "View" to open the BookCandidatePicker modal ────────────────
 - tapOn:
     label: 'View'
-    timeout: 5000
 
 # ── Step 6: Verify the picker modal is showing candidates ───────────────────
-- assertVisible:
-    text: 'Which book is this?'
+- extendedWaitUntil:
+    visible:
+      text: 'Which book is this?'
     timeout: 3000
 
 # ── Step 7: Select the first book candidate ──────────────────────────────────
-# The candidate card's accessibility label follows the pattern:
-#   "Select {title} by {author}"
-# Use a regex to match any candidate with "Dune" in the label.
+- extendedWaitUntil:
+    visible:
+      label: 'Select Dune.*'
+    timeout: 5000
 - tapOn:
     label: 'Select Dune.*'
-    timeout: 5000
 
 # ── Step 8: Wait for "added to wishlist" success banner ──────────────────────
-- assertVisible:
-    text: '.*added to your wishlist.*'
+- extendedWaitUntil:
+    visible:
+      text: '.*added to your wishlist.*'
     timeout: 10000
 
 # ── Step 9: Navigate to wishlist tab to confirm ─────────────────────────────
@@ -69,18 +85,7 @@ tags:
     text: 'Wishlist'
 
 # ── Step 10: Verify the book appears in the wishlist ─────────────────────────
-- assertVisible:
-    text: 'Dune'
+- extendedWaitUntil:
+    visible:
+      text: 'Dune'
     timeout: 10000
-
-- assertVisible:
-    text: 'Frank Herbert'
-    timeout: 3000
-    optional: true
-
-# ── Step 11: Clean up — remove the book from wishlist ────────────────────────
-# This prevents test pollution on repeated runs.
-- tapOn:
-    label: 'Remove Dune.*'
-    optional: true
-    timeout: 3000
