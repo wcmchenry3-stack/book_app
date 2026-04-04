@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 import sentry_sdk
@@ -57,3 +58,54 @@ class TestSentryUnit:
         """main.py should have a debug Sentry test route."""
         source = _MAIN_PY.read_text()
         assert "sentry-test" in source or "sentry_test" in source
+
+
+class TestSentryContextMiddleware:
+    """Tests for the Sentry context enrichment middleware."""
+
+    def test_middleware_registered_in_main(self):
+        """main.py should register SentryContextMiddleware."""
+        source = _MAIN_PY.read_text()
+        assert "SentryContextMiddleware" in source
+
+    @patch("app.core.sentry_context.sentry_sdk")
+    def test_set_sentry_user_sets_id_only(self, mock_sentry):
+        """set_sentry_user should set user context with ID only (no PII)."""
+        from app.core.sentry_context import set_sentry_user
+
+        set_sentry_user(123)
+
+        mock_sentry.set_user.assert_called_once_with({"id": "123"})
+
+    @patch("app.core.sentry_context.sentry_sdk")
+    def test_set_sentry_user_converts_to_string(self, mock_sentry):
+        """User ID should be converted to a string."""
+        from app.core.sentry_context import set_sentry_user
+
+        set_sentry_user("abc-uuid-123")
+
+        mock_sentry.set_user.assert_called_once_with({"id": "abc-uuid-123"})
+
+    @patch("app.core.sentry_context.sentry_sdk")
+    def test_set_sentry_user_no_email_in_context(self, mock_sentry):
+        """User context must NOT include email (PII)."""
+        from app.core.sentry_context import set_sentry_user
+
+        set_sentry_user(42)
+
+        call_args = mock_sentry.set_user.call_args[0][0]
+        assert "email" not in call_args
+        assert "username" not in call_args
+
+    def test_set_sentry_user_called_in_dependencies(self):
+        """auth/dependencies.py should call set_sentry_user."""
+        deps_path = (
+            Path(__file__).resolve().parent.parent / "app" / "auth" / "dependencies.py"
+        )
+        source = deps_path.read_text()
+        assert "set_sentry_user" in source
+
+    def test_send_default_pii_is_false(self):
+        """Sentry init must have send_default_pii=False."""
+        source = _MAIN_PY.read_text()
+        assert "send_default_pii=False" in source

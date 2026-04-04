@@ -21,6 +21,7 @@ from app.core.config import settings
 from app.core.database import AsyncSessionLocal
 from app.core.limiter import limiter
 from app.core.logging import configure_logging, new_request_id, request_id_var
+from app.core.sentry_context import SentryContextMiddleware
 
 configure_logging()
 
@@ -130,6 +131,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # Middleware stack — add_middleware wraps in reverse order so the last call added
 # becomes the outermost layer (first to run on incoming requests).
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(SentryContextMiddleware)
 app.add_middleware(RequestIdMiddleware)
 app.add_middleware(CloudflareRealIPMiddleware)
 app.add_middleware(

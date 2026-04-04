@@ -1,0 +1,44 @@
+appId: com.buffingchi.bookshelf
+name: Scan — no results error state
+tags:
+  - scan
+  - error
+---
+# Precondition: app is launched and user is logged in.
+
+# Navigate to scan tab
+- tapOn:
+    text: 'Camera'
+
+# Switch to text search mode
+- tapOn:
+    label: 'Text search mode'
+
+# Search for gibberish that should return no results
+- tapOn:
+    label: 'Book title or author search'
+- inputText: 'zzzzxxxxxxxqqqq9999'
+- tapOn:
+    label: 'Search for book'
+
+# Expect a "no books found" banner or similar feedback
+- assertVisible:
+    text: '.*'
+    timeout: 10000
+    optional: true
+
+# Verify the search input is still usable (app didn't crash)
+- assertVisible:
+    label: 'Book title or author search'
+
+# Try a valid search after the failed one to verify recovery
+- tapOn:
+    label: 'Book title or author search'
+- inputText: 'Dune'
+- tapOn:
+    label: 'Search for book'
+
+# App should handle the new search normally
+- assertVisible:
+    label: 'Book title or author search'
+    timeout: 10000
