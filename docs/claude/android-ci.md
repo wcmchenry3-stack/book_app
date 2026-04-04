@@ -1,9 +1,12 @@
 # Android CI/CD — Build Infrastructure
 
-## IMPORTANT: We use EAS Build, NOT Xcode Cloud
+## IMPORTANT: We use local Gradle builds, NOT EAS Build
 
-Android builds run through **EAS Build** (Expo's cloud CI). Xcode Cloud is
-iOS-only. Do not suggest Xcode Cloud fixes for Android build failures.
+Android builds and Play Store submissions are done **locally** using
+`./gradlew assembleRelease` and uploaded directly via the Play Console.
+EAS Build is NOT used — for either iOS or Android. Do not suggest `eas build`,
+`eas submit`, or EAS-specific config for any build or submission issue.
+`frontend/eas.json` has been deleted.
 
 ## Why `npm ci` must run before Gradle
 
@@ -19,68 +22,62 @@ Always install JS dependencies before any Gradle command — both locally and in
 
 ## Bare workflow
 
-`frontend/android/` is committed (bare Expo workflow). Running `expo prebuild`
-locally regenerates it; EAS Build does NOT run prebuild — it uses the committed
-`android/` directory directly.
+`frontend/android/` is committed (bare Expo workflow), generated via
+`expo prebuild --platform android`. When native dependencies change
+(e.g. adding a new Expo module), re-run prebuild and commit the result:
 
-## Signing configuration
+```bash
+cd frontend
+npx expo prebuild --platform android --no-install
+git add android/
+git commit -m "chore(android): regenerate prebuild after <reason>"
+```
 
-- **Debug**: uses `app/debug.keystore` (standard Android debug key, gitignored)
-- **Release**: uses `app/upload-keystore.jks` (gitignored), passwords via env vars:
-  - `BOOKSHELF_UPLOAD_STORE_PASSWORD`
-  - `BOOKSHELF_UPLOAD_KEY_PASSWORD`
-  - These are configured as EAS secrets (`eas secret:create`)
-  - Fallback passwords in `app/build.gradle` are for local development only
+## Signing
 
-**Critical**: Never commit keystores or `local.properties` — they are gitignored
-for security.
+- **Debug keystore**: never committed. CI generates a throwaway one at build time via `keytool`. See `called-android-build-check.yml` in the shared `.github` repo.
+- **Release keystore**: stored securely outside the repo. Required only for Play Store uploads, not for CI checks.
+- `frontend/android/app/debug.keystore` and `upload-keystore.jks` are gitignored — keep them there.
 
-## Key Gradle files
+## CI jobs (GitHub Actions)
+
+| Job | What it checks |
+|---|---|
+| `android-bundle-check` | JS bundle compiles for Android (Metro, no native build) |
+| `android-build-check` | `./gradlew assembleDebug` compiles cleanly end-to-end |
+| `gradle-wrapper-check` | `gradle-wrapper.jar` is present and unmodified |
+| `local-path-check` | No hardcoded local machine paths in Gradle files |
+
+## Play Store submission workflow
+
+1. Increment `versionCode` in `frontend/android/app/build.gradle`
+2. Run `./gradlew bundleRelease` locally to produce an AAB
+3. Sign the AAB with the release keystore (stored offline)
+4. Upload to Play Console → Internal Testing → promote to production
+
+## Env vars
+
+All runtime env vars live in `frontend/.env.production` (committed) and
+`frontend/.env.local` (gitignored, for local dev). There is no `eas.json`.
+
+## Key files
 
 | File | Purpose |
 |---|---|
-| `frontend/android/build.gradle` | Root project: repositories, plugin dependencies |
 | `frontend/android/app/build.gradle` | App module: SDK versions, signing, dependencies, Sentry |
+| `frontend/android/build.gradle` | Root project: repositories, plugin dependencies |
 | `frontend/android/settings.gradle` | Module includes, React Native + Expo autolinking |
 | `frontend/android/gradle.properties` | JVM args, architecture list, Hermes/New Arch toggles |
-| `frontend/android/gradle/wrapper/gradle-wrapper.properties` | Gradle distribution version (currently 9.0.0) |
+| `frontend/android/gradle/wrapper/gradle-wrapper.properties` | Gradle distribution version |
 | `frontend/android/sentry.properties` | Sentry CLI config (uses env vars for org/project/token) |
-
-## JS bundle validation (GitHub Actions)
-
-The `android-bundle-check` CI job runs `npx expo export:embed --platform android`
-on every PR to verify the JS bundle can be created. This catches silent bundling
-failures before they reach EAS Build.
-
-The `android-build-check` CI job compiles Debug mode via `./gradlew assembleDebug`.
-Debug builds skip JS bundling (Metro dev server is expected), so it only validates
-native compilation. The bundle check covers JS.
-
-## EAS Build profiles (eas.json)
-
-- **development**: APK with dev client, internal distribution
-- **preview**: APK, internal distribution (for testing)
-- **production**: auto-incrementing version code
-
-## Gradle wrapper security
-
-The `gradle-wrapper-check` CI job validates the Gradle wrapper JAR checksum to
-prevent supply-chain attacks. Never replace `gradlew` or `gradle-wrapper.jar`
-manually — use `gradle wrapper --gradle-version=X.Y.Z` to upgrade.
-
-## Sentry integration
-
-`@sentry/react-native` applies `sentry.gradle` in `app/build.gradle`. The plugin
-uploads source maps during release builds. It reads `sentry.properties` for the
-CLI path and falls back to `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN`
-env vars. CI builds should set `SENTRY_ALLOW_FAILURE=true` to prevent upload
-failures from blocking the build.
+| `frontend/android/app/debug.keystore` | Gitignored — generated by CI, never committed |
 
 ## Key differences from iOS CI
 
 | Aspect | iOS | Android |
 |---|---|---|
-| Build system | Xcode Cloud | EAS Build |
+| Build system | Xcode Cloud | Local Gradle (`./gradlew`) |
+| Submission | App Store Connect | Play Console (direct upload) |
 | Native deps | CocoaPods (`pod install`) | Gradle (automatic) |
 | Lock file | `Podfile.lock` (committed) | None (Gradle resolves dynamically) |
 | CI compile check | `ios-build-check` (macOS) | `android-build-check` (Linux) |
