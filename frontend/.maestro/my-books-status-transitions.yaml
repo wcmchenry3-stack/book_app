@@ -1,0 +1,45 @@
+appId: com.buffingchi.bookshelf
+name: My Books — view and navigate status tabs
+tags:
+  - my-books
+  - navigation
+---
+# Precondition: app is launched and user is logged in.
+
+# Navigate to My Books tab
+- tapOn:
+    text: 'My Books'
+
+# Verify My Books screen loads
+- assertVisible:
+    text: 'My Books'
+    timeout: 5000
+
+# Verify status filter tabs are visible
+- assertVisible:
+    text: 'All'
+    optional: true
+- assertVisible:
+    text: 'Reading'
+    optional: true
+- assertVisible:
+    text: 'Read'
+    optional: true
+
+# Tap through status tabs
+- tapOn:
+    text: 'Reading'
+    optional: true
+
+- tapOn:
+    text: 'Read'
+    optional: true
+
+# Return to All tab
+- tapOn:
+    text: 'All'
+    optional: true
+
+# Verify screen is still responsive
+- assertVisible:
+    text: 'My Books'

@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+import httpx
 import pytest
 
 from app.schemas.book import EnrichedBook
@@ -131,3 +132,76 @@ class TestEnrich:
         results = await service.enrich([c1, c2])
 
         assert len(results) == 2
+
+
+class TestEnrichErrorPaths:
+    """Verify graceful degradation when one or both APIs fail."""
+
+    async def test_handles_ol_exception_gb_success(self, service):
+        """OL raises an error; GB succeeds → result has GB data but no OL work ID."""
+        service.ol.search = AsyncMock(
+            side_effect=httpx.HTTPStatusError("429", request=None, response=None)
+        )
+        service.gb.search = AsyncMock(return_value=GB_VOLUME)
+
+        results = await service.enrich([CANDIDATE])
+
+        assert len(results) == 1
+        book = results[0]
+        assert book.title == "Dune"
+        assert book.open_library_work_id is None  # OL failed
+        assert book.google_books_id == "gb_dune_001"  # GB succeeded
+        assert book.description == "A desert planet epic."
+
+    async def test_handles_gb_exception_ol_success(self, service):
+        """GB raises an error; OL succeeds → result has OL data but no GB enrichment."""
+        service.ol.search = AsyncMock(return_value=OL_DOC)
+        service.gb.search = AsyncMock(
+            side_effect=httpx.HTTPStatusError("500", request=None, response=None)
+        )
+
+        results = await service.enrich([CANDIDATE])
+
+        assert len(results) == 1
+        book = results[0]
+        assert book.title == "Dune"
+        assert book.open_library_work_id == "OL45804W"  # OL succeeded
+        assert book.google_books_id is None  # GB failed — empty dict
+        assert book.description is None  # no GB data
+        assert "Science fiction" in book.subjects  # OL subjects present
+
+    async def test_handles_both_apis_failing(self, service):
+        """Both APIs raise → result uses only candidate data, no enrichment."""
+        service.ol.search = AsyncMock(
+            side_effect=httpx.TimeoutException("OL timed out")
+        )
+        service.gb.search = AsyncMock(
+            side_effect=httpx.ConnectError("GB connection refused")
+        )
+
+        results = await service.enrich([CANDIDATE])
+
+        assert len(results) == 1
+        book = results[0]
+        assert book.title == "Dune"
+        assert book.author == "Frank Herbert"
+        assert book.open_library_work_id is None
+        assert book.google_books_id is None
+        assert book.description is None
+        assert book.subjects == []
+        assert book.confidence == 0.97
+
+    async def test_handles_ol_timeout_specifically(self, service):
+        """OL times out; GB succeeds → partial enrichment with GB data."""
+        service.ol.search = AsyncMock(
+            side_effect=httpx.TimeoutException("OL timed out")
+        )
+        service.gb.search = AsyncMock(return_value=GB_VOLUME)
+
+        results = await service.enrich([CANDIDATE])
+
+        assert len(results) == 1
+        book = results[0]
+        assert book.open_library_work_id is None
+        assert book.google_books_id == "gb_dune_001"
+        assert book.editions[0].publisher == "Ace Books"

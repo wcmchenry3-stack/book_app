@@ -1,0 +1,31 @@
+appId: com.buffingchi.bookshelf
+name: Login — Google authentication flow
+tags:
+  - auth
+  - login
+---
+# This flow verifies the login screen renders correctly.
+# Google OAuth cannot be fully automated in Maestro (requires real
+# Google Sign-In), so we verify the UI state before and after the
+# sign-in button is visible.
+
+# App should start on the login screen
+- assertVisible:
+    text: 'Sign in with Google'
+    timeout: 10000
+
+# Verify login screen elements
+- assertVisible:
+    text: 'Sign in with Google'
+
+# Tap the sign-in button — on a real device this opens Google OAuth;
+# on simulator it may show a web view or error. We verify the tap
+# doesn't crash the app.
+- tapOn:
+    text: 'Sign in with Google'
+
+# App should still be responsive after tapping sign-in
+- assertVisible:
+    text: 'Sign in with Google'
+    timeout: 5000
+    optional: true

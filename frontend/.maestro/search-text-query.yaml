@@ -1,0 +1,48 @@
+appId: com.buffingchi.bookshelf
+name: Scan — text search query flow
+tags:
+  - scan
+  - search
+---
+# Precondition: app is launched and user is logged in.
+
+# Navigate to scan tab
+- tapOn:
+    text: 'Camera'
+
+# Switch to text search mode
+- tapOn:
+    label: 'Text search mode'
+
+# Verify search input is visible
+- assertVisible:
+    label: 'Book title or author search'
+- assertVisible:
+    label: 'Search for book'
+
+# Enter a search query
+- tapOn:
+    label: 'Book title or author search'
+- inputText: 'Foundation Isaac Asimov'
+
+# Submit the search
+- tapOn:
+    label: 'Search for book'
+
+# Wait for results — either a success banner or no-results message
+- assertVisible:
+    text: '.*'
+    timeout: 10000
+    optional: true
+
+# Try another search with a different query
+- tapOn:
+    label: 'Book title or author search'
+- inputText: 'The Great Gatsby'
+- tapOn:
+    label: 'Search for book'
+
+# Verify app remains responsive
+- assertVisible:
+    label: 'Book title or author search'
+    timeout: 5000

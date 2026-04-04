@@ -7,8 +7,15 @@ import LoginScreen from '../../app/(auth)/login';
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
 const mockLogin = jest.fn();
+const mockTestLogin = jest.fn();
 jest.mock('../../hooks/useAuth', () => ({
-  useAuth: () => ({ login: mockLogin }),
+  useAuth: () => ({ login: mockLogin, testLogin: mockTestLogin }),
+}));
+
+jest.mock('../../lib/api', () => ({
+  api: { post: jest.fn() },
+  ACCESS_TOKEN_KEY: 'bookshelf_access_token',
+  REFRESH_TOKEN_KEY: 'bookshelf_refresh_token',
 }));
 
 jest.mock('../../hooks/useTheme', () => ({
