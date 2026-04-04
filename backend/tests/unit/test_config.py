@@ -60,9 +60,9 @@ class TestCorsOriginsValidator:
     def test_accepts_valid_origins(self):
         s = Settings(
             database_url="postgresql+asyncpg://u:p@localhost/db",
-            cors_origins=["https://example.onrender.com", "http://localhost:8081"],
+            cors_origins=["https://example.buffingchi.com", "http://localhost:8081"],
         )
-        assert "https://example.onrender.com" in s.cors_origins
+        assert "https://example.buffingchi.com" in s.cors_origins
 
     def test_accepts_empty_origins(self):
         s = Settings(

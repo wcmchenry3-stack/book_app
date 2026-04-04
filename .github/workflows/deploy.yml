@@ -15,5 +15,5 @@ jobs:
     with:
       service-name: 'bookshelf-api'
       service-id: 'srv-d6vkel7fte5s73du7fc0'
-      zap-target-url: 'https://bookshelf-api-rxp3.onrender.com'
+      zap-target-url: 'https://bookshelfapi.buffingchi.com'
     secrets: inherit
