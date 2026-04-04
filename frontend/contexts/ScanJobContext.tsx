@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
-import { v4 as uuidv4 } from 'uuid';
+import * as Crypto from 'expo-crypto';
 import { useTranslation } from 'react-i18next';
 
 import type { EnrichedBook } from '../components/BookCandidatePicker';
@@ -187,37 +187,46 @@ export function ScanJobProvider({ children }: { children: React.ReactNode }) {
 
   const startScan = useCallback(
     async (type: ScanJobType, imageUri?: string, query?: string) => {
-      const job: ScanJob = {
-        id: uuidv4(),
-        type,
-        status: 'pending',
-        createdAt: Date.now(),
-        query,
-        imageUri,
-        retryCount: 0,
-      };
+      try {
+        const job: ScanJob = {
+          id: Crypto.randomUUID(),
+          type,
+          status: 'pending',
+          createdAt: Date.now(),
+          query,
+          imageUri,
+          retryCount: 0,
+        };
 
-      Sentry.addBreadcrumb({
-        category: 'scan',
-        message: `Scan started: ${type}`,
-        level: 'info',
-        data: { jobId: job.id, type: job.type },
-      });
+        Sentry.addBreadcrumb({
+          category: 'scan',
+          message: `Scan started: ${type}`,
+          level: 'info',
+          data: { jobId: job.id, type: job.type },
+        });
 
-      setJobs((prev) => [job, ...prev]);
+        setJobs((prev) => [job, ...prev]);
 
-      const netState = await NetInfo.fetch();
-      if (!netState.isConnected) {
-        updateJob(job.id, { status: 'queued' });
+        const netState = await NetInfo.fetch();
+        if (!netState.isConnected) {
+          updateJob(job.id, { status: 'queued' });
+          showBanner({
+            message: t('savedOffline'),
+            type: 'info',
+            duration: 4000,
+          });
+          return;
+        }
+
+        await executeScanRef.current(job);
+      } catch (err) {
+        Sentry.captureException(err);
         showBanner({
-          message: t('savedOffline'),
-          type: 'info',
+          message: t('scanFailedMessage'),
+          type: 'error',
           duration: 4000,
         });
-        return;
       }
-
-      await executeScanRef.current(job);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [showBanner, t]
