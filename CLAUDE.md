@@ -42,6 +42,7 @@ Monorepo: `backend/` · `frontend/` · `.github/` · `docs/`
 19. Read `docs/claude/android-ci.md` before modifying `build.gradle`, `settings.gradle`, or `gradle.properties`.
 20. After any change to `frontend/android/` or Gradle files, verify `android-bundle-check` and `android-build-check` CI jobs pass before merging.
 21. `sentry.properties` must use environment variables for org/project/token — never hardcode Sentry credentials.
+22. Android Gradle builds require JDK 17 locally (`export JAVA_HOME=$(/usr/libexec/java_home -v 17)`). JDK 24+ breaks CMake native loading. `frontend/android/settings.gradle` enforces this with a preflight check.
 
 ## Quick Commands
 ```

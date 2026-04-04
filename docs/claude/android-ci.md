@@ -8,6 +8,29 @@ EAS Build is NOT used — for either iOS or Android. Do not suggest `eas build`,
 `eas submit`, or EAS-specific config for any build or submission issue.
 `frontend/eas.json` has been deleted.
 
+## Local JDK requirement — JDK 17
+
+**Gradle must run under JDK 17** (matches CI; JDK 21 also works). JDK 24+
+breaks the Android Gradle Plugin's CMake native loading with
+`A restricted method in java.lang.System has been called`, which surfaces
+~7 minutes into the build at `:app:configureCMakeDebug`. `settings.gradle`
+has a preflight check that fails fast if the JDK is wrong.
+
+**Set JAVA_HOME before running any Gradle / `npx expo run:android` command:**
+
+```bash
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)
+```
+
+If you don't already have JDK 17 installed:
+
+```bash
+brew install --cask zulu@17
+```
+
+Or use a version manager with the committed `.tool-versions` file at the
+repo root (`java zulu-17.64.17`): `asdf install` / `mise install`.
+
 ## Why `npm ci` must run before Gradle
 
 `node_modules/` is gitignored. Gradle's `settings.gradle` calls
