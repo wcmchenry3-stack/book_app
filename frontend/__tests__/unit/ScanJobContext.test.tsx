@@ -39,8 +39,8 @@ jest.mock('@react-native-community/netinfo', () => ({
 }));
 
 let mockUuidCounter = 0;
-jest.mock('uuid', () => ({
-  v4: () => `test-uuid-${++mockUuidCounter}`,
+jest.mock('expo-crypto', () => ({
+  randomUUID: () => `test-uuid-${++mockUuidCounter}`,
 }));
 
 jest.mock('expo-file-system', () => ({
