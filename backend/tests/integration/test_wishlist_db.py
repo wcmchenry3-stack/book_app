@@ -4,8 +4,6 @@ These tests require a running PostgreSQL instance. They are automatically
 skipped when DATABASE_URL is not configured or points to the dummy URL.
 """
 
-import uuid
-
 import pytest
 
 from app.models.book import Book

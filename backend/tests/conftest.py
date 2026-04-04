@@ -58,7 +58,6 @@ async def db_session():
     Only usable when a real DATABASE_URL is configured.
     """
     from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-    from sqlalchemy.orm import sessionmaker
 
     from app.core.config import settings
     from app.core.database import Base

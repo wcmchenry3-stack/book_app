@@ -6,7 +6,6 @@ Requires a real PostgreSQL database — skipped when DATABASE_URL is dummy.
 import pytest
 
 from app.models.book import Book
-from app.models.edition import Edition
 from app.models.user import User
 from app.models.user_book import UserBook
 
