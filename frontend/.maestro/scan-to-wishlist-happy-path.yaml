@@ -1,0 +1,86 @@
+appId: com.buffingchi.bookshelf
+name: Happy path — text search → select book → verify wishlist
+tags:
+  - e2e
+  - happy-path
+  - wishlist
+  - scan
+---
+# FULL HAPPY PATH: search for a book, select from results, confirm it's in the wishlist.
+#
+# Prerequisites:
+#   - App is launched and user is logged in
+#   - Backend is running with valid Google Books + OpenLibrary API keys
+#   - Network connectivity available
+#
+# Uses text search (not camera) for deterministic, CI-friendly results.
+# For the camera-capture variant see scan-to-wishlist-camera.yaml.
+
+# ── Step 1: Navigate to scan tab ─────────────────────────────────────────────
+- tapOn:
+    text: 'Camera'
+
+# ── Step 2: Switch to text search mode ───────────────────────────────────────
+- tapOn:
+    label: 'Text search mode'
+
+- assertVisible:
+    label: 'Book title or author search'
+
+# ── Step 3: Search for a well-known book ─────────────────────────────────────
+- tapOn:
+    label: 'Book title or author search'
+- inputText: 'Dune by Frank Herbert'
+- tapOn:
+    label: 'Search for book'
+
+# ── Step 4: Wait for results banner ──────────────────────────────────────────
+# The API call chain (Google Books + OpenLibrary enrichment) can take several
+# seconds. Wait up to 15s for the "Book found" success banner.
+- assertVisible:
+    text: '.*Dune.*'
+    timeout: 15000
+
+# ── Step 5: Tap "View" to open the BookCandidatePicker modal ────────────────
+- tapOn:
+    label: 'View'
+    timeout: 5000
+
+# ── Step 6: Verify the picker modal is showing candidates ───────────────────
+- assertVisible:
+    text: 'Which book is this?'
+    timeout: 3000
+
+# ── Step 7: Select the first book candidate ──────────────────────────────────
+# The candidate card's accessibility label follows the pattern:
+#   "Select {title} by {author}"
+# Use a regex to match any candidate with "Dune" in the label.
+- tapOn:
+    label: 'Select Dune.*'
+    timeout: 5000
+
+# ── Step 8: Wait for "added to wishlist" success banner ──────────────────────
+- assertVisible:
+    text: '.*added to your wishlist.*'
+    timeout: 10000
+
+# ── Step 9: Navigate to wishlist tab to confirm ─────────────────────────────
+- tapOn:
+    text: 'Wishlist'
+
+# ── Step 10: Verify the book appears in the wishlist ─────────────────────────
+- assertVisible:
+    text: 'Dune'
+    timeout: 10000
+
+- assertVisible:
+    text: 'Frank Herbert'
+    timeout: 3000
+    optional: true
+
+# ── Step 11: Clean up — remove the book from wishlist ────────────────────────
+# This prevents test pollution on repeated runs.
+- tapOn:
+    label: 'Remove Dune.*'
+    optional: true
+    timeout: 3000
