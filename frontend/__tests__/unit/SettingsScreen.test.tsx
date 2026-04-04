@@ -12,13 +12,31 @@ jest.mock('../../hooks/useTheme', () => ({
   }),
 }));
 
+const MockThemeToggleButton = () => <></>;
 jest.mock('../../components/ThemeToggleButton', () => ({
-  ThemeToggleButton: () => null,
+  ThemeToggleButton: () => <MockThemeToggleButton />,
 }));
 
 describe('SettingsScreen', () => {
   it('renders the settings heading', () => {
     const { getByText } = render(<SettingsScreen />);
     expect(getByText('Settings')).toBeTruthy();
+  });
+
+  it('renders the ThemeToggleButton', () => {
+    const { UNSAFE_getByType } = render(<SettingsScreen />);
+    expect(UNSAFE_getByType(MockThemeToggleButton)).toBeTruthy();
+  });
+
+  it('applies theme background color', () => {
+    const { toJSON } = render(<SettingsScreen />);
+    const tree = toJSON();
+    // Root View should have the mocked background color
+    expect(tree).toBeTruthy();
+    const rootStyle = Array.isArray(tree.props.style) ? tree.props.style : [tree.props.style];
+    const hasBackground = rootStyle.some(
+      (s: Record<string, unknown>) => s?.backgroundColor === '#fff'
+    );
+    expect(hasBackground).toBe(true);
   });
 });

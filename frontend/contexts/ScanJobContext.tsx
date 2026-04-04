@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import type { EnrichedBook } from '../components/BookCandidatePicker';
 import { useBanner } from '../hooks/useBanner';
 import { api } from '../lib/api';
+import { Sentry } from '../lib/sentry';
 import type { ScanJob, ScanJobType } from '../lib/scanJob';
 import { loadJobs, saveJobs } from '../lib/scanJobStorage';
 
@@ -143,7 +144,10 @@ export function ScanJobProvider({ children }: { children: React.ReactNode }) {
           },
         ],
       });
-    } catch {
+    } catch (err) {
+      Sentry.captureException(err, {
+        tags: { feature: 'scan', action: 'execute_scan', jobType: job.type },
+      });
       updateJob(job.id, { status: 'failed', error: 'network_or_server' });
       showBanner({
         message: t('scanFailedTitle'),
@@ -193,6 +197,13 @@ export function ScanJobProvider({ children }: { children: React.ReactNode }) {
         retryCount: 0,
       };
 
+      Sentry.addBreadcrumb({
+        category: 'scan',
+        message: `Scan started: ${type}`,
+        level: 'info',
+        data: { jobId: job.id, type: job.type },
+      });
+
       setJobs((prev) => [job, ...prev]);
 
       const netState = await NetInfo.fetch();
@@ -220,6 +231,13 @@ export function ScanJobProvider({ children }: { children: React.ReactNode }) {
     async (jobId: string) => {
       const job = jobsRef.current.find((j) => j.id === jobId);
       if (!job) return;
+
+      Sentry.addBreadcrumb({
+        category: 'scan',
+        message: `Scan retry: attempt ${job.retryCount + 1}`,
+        level: 'info',
+        data: { jobId, retryCount: job.retryCount + 1 },
+      });
 
       if (job.retryCount >= MAX_RETRIES) {
         showBanner({
@@ -276,6 +294,13 @@ export function ScanJobProvider({ children }: { children: React.ReactNode }) {
 
   const handleSelectBook = useCallback(
     async (book: EnrichedBook) => {
+      Sentry.addBreadcrumb({
+        category: 'scan',
+        message: `Book selected: ${book.title}`,
+        level: 'info',
+        data: { title: book.title, author: book.author },
+      });
+
       try {
         await api.post('/wishlist', book);
         if (reviewingJobId) {
@@ -287,7 +312,10 @@ export function ScanJobProvider({ children }: { children: React.ReactNode }) {
           type: 'success',
           duration: 4000,
         });
-      } catch {
+      } catch (err) {
+        Sentry.captureException(err, {
+          tags: { feature: 'scan', action: 'select_book' },
+        });
         showBanner({
           message: t('couldNotSaveMessage'),
           type: 'error',
