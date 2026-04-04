@@ -505,9 +505,7 @@ describe('ScanScreen — capture failure paths surface banners', () => {
     await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
 
     expect(mockStartScan).not.toHaveBeenCalled();
-    expect(mockShowBanner).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'error' })
-    );
+    expect(mockShowBanner).toHaveBeenCalledWith(expect.objectContaining({ type: 'error' }));
     expect(mockCaptureException).toHaveBeenCalledWith(
       expect.any(Error),
       expect.objectContaining({
@@ -525,9 +523,7 @@ describe('ScanScreen — capture failure paths surface banners', () => {
     await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
 
     expect(mockStartScan).not.toHaveBeenCalled();
-    expect(mockShowBanner).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'error' })
-    );
+    expect(mockShowBanner).toHaveBeenCalledWith(expect.objectContaining({ type: 'error' }));
     expect(mockCaptureException).toHaveBeenCalledWith(
       expect.any(Error),
       expect.objectContaining({
@@ -542,9 +538,7 @@ describe('ScanScreen — capture failure paths surface banners', () => {
     await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
 
     expect(mockStartScan).not.toHaveBeenCalled();
-    expect(mockShowBanner).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'error' })
-    );
+    expect(mockShowBanner).toHaveBeenCalledWith(expect.objectContaining({ type: 'error' }));
     expect(mockCaptureException).toHaveBeenCalledWith(
       expect.any(Error),
       expect.objectContaining({
