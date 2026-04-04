@@ -1,147 +1,139 @@
 import React, { useRef, useState } from 'react';
-import { Alert, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { isAxiosError } from 'axios';
+import { Directory, File, Paths } from 'expo-file-system';
 import { useTranslation } from 'react-i18next';
 
-import { BookCandidatePicker, EnrichedBook } from '../../components/BookCandidatePicker';
-import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { Sentry } from '../../lib/sentry';
 import { useTheme } from '../../hooks/useTheme';
-import { api } from '../../lib/api';
+import { useScanJobs } from '../../hooks/useScanJobs';
+import { useBanner } from '../../hooks/useBanner';
 
 type InputMode = 'camera' | 'search';
-type ScreenState = 'idle' | 'loading' | 'picker';
 type CameraFacing = 'back' | 'front';
 
 export default function ScanScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation('scan');
+  const { startScan } = useScanJobs();
+  const { showBanner } = useBanner();
   const [permission, requestPermission] = useCameraPermissions();
   const [inputMode, setInputMode] = useState<InputMode>('camera');
-  const [screenState, setScreenState] = useState<ScreenState>('idle');
-  const [candidates, setCandidates] = useState<EnrichedBook[]>([]);
   const [query, setQuery] = useState('');
   const [facing, setFacing] = useState<CameraFacing>('back');
+  const [capturing, setCapturing] = useState(false);
   const cameraRef = useRef<CameraView>(null);
+  const captureSeq = useRef(0);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const webInputRef = useRef<any>(null);
 
-  function handleScanError(err: unknown) {
-    if (isAxiosError(err) && err.response?.status === 503) {
-      Alert.alert(t('scanUnavailableTitle'), t('scanUnavailableMessage'));
-    } else {
-      Alert.alert(t('scanFailedTitle'), t('scanFailedMessage'));
-    }
-  }
-
-  async function submitScan(formData: FormData) {
-    const response = await api.post<EnrichedBook[]>('/scan', formData, {
-      // transformRequest runs after all header merging, so we can adjust
-      // Content-Type reliably here:
-      //   Web   — delete it; the browser XHR sets multipart/form-data with the
-      //           correct boundary automatically when the body is a FormData.
-      //   Native — set it explicitly; React Native's network layer adds the
-      //            boundary when the hint is 'multipart/form-data'.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      transformRequest: [
-        (data: FormData, headers: any) => {
-          if (Platform.OS === 'web') {
-            headers.delete('Content-Type');
-          } else {
-            headers.set('Content-Type', 'multipart/form-data');
-          }
-          return data;
-        },
-      ],
-    });
-    if (!response.data || response.data.length === 0) {
-      setScreenState('idle');
-      Alert.alert(t('noBooksFoundTitle'), t('noBooksFoundMessage'));
-      return;
-    }
-    setCandidates(response.data);
-    setScreenState('picker');
-  }
-
-  // Web: file input onChange — receives a File object directly from the browser
+  // Web: file input onChange — receives a File object directly from the browser.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async function handleWebFileChange(e: any) {
     const file: File | undefined = e?.target?.files?.[0];
     if (!file) return;
-    // Reset so the same file can be re-selected
     if (webInputRef.current) webInputRef.current.value = '';
-    setScreenState('loading');
+
+    // On web, pass the File object URL. The ScanJobContext handles FormData.
+    let uri: string;
     try {
-      const formData = new FormData();
-      formData.append('file', file, 'scan.jpg');
-      await submitScan(formData);
-    } catch (err) {
-      setScreenState('idle');
-      handleScanError(err);
+      uri = URL.createObjectURL(file);
+    } catch {
+      uri = file.name;
     }
+    startScan('image', uri);
   }
 
-  // Native: camera shutter
+  // Native: camera shutter — take photo, persist to document dir, start background scan.
   async function handleCapture() {
-    if (!cameraRef.current) return;
-    setScreenState('loading');
+    if (!cameraRef.current || capturing) return;
+    setCapturing(true);
+    Sentry.addBreadcrumb({
+      category: 'scan',
+      message: 'Camera capture started',
+      level: 'info',
+    });
+    // Track which pipeline stage is executing so the catch block can tag the
+    // failure precisely. Each silent failure previously looked identical in Sentry.
+    let stage: 'take_picture' | 'dir_create' | 'file_copy' | 'start_scan' = 'take_picture';
     try {
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.7,
         base64: false,
       });
       if (!photo?.uri) {
-        setScreenState('idle');
+        Sentry.addBreadcrumb({
+          category: 'scan',
+          message: 'takePictureAsync returned no URI',
+          level: 'warning',
+        });
         return;
       }
-      const formData = new FormData();
-      formData.append('file', {
-        uri: photo.uri,
-        name: 'scan.jpg',
-        type: 'image/jpeg',
-      } as unknown as Blob);
-      await submitScan(formData);
-    } catch (err) {
-      setScreenState('idle');
-      handleScanError(err);
+
+      // Heal corruption from the pre-#174 bug: if an earlier version of the app
+      // wrote a File (not a Directory) at the scan-queue path, delete it so the
+      // Directory.create() call below doesn't collide with it.
+      stage = 'dir_create';
+      try {
+        const stalePath = new File(Paths.document, 'scan-queue');
+        if (stalePath.exists) {
+          stalePath.delete();
+          Sentry.addBreadcrumb({
+            category: 'scan',
+            message: 'Removed stale scan-queue file from pre-#174 state',
+            level: 'info',
+          });
+        }
+      } catch {
+        // Best-effort cleanup — if this throws we'll still attempt create() below
+        // and surface that failure to the user.
+      }
+
+      // Copy temp file to persistent document directory. idempotent: true means
+      // create() is a no-op when the directory already exists (expo-file-system
+      // otherwise throws). intermediates: true guards first-launch edge cases.
+      const destDir = new Directory(Paths.document, 'scan-queue');
+      destDir.create({ intermediates: true, idempotent: true });
+
+      stage = 'file_copy';
+      // Sequence counter prevents filename collisions if two captures land in
+      // the same millisecond (double-tap race).
+      const seq = captureSeq.current++;
+      const destFile = new File(destDir, `${Date.now()}-${seq}.jpg`);
+      const sourceFile = new File(photo.uri);
+      sourceFile.copy(destFile);
+
+      stage = 'start_scan';
+      Sentry.addBreadcrumb({
+        category: 'scan',
+        message: 'Photo saved, starting scan',
+        level: 'info',
+        data: { destUri: destFile.uri },
+      });
+      startScan('image', destFile.uri);
+    } catch (error) {
+      Sentry.captureException(error, {
+        tags: { feature: 'camera-capture', stage },
+        extra: { facing },
+      });
+      // Give the user visible feedback instead of just logging to Sentry. The
+      // original bug shipped precisely because this catch was silent.
+      showBanner({
+        message: t('scanFailedMessage'),
+        type: 'error',
+        actions: [{ label: t('retryNow'), onPress: () => handleCapture() }],
+        duration: 8000,
+      });
+    } finally {
+      setCapturing(false);
     }
   }
 
-  async function handleSearch() {
+  function handleSearch() {
     const q = query.trim();
     if (!q) return;
-    setScreenState('loading');
-    try {
-      const response = await api.get<EnrichedBook[]>('/books/search', { params: { q } });
-      if (!response.data || response.data.length === 0) {
-        setScreenState('idle');
-        Alert.alert(t('noResultsTitle'), t('noResultsMessage'));
-        return;
-      }
-      setCandidates(response.data);
-      setScreenState('picker');
-    } catch {
-      setScreenState('idle');
-      Alert.alert(t('searchFailedTitle'), t('searchFailedMessage'));
-    }
-  }
-
-  async function handleSelect(book: EnrichedBook) {
-    setCandidates([]);
-    setScreenState('loading');
-    try {
-      await api.post('/wishlist', book);
-      setScreenState('idle');
-      Alert.alert(t('addedTitle'), t('addedMessage', { title: book.title }));
-    } catch {
-      setScreenState('idle');
-      Alert.alert(t('couldNotSaveTitle'), t('couldNotSaveMessage'));
-    }
-  }
-
-  function handleDismiss() {
-    setCandidates([]);
-    setScreenState('idle');
+    startScan('text', undefined, q);
+    setQuery('');
   }
 
   const modeToggle = (
@@ -194,16 +186,6 @@ export default function ScanScreen() {
 
   // ── Search mode ──────────────────────────────────────────────────────────
   if (inputMode === 'search') {
-    if (screenState === 'loading') {
-      // Keep modeToggle visible so the user can switch back while a search
-      // (or a camera scan that was mid-flight when they switched) is running.
-      return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-          {modeToggle}
-          <LoadingSpinner message={t('loading')} />
-        </View>
-      );
-    }
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         {modeToggle}
@@ -235,26 +217,15 @@ export default function ScanScreen() {
             <Text style={styles.searchButtonText}>{t('searchButton')}</Text>
           </Pressable>
         </View>
-        <BookCandidatePicker
-          visible={screenState === 'picker'}
-          candidates={candidates}
-          onSelect={handleSelect}
-          onDismiss={handleDismiss}
-        />
       </View>
     );
   }
 
   // ── Web camera mode ───────────────────────────────────────────────────────
-  // expo-camera's CameraView does not work reliably on iOS web browsers.
-  // Use a native <input type="file" capture="environment"> instead — this
-  // opens the device's built-in camera app (rear lens by default) and
-  // returns a proper File object that FormData understands.
   if (Platform.OS === 'web') {
     return (
       <>
         {React.createElement('input', {
-          // testID lets @testing-library/react-native find this node in tests
           testID: 'web-file-input',
           ref: webInputRef,
           type: 'file',
@@ -265,25 +236,15 @@ export default function ScanScreen() {
         })}
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
           {modeToggle}
-          {screenState === 'loading' ? (
-            <LoadingSpinner message={t('loading')} />
-          ) : (
-            <Pressable
-              style={[styles.webCaptureButton, { backgroundColor: theme.colors.primary }]}
-              onPress={() => webInputRef.current?.click()}
-              accessibilityRole="button"
-              accessibilityLabel={t('captureA11y')}
-              accessibilityHint={t('captureHint')}
-            >
-              <Text style={styles.webCaptureButtonText}>{t('takePhoto')}</Text>
-            </Pressable>
-          )}
-          <BookCandidatePicker
-            visible={screenState === 'picker'}
-            candidates={candidates}
-            onSelect={handleSelect}
-            onDismiss={handleDismiss}
-          />
+          <Pressable
+            style={[styles.webCaptureButton, { backgroundColor: theme.colors.primary }]}
+            onPress={() => webInputRef.current?.click()}
+            accessibilityRole="button"
+            accessibilityLabel={t('captureA11y')}
+            accessibilityHint={t('captureHint')}
+          >
+            <Text style={styles.webCaptureButtonText}>{t('takePhoto')}</Text>
+          </Pressable>
         </View>
       </>
     );
@@ -325,50 +286,33 @@ export default function ScanScreen() {
   }
 
   // ── Native camera view ────────────────────────────────────────────────────
-  // Keep CameraView always mounted during loading to prevent iOS from
-  // re-triggering the camera permission dialog when the view re-mounts.
   return (
     <View style={styles.container}>
-      <CameraView ref={cameraRef} style={styles.camera} facing={facing}>
-        <View style={styles.overlay}>
-          {modeToggle}
-          {screenState === 'loading' ? (
-            <LoadingSpinner message={t('loading')} />
-          ) : (
-            <>
-              <View style={[styles.frame, { borderColor: theme.colors.primary }]} />
-              <View style={styles.cameraControls}>
-                <Pressable
-                  style={styles.flipButton}
-                  onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('flipCameraA11y')}
-                >
-                  <Text style={styles.flipButtonText}>{t('flipCamera')}</Text>
-                </Pressable>
-                <Pressable
-                  style={[styles.captureButton, { backgroundColor: theme.colors.primary }]}
-                  onPress={handleCapture}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('captureA11y')}
-                  accessibilityHint={t('captureHint')}
-                >
-                  <View
-                    style={[styles.captureInner, { backgroundColor: theme.colors.background }]}
-                  />
-                </Pressable>
-              </View>
-            </>
-          )}
+      <CameraView ref={cameraRef} style={styles.camera} facing={facing} />
+      <View style={styles.overlay}>
+        {modeToggle}
+        <View style={[styles.frame, { borderColor: theme.colors.primary }]} />
+        <View style={styles.cameraControls}>
+          <Pressable
+            style={styles.flipButton}
+            onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
+            accessibilityRole="button"
+            accessibilityLabel={t('flipCameraA11y')}
+          >
+            <Text style={styles.flipButtonText}>{t('flipCamera')}</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.captureButton, { backgroundColor: theme.colors.primary }]}
+            onPress={handleCapture}
+            disabled={capturing}
+            accessibilityRole="button"
+            accessibilityLabel={t('captureA11y')}
+            accessibilityHint={t('captureHint')}
+          >
+            <View style={[styles.captureInner, { backgroundColor: theme.colors.background }]} />
+          </Pressable>
         </View>
-      </CameraView>
-
-      <BookCandidatePicker
-        visible={screenState === 'picker'}
-        candidates={candidates}
-        onSelect={handleSelect}
-        onDismiss={handleDismiss}
-      />
+      </View>
     </View>
   );
 }
@@ -377,8 +321,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   camera: { flex: 1, width: '100%' },
   overlay: {
-    flex: 1,
-    width: '100%',
+    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 60,

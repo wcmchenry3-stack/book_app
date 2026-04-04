@@ -178,3 +178,62 @@ class TestIdentifyFailures:
 
             with pytest.raises(ScanUnavailableError):
                 await identifier.identify(IMAGE_BYTES)
+
+    async def test_raises_scan_unavailable_on_403_forbidden(self, identifier):
+        with patch("app.services.chatgpt_vision.httpx.AsyncClient") as mock_client_cls:
+            mock_client = AsyncMock()
+            mock_client.post = AsyncMock(
+                side_effect=httpx.HTTPStatusError(
+                    "403", request=MagicMock(), response=MagicMock()
+                )
+            )
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=False)
+            mock_client_cls.return_value = mock_client
+
+            with pytest.raises(ScanUnavailableError):
+                await identifier.identify(IMAGE_BYTES)
+
+    async def test_raises_scan_unavailable_on_429_rate_limited(self, identifier):
+        with patch("app.services.chatgpt_vision.httpx.AsyncClient") as mock_client_cls:
+            mock_client = AsyncMock()
+            mock_client.post = AsyncMock(
+                side_effect=httpx.HTTPStatusError(
+                    "429", request=MagicMock(), response=MagicMock()
+                )
+            )
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=False)
+            mock_client_cls.return_value = mock_client
+
+            with pytest.raises(ScanUnavailableError):
+                await identifier.identify(IMAGE_BYTES)
+
+    async def test_raises_scan_unavailable_on_500_server_error(self, identifier):
+        with patch("app.services.chatgpt_vision.httpx.AsyncClient") as mock_client_cls:
+            mock_client = AsyncMock()
+            mock_client.post = AsyncMock(
+                side_effect=httpx.HTTPStatusError(
+                    "500", request=MagicMock(), response=MagicMock()
+                )
+            )
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=False)
+            mock_client_cls.return_value = mock_client
+
+            with pytest.raises(ScanUnavailableError):
+                await identifier.identify(IMAGE_BYTES)
+
+    async def test_propagates_connection_error(self, identifier):
+        """ConnectError is not caught — it propagates to the caller."""
+        with patch("app.services.chatgpt_vision.httpx.AsyncClient") as mock_client_cls:
+            mock_client = AsyncMock()
+            mock_client.post = AsyncMock(
+                side_effect=httpx.ConnectError("connection refused")
+            )
+            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_client.__aexit__ = AsyncMock(return_value=False)
+            mock_client_cls.return_value = mock_client
+
+            with pytest.raises(httpx.ConnectError):
+                await identifier.identify(IMAGE_BYTES)

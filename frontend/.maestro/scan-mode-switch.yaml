@@ -1,0 +1,48 @@
+appId: com.buffingchi.bookshelf
+name: Scan — mode switching between camera and search
+tags:
+  - scan
+  - mode-switch
+---
+# Precondition: app is launched and user is logged in.
+
+# Navigate to scan tab (defaults to camera mode)
+- tapOn:
+    text: 'Camera'
+
+# Verify camera controls are showing
+- assertVisible:
+    label: 'Capture book cover'
+
+# Switch to search mode
+- tapOn:
+    label: 'Text search mode'
+
+# Camera controls should be hidden, search input visible
+- assertNotVisible:
+    label: 'Capture book cover'
+- assertVisible:
+    label: 'Book title or author search'
+- assertVisible:
+    label: 'Search for book'
+
+# Perform a text search
+- tapOn:
+    label: 'Book title or author search'
+- inputText: 'Dune by Frank Herbert'
+- tapOn:
+    label: 'Search for book'
+
+# Search input should clear after submission
+- assertVisible:
+    label: 'Book title or author search'
+
+# Switch back to camera mode
+- tapOn:
+    label: 'Camera scan mode'
+
+# Camera controls should reappear
+- assertVisible:
+    label: 'Capture book cover'
+- assertVisible:
+    label: 'Flip camera'

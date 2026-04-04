@@ -1,0 +1,34 @@
+appId: com.buffingchi.bookshelf
+name: Settings — theme toggle interaction
+tags:
+  - settings
+  - theme
+---
+# Precondition: app is launched and user is logged in.
+
+# Navigate to settings tab
+- tapOn:
+    text: 'Settings'
+
+# Verify settings screen loads
+- assertVisible:
+    text: 'Settings'
+    timeout: 5000
+
+# Tap the theme toggle button
+- tapOn:
+    label: 'Toggle theme'
+    optional: true
+
+# Verify screen is still responsive after theme toggle
+- assertVisible:
+    text: 'Settings'
+    timeout: 3000
+
+# Toggle theme again to return to original
+- tapOn:
+    label: 'Toggle theme'
+    optional: true
+
+- assertVisible:
+    text: 'Settings'

@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     # Leave empty in development to skip the check.
     turnstile_secret_key: str = ""
 
+    # Testing (dev/staging only — never set in production)
+    test_auth_secret: str = ""
+
     # Observability
     sentry_dsn: str = ""
 

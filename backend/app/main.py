@@ -1,7 +1,10 @@
+import hmac
 import logging
+from datetime import datetime, timedelta, timezone
 
 import sentry_sdk
 from fastapi import FastAPI, Request
+from sqlalchemy import select
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sentry_sdk.integrations.fastapi import FastApiIntegration
@@ -21,6 +24,7 @@ from app.core.config import settings
 from app.core.database import AsyncSessionLocal
 from app.core.limiter import limiter
 from app.core.logging import configure_logging, new_request_id, request_id_var
+from app.core.sentry_context import SentryContextMiddleware
 
 configure_logging()
 
@@ -130,6 +134,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # Middleware stack — add_middleware wraps in reverse order so the last call added
 # becomes the outermost layer (first to run on incoming requests).
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(SentryContextMiddleware)
 app.add_middleware(RequestIdMiddleware)
 app.add_middleware(CloudflareRealIPMiddleware)
 app.add_middleware(
@@ -175,3 +180,66 @@ if settings.environment != "production":
     @limiter.limit("5/minute")
     async def sentry_test(request: Request) -> JSONResponse:
         1 / 0  # intentional — triggers Sentry capture
+
+    @app.post("/auth/test-login")
+    @limiter.limit("2/minute")
+    async def test_login(request: Request) -> JSONResponse:
+        """Dev-only login for E2E tests. Requires TEST_AUTH_SECRET.
+
+        This endpoint is NOT registered in production (guarded by the
+        ``if settings.environment != "production"`` block).  Even in dev
+        it requires a shared secret and only issues tokens for emails
+        already in the ALLOWED_EMAILS allowlist.
+        """
+        from app.auth.jwt import create_access_token, create_refresh_token
+        from app.core.database import get_db
+        from app.models.refresh_token import RefreshToken as RefreshTokenModel
+        from app.models.user import User
+
+        if not settings.test_auth_secret:
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "TEST_AUTH_SECRET not configured"},
+            )
+
+        body = await request.json()
+        provided_secret = body.get("secret", "")
+        email = body.get("email", "")
+
+        if not hmac.compare_digest(provided_secret, settings.test_auth_secret):
+            return JSONResponse(status_code=403, content={"detail": "Invalid secret"})
+
+        if settings.allowed_emails_list and email not in settings.allowed_emails_list:
+            return JSONResponse(
+                status_code=403, content={"detail": "Email not in allowlist"}
+            )
+
+        async for db in get_db():
+            result = await db.execute(select(User).where(User.email == email))
+            user = result.scalar_one_or_none()
+            if user is None:
+                user = User(
+                    email=email,
+                    google_id=f"test_{email}",
+                    display_name="E2E Test User",
+                )
+                db.add(user)
+                await db.commit()
+                await db.refresh(user)
+
+            access_token = create_access_token(str(user.id), user.email)
+            refresh_token, jti = create_refresh_token(str(user.id))
+            expires_at = datetime.now(timezone.utc) + timedelta(
+                days=settings.refresh_token_expiry_days
+            )
+            db.add(RefreshTokenModel(jti=jti, user_id=user.id, expires_at=expires_at))
+            await db.commit()
+
+            logger.info("test-login: issued tokens for %s", email)
+            return JSONResponse(
+                content={
+                    "access_token": access_token,
+                    "refresh_token": refresh_token,
+                    "expires_in": settings.jwt_expiry_hours * 3600,
+                }
+            )

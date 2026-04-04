@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.jwt import decode_token
 from app.core.database import get_db
+from app.core.sentry_context import set_sentry_user
 from app.models.user import User
 
 _bearer = HTTPBearer()
@@ -38,4 +39,5 @@ async def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
         )
+    set_sentry_user(user.id)
     return user

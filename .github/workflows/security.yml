@@ -144,7 +144,7 @@ jobs:
       - name: ZAP Full Scan
         uses: zaproxy/action-full-scan@v0.13.0
         with:
-          target: 'https://bookshelf-api-rxp3.onrender.com'
+          target: 'https://bookshelfapi.buffingchi.com'
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-z "-config scanner.attackStrength=LOW"'
           allow_issue_writing: false

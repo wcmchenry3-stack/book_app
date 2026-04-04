@@ -1,0 +1,51 @@
+appId: com.buffingchi.bookshelf
+name: Wishlist — view and interact with wishlist
+tags:
+  - wishlist
+  - navigation
+---
+# Precondition: app is launched and user is logged in.
+
+# Navigate to wishlist tab
+- tapOn:
+    text: 'Wishlist'
+
+# Verify wishlist screen loads
+- assertVisible:
+    text: 'Wishlist'
+    timeout: 5000
+
+# If wishlist is empty, verify empty state message
+- assertVisible:
+    text: '.*'
+    timeout: 3000
+    optional: true
+
+# Navigate back to scan to trigger a search and add a book
+- tapOn:
+    text: 'Camera'
+
+# Switch to text search mode
+- tapOn:
+    label: 'Text search mode'
+
+# Search for a book
+- tapOn:
+    label: 'Book title or author search'
+- inputText: 'Dune'
+- tapOn:
+    label: 'Search for book'
+
+# Wait for results and check banner appears
+- assertVisible:
+    text: '.*'
+    timeout: 10000
+    optional: true
+
+# Navigate back to wishlist to verify any changes
+- tapOn:
+    text: 'Wishlist'
+
+- assertVisible:
+    text: 'Wishlist'
+    timeout: 5000

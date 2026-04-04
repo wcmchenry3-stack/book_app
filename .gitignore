@@ -68,5 +68,13 @@ frontend/ios/*.xcarchive
 frontend/ios/Bookshelf.xcworkspace/xcuserdata/
 frontend/ios/.xcode.env.local
 
+# Android bare workflow — commit the project, ignore build artifacts
+frontend/android/app/build/
+frontend/android/build/
+frontend/android/.gradle/
+frontend/android/app/upload-keystore.jks
+*.jks
+*.keystore
+
 # Claude Code local overrides (personal, not shared)
 .claude/settings.local.json

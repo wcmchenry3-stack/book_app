@@ -8,6 +8,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (idToken: string) => Promise<void>;
+  testLogin: (accessToken: string, refreshToken: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -15,6 +16,7 @@ export const AuthContext = createContext<AuthContextValue>({
   isAuthenticated: false,
   isLoading: true,
   login: async () => {},
+  testLogin: async () => {},
   logout: async () => {},
 });
 
@@ -50,6 +52,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated(true);
   }, []);
 
+  const testLogin = useCallback(async (accessToken: string, refreshToken: string) => {
+    await storage.setItem(ACCESS_TOKEN_KEY, accessToken);
+    await storage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    setIsAuthenticated(true);
+  }, []);
+
   const logout = useCallback(async () => {
     await storage.deleteItem(ACCESS_TOKEN_KEY);
     await storage.deleteItem(REFRESH_TOKEN_KEY);
@@ -57,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, isLoading, login, testLogin, logout }}>
       {children}
     </AuthContext.Provider>
   );

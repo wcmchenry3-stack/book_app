@@ -29,5 +29,14 @@
   "scanUnavailableMessage": "Cover scanning is temporarily unavailable. Try searching by title instead.",
   "flipCamera": "Flip",
   "flipCameraA11y": "Flip camera",
-  "takePhoto": "Scan Book Cover"
+  "takePhoto": "Scan Book Cover",
+  "searchingInBackground": "Searching in background…",
+  "bookFound": "Book found: {{title}}",
+  "viewResults": "View",
+  "retryNow": "Retry",
+  "saveForLater": "Save for Later",
+  "savedOffline": "Saved for when you're back online",
+  "processingQueue": "Processing saved scan…",
+  "maxRetries": "Maximum retries reached. Saved for later.",
+  "noBooksFound": "No books found"
 }
