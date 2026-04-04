@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Sentry } from '../../lib/sentry';
 import { useTheme } from '../../hooks/useTheme';
 import { useScanJobs } from '../../hooks/useScanJobs';
+import { useBanner } from '../../hooks/useBanner';
 
 type InputMode = 'camera' | 'search';
 type CameraFacing = 'back' | 'front';
@@ -15,12 +16,14 @@ export default function ScanScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation('scan');
   const { startScan } = useScanJobs();
+  const { showBanner } = useBanner();
   const [permission, requestPermission] = useCameraPermissions();
   const [inputMode, setInputMode] = useState<InputMode>('camera');
   const [query, setQuery] = useState('');
   const [facing, setFacing] = useState<CameraFacing>('back');
   const [capturing, setCapturing] = useState(false);
   const cameraRef = useRef<CameraView>(null);
+  const captureSeq = useRef(0);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const webInputRef = useRef<any>(null);
 
@@ -50,6 +53,9 @@ export default function ScanScreen() {
       message: 'Camera capture started',
       level: 'info',
     });
+    // Track which pipeline stage is executing so the catch block can tag the
+    // failure precisely. Each silent failure previously looked identical in Sentry.
+    let stage: 'take_picture' | 'dir_create' | 'file_copy' | 'start_scan' = 'take_picture';
     try {
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.7,
@@ -64,15 +70,40 @@ export default function ScanScreen() {
         return;
       }
 
-      // Copy temp file to persistent document directory.
-      const destDir = new Directory(Paths.document, 'scan-queue');
-      if (!destDir.exists) {
-        destDir.create();
+      // Heal corruption from the pre-#174 bug: if an earlier version of the app
+      // wrote a File (not a Directory) at the scan-queue path, delete it so the
+      // Directory.create() call below doesn't collide with it.
+      stage = 'dir_create';
+      try {
+        const stalePath = new File(Paths.document, 'scan-queue');
+        if (stalePath.exists) {
+          stalePath.delete();
+          Sentry.addBreadcrumb({
+            category: 'scan',
+            message: 'Removed stale scan-queue file from pre-#174 state',
+            level: 'info',
+          });
+        }
+      } catch {
+        // Best-effort cleanup — if this throws we'll still attempt create() below
+        // and surface that failure to the user.
       }
-      const destFile = new File(destDir, `${Date.now()}.jpg`);
+
+      // Copy temp file to persistent document directory. idempotent: true means
+      // create() is a no-op when the directory already exists (expo-file-system
+      // otherwise throws). intermediates: true guards first-launch edge cases.
+      const destDir = new Directory(Paths.document, 'scan-queue');
+      destDir.create({ intermediates: true, idempotent: true });
+
+      stage = 'file_copy';
+      // Sequence counter prevents filename collisions if two captures land in
+      // the same millisecond (double-tap race).
+      const seq = captureSeq.current++;
+      const destFile = new File(destDir, `${Date.now()}-${seq}.jpg`);
       const sourceFile = new File(photo.uri);
       sourceFile.copy(destFile);
 
+      stage = 'start_scan';
       Sentry.addBreadcrumb({
         category: 'scan',
         message: 'Photo saved, starting scan',
@@ -82,8 +113,16 @@ export default function ScanScreen() {
       startScan('image', destFile.uri);
     } catch (error) {
       Sentry.captureException(error, {
-        tags: { feature: 'camera-capture' },
+        tags: { feature: 'camera-capture', stage },
         extra: { facing },
+      });
+      // Give the user visible feedback instead of just logging to Sentry. The
+      // original bug shipped precisely because this catch was silent.
+      showBanner({
+        message: t('scanFailedMessage'),
+        type: 'error',
+        actions: [{ label: t('retryNow'), onPress: () => handleCapture() }],
+        duration: 8000,
       });
     } finally {
       setCapturing(false);
