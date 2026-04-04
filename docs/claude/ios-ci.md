@@ -3,9 +3,11 @@
 ## IMPORTANT: We use Xcode Cloud, NOT EAS Build
 
 iOS builds and App Store submissions run through **Xcode Cloud** (Apple's CI,
-`/Volumes/workspace/` on the build worker). EAS Build is NOT used. Do not
-suggest EAS-specific fixes (e.g. `eas.json` resource classes) for Xcode Cloud
-build failures.
+`/Volumes/workspace/` on the build worker). EAS Build is NOT used — for either
+iOS or Android. Do not suggest `eas build`, `eas submit`, or `eas.json` config
+for any build or submission issue. `frontend/eas.json` has been deleted.
+
+For Android build infrastructure, see [android-ci.md](android-ci.md).
 
 ## Why `pod install` must run in CI
 
