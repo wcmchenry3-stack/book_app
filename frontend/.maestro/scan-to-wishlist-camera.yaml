@@ -1,77 +1,85 @@
 appId: com.buffingchi.bookshelf
-name: Happy path — camera capture → select book → verify wishlist
+name: Happy path — test login → camera capture → select book → verify wishlist
 tags:
   - e2e
   - happy-path
   - wishlist
   - camera
 ---
-# FULL HAPPY PATH (CAMERA VARIANT): capture a book cover, select from results,
-# confirm it's in the wishlist.
+# FULL HAPPY PATH (CAMERA VARIANT): log in, capture a book cover, select from
+# results, confirm it's in the wishlist.
 #
 # Prerequisites:
-#   - App is launched and user is logged in
-#   - Backend running with valid OpenAI, Google Books, and OpenLibrary API keys
-#   - A physical book cover visible to the simulator camera, OR a simulator with
-#     a custom camera feed image (Xcode > Simulator > Features > Camera)
-#   - Network connectivity available
+#   - App is running in dev mode (Expo Go or dev build)
+#   - Backend has TEST_AUTH_SECRET, ALLOWED_EMAILS, and valid OpenAI API key
+#   - Frontend .env has EXPO_PUBLIC_TEST_AUTH_SECRET and EXPO_PUBLIC_TEST_EMAIL
+#   - A physical book cover visible to the simulator camera
 #
-# ⚠️  This flow is NON-DETERMINISTIC — results depend on what the Vision API
-#     identifies from the camera feed. For CI use scan-to-wishlist-happy-path.yaml
-#     (text search variant) instead.
+# This flow is NON-DETERMINISTIC — results depend on what the Vision API
+# identifies from the camera feed. For CI use scan-to-wishlist-happy-path.yaml.
+
+# ── Step 0: Log in via dev-only test login button ────────────────────────────
+- assertVisible:
+    text: 'Test Login'
+- tapOn:
+    text: 'Test Login'
+
+- extendedWaitUntil:
+    visible:
+      text: 'Camera'
+    timeout: 10000
 
 # ── Step 1: Navigate to scan tab (camera mode is the default) ────────────────
 - tapOn:
     text: 'Camera'
 
-# Verify camera controls are visible
-- assertVisible:
-    label: 'Capture book cover'
+- extendedWaitUntil:
+    visible:
+      label: 'Capture book cover'
     timeout: 5000
 
 # ── Step 2: Capture a photo ──────────────────────────────────────────────────
 - tapOn:
     label: 'Capture book cover'
 
-# Camera controls should remain visible (capture is non-blocking)
 - assertVisible:
     label: 'Capture book cover'
 
 # ── Step 3: Wait for results ─────────────────────────────────────────────────
-# The full pipeline: image upload → OpenAI Vision → enrichment → results.
-# This can take 10-20 seconds depending on API response times.
-- assertVisible:
-    text: 'Book found:.*'
+- extendedWaitUntil:
+    visible:
+      text: 'Book found:.*'
     timeout: 30000
 
 # ── Step 4: Tap "View" to open the BookCandidatePicker ──────────────────────
 - tapOn:
     label: 'View'
-    timeout: 5000
 
-# ── Step 5: Verify the picker modal is showing ──────────────────────────────
-- assertVisible:
-    text: 'Which book is this?'
+- extendedWaitUntil:
+    visible:
+      text: 'Which book is this?'
     timeout: 3000
 
-# ── Step 6: Select the first book candidate ──────────────────────────────────
-# We can't predict which book the Vision API identifies, so tap the first
-# candidate card using a broad pattern.
+# ── Step 5: Select the first book candidate ──────────────────────────────────
+- extendedWaitUntil:
+    visible:
+      label: 'Select .*'
+    timeout: 5000
 - tapOn:
     label: 'Select .*'
     index: 0
-    timeout: 5000
 
-# ── Step 7: Wait for success banner ─────────────────────────────────────────
-- assertVisible:
-    text: '.*added to your wishlist.*'
+# ── Step 6: Wait for success banner ─────────────────────────────────────────
+- extendedWaitUntil:
+    visible:
+      text: '.*added to your wishlist.*'
     timeout: 10000
 
-# ── Step 8: Navigate to wishlist and verify ──────────────────────────────────
+# ── Step 7: Navigate to wishlist and verify ──────────────────────────────────
 - tapOn:
     text: 'Wishlist'
 
-# Wishlist should not be empty — at least one book was just added
-- assertNotVisible:
-    text: 'Your wishlist is empty.*'
+- extendedWaitUntil:
+    notVisible:
+      text: 'Your wishlist is empty.*'
     timeout: 10000
