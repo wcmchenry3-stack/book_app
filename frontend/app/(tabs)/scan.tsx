@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { File, Paths } from 'expo-file-system';
+import { Directory, File, Paths } from 'expo-file-system';
 import { useTranslation } from 'react-i18next';
 
 import { Sentry } from '../../lib/sentry';
@@ -65,7 +65,7 @@ export default function ScanScreen() {
       }
 
       // Copy temp file to persistent document directory.
-      const destDir = new File(Paths.document, 'scan-queue');
+      const destDir = new Directory(Paths.document, 'scan-queue');
       if (!destDir.exists) {
         destDir.create();
       }

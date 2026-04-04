@@ -42,11 +42,22 @@ jest.mock('expo-camera', () => {
 
 const mockFileCopy = jest.fn();
 const mockFileCreate = jest.fn();
+const mockDirCreate = jest.fn();
 
 jest.mock('expo-file-system', () => ({
   Paths: { document: 'file:///docs' },
+  Directory: jest.fn().mockImplementation((...args: unknown[]) => {
+    const parts = args.map((a) =>
+      typeof a === 'object' && a !== null && 'uri' in a ? (a as { uri: string }).uri : String(a)
+    );
+    return {
+      uri: parts.join('/'),
+      exists: true,
+      create: mockDirCreate,
+    };
+  }),
   File: jest.fn().mockImplementation((...args: unknown[]) => {
-    // Mimic expo-file-system File: resolve uri from parent (string or File) + name
+    // Mimic expo-file-system File: resolve uri from parent (string or File/Directory) + name
     const parts = args.map((a) =>
       typeof a === 'object' && a !== null && 'uri' in a ? (a as { uri: string }).uri : String(a)
     );
@@ -395,26 +406,22 @@ describe('ScanScreen — Sentry logging', () => {
 describe('ScanScreen — scan-queue directory handling', () => {
   it('creates scan-queue directory when it does not exist', async () => {
     const FileSystem = require('expo-file-system');
-    // Override File mock to return exists: false for directory
-    let callCount = 0;
-    FileSystem.File.mockImplementation((...args: unknown[]) => {
-      callCount++;
+    // Override Directory mock to return exists: false
+    FileSystem.Directory.mockImplementationOnce((...args: unknown[]) => {
       const parts = args.map((a: unknown) =>
         typeof a === 'object' && a !== null && 'uri' in a ? (a as { uri: string }).uri : String(a)
       );
       return {
         uri: parts.join('/'),
-        // First File() call is the destDir — simulate it not existing
-        exists: callCount !== 1,
-        create: mockFileCreate,
-        copy: mockFileCopy,
+        exists: false,
+        create: mockDirCreate,
       };
     });
 
     mockTakePictureAsync.mockResolvedValue({ uri: 'file://test.jpg' });
     const { getByLabelText } = render(<ScanScreen />);
     await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
-    expect(mockFileCreate).toHaveBeenCalled();
+    expect(mockDirCreate).toHaveBeenCalled();
   });
 
   it('skips directory creation when scan-queue already exists', async () => {
@@ -422,6 +429,6 @@ describe('ScanScreen — scan-queue directory handling', () => {
     const { getByLabelText } = render(<ScanScreen />);
     await act(async () => fireEvent.press(getByLabelText('Capture book cover')));
     // Default mock returns exists: true, so create should not be called
-    expect(mockFileCreate).not.toHaveBeenCalled();
+    expect(mockDirCreate).not.toHaveBeenCalled();
   });
 });
