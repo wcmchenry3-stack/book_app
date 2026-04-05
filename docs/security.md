@@ -2,17 +2,22 @@
 
 See [~/.claude/standards/security.md](~/.claude/standards/security.md) for universal security standards.
 
+**Related docs:** [`architecture.md`](architecture.md#middleware-stack) (middleware stack + rate limiting) · [`integrations.md`](integrations.md#cloudflare) (Turnstile + WAF) · [`api.md`](api.md#conventions) (error response format) · [`data-model.md`](data-model.md#refresh_tokens-backendappmodelsrefresh_tokenpy) (JTI revocation table)
+
 ## Security Controls
 
 | Concern | Solution |
 |---------|----------|
 | JWT algorithm confusion | Pinned to RS256; all other algorithms including `none` rejected |
 | JWT expiry | 24hr access token, 7-day refresh token with JTI revocation |
+| Refresh token theft | Single-use rotation — every `/auth/refresh` revokes the old `jti` and issues a new one |
 | Single-user lock | `ALLOWED_EMAILS` env var checked post-Google-auth |
-| Rate limiting | `slowapi` — per-user (auth'd) / per-IP (unauth'd); 10 req/min on `/scan` |
+| Rate limiting | `slowapi` — per-client-IP; 10 req/min on `/scan`, 5/min auth, 120/min reads, etc. |
 | Real client IP | `CloudflareRealIPMiddleware` reads `CF-Connecting-IP` in production |
+| Host header spoofing | `TrustedHostMiddleware` (prod only) rejects requests with Host header outside `TRUSTED_HOSTS`; `/health` exempted via `_HealthExemptTrustedHost` so origin-direct probes still work |
+| Request size limit | `RequestSizeLimitMiddleware` drops bodies > 10 MB with 413 before reading the stream |
 | DDoS / Bot protection | Cloudflare free tier (Bot Fight Mode, HTTP DDoS protection) |
-| Bot protection on /scan | Cloudflare Turnstile — opt-in via `TURNSTILE_SECRET_KEY` env var |
+| Bot protection on /scan | Cloudflare Turnstile — opt-in via `TURNSTILE_SECRET_KEY` env var. Request must carry `cf-turnstile-response`; verified against Cloudflare siteverify with 5s timeout |
 | CORS | Explicit method/header allowlist; wildcard origins rejected at config validation |
 | Input validation | Pydantic on all endpoints; extension + MIME + size + magic bytes on uploads |
 | SQL injection | SQLAlchemy ORM throughout; no raw SQL |
