@@ -91,7 +91,7 @@ jest.mock('../../hooks/useTheme', () => ({
 }));
 
 jest.mock('../../lib/sentry', () => ({
-  Sentry: { captureException: jest.fn(), addBreadcrumb: jest.fn() },
+  Sentry: { captureException: jest.fn(), addBreadcrumb: jest.fn(), captureMessage: jest.fn() },
 }));
 
 beforeEach(() => {
