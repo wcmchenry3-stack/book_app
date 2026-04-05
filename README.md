@@ -53,21 +53,19 @@ npx expo start            # press i for iOS sim, a for Android, w for web
 
 ## Documentation
 
-| Doc | Purpose | Status |
-|---|---|---|
-| [`docs/getting-started.md`](docs/getting-started.md) | End-to-end local dev setup (DB + backend + frontend + first scan) | ⏳ [#187](../../issues/187) |
-| [`docs/architecture.md`](docs/architecture.md) | System design, middleware stack, auth architecture, decision records | ⏳ [#186](../../issues/186) |
-| [`docs/project-structure.md`](docs/project-structure.md) | Monorepo layout, conventions, "how to add a ..." recipes | ⏳ [#191](../../issues/191) |
-| [`docs/features.md`](docs/features.md) | User-facing features, scan flow + auth flow sequence diagrams | ⏳ [#188](../../issues/188) |
-| [`docs/data-model.md`](docs/data-model.md) | ER diagram, entity reference, book-dedup strategy | ⏳ [#189](../../issues/189) |
-| [`docs/api.md`](docs/api.md) | REST endpoint reference with examples and error codes | ⏳ [#190](../../issues/190) |
-| [`docs/integrations.md`](docs/integrations.md) | Google OAuth / Books / OpenAI / Open Library / Sentry / Cloudflare / Render | ⏳ [#192](../../issues/192) |
-| [`docs/deployment.md`](docs/deployment.md) | Render config, env vars, release process, rollback | ⏳ [#193](../../issues/193) |
-| [`docs/testing.md`](docs/testing.md) | Test strategy (unit/integration/security/accuracy/perf), patterns, how to run | ⏳ [#194](../../issues/194) |
-| [`docs/security.md`](docs/security.md) | Security controls, OWASP test cases, incident runbook | ✅ |
-| [`docs/claude/`](docs/claude/) | Claude-specific guides (git workflow, iOS/Android CI, backend/frontend conventions) | ✅ |
-
-> **Doc overhaul in progress.** Items marked ⏳ are being written incrementally — see [#185–#196](../../issues?q=is%3Aissue+label%3Adocumentation) (12 PRs, one per doc). This note comes out once all are merged.
+| Doc | Purpose |
+|---|---|
+| [`docs/getting-started.md`](docs/getting-started.md) | End-to-end local dev setup (DB + backend + frontend + first scan) |
+| [`docs/architecture.md`](docs/architecture.md) | System design, middleware stack, auth architecture, decision records |
+| [`docs/project-structure.md`](docs/project-structure.md) | Monorepo layout, conventions, "how to add a ..." recipes |
+| [`docs/features.md`](docs/features.md) | User-facing features, scan flow + auth flow sequence diagrams |
+| [`docs/data-model.md`](docs/data-model.md) | ER diagram, entity reference, book-dedup strategy |
+| [`docs/api.md`](docs/api.md) | REST endpoint reference with examples and error codes |
+| [`docs/integrations.md`](docs/integrations.md) | Google OAuth / Books / OpenAI / Open Library / Sentry / Cloudflare / Render |
+| [`docs/deployment.md`](docs/deployment.md) | Render config, env vars, release process, rollback |
+| [`docs/testing.md`](docs/testing.md) | Test strategy (unit/integration/security/accuracy/perf), patterns, how to run |
+| [`docs/security.md`](docs/security.md) | Security controls, OWASP test cases, incident runbook |
+| [`docs/claude/`](docs/claude/) | Claude-specific guides (git workflow, iOS/Android CI, backend/frontend conventions) |
 
 ## For Claude sessions
 
