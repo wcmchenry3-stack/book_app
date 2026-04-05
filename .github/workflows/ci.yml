@@ -16,7 +16,11 @@ jobs:
   backend-health:
     uses: wcmchenry3-stack/.github/.github/workflows/called-backend-health.yml@main
     with:
-      backend-url: 'https://bookshelfapi.buffingchi.com'
+      # Direct Render origin intentionally used here instead of bookshelfapi.buffingchi.com.
+      # Cloudflare Bot Fight Mode blocks GHA runner IPs (Azure cloud ranges) before
+      # the WAF skip rule fires — health checks must bypass the proxy.
+      # See wcmchenry3-stack/.github#45.
+      backend-url: 'https://bookshelf-api-rxp3.onrender.com'
       health-path: '/health'
     secrets: inherit
 
