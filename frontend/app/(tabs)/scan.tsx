@@ -46,6 +46,14 @@ export default function ScanScreen() {
 
   // Native: camera shutter — take photo, persist to document dir, start background scan.
   async function handleCapture() {
+    // Diagnostic event — fires on every press so we can confirm the button's
+    // onPress is actually reaching us (breadcrumbs alone don't reach Sentry
+    // unless an exception is later captured).
+    Sentry.captureMessage('camera_capture_pressed', {
+      level: 'info',
+      tags: { feature: 'camera-capture', phase: 'press' },
+      extra: { hasCameraRef: !!cameraRef.current, capturing },
+    });
     if (!cameraRef.current || capturing) return;
     setCapturing(true);
     Sentry.addBreadcrumb({
@@ -57,10 +65,17 @@ export default function ScanScreen() {
     // failure precisely. Each silent failure previously looked identical in Sentry.
     let stage: 'take_picture' | 'dir_create' | 'file_copy' | 'start_scan' = 'take_picture';
     try {
-      const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.7,
-        base64: false,
-      });
+      // Wrap takePictureAsync in a 10s timeout — without this, a hung native
+      // promise makes the whole flow silently stall with no Sentry signal.
+      const photo = await Promise.race([
+        cameraRef.current.takePictureAsync({
+          quality: 0.7,
+          base64: false,
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('takePictureAsync timeout after 10s')), 10000)
+        ),
+      ]);
       if (!photo?.uri) {
         Sentry.addBreadcrumb({
           category: 'scan',
@@ -109,6 +124,13 @@ export default function ScanScreen() {
         message: 'Photo saved, starting scan',
         level: 'info',
         data: { destUri: destFile.uri },
+      });
+      // Diagnostic event confirming we reached startScan — paired with
+      // camera_capture_pressed, this tells us exactly where the flow drops.
+      Sentry.captureMessage('camera_capture_started_scan', {
+        level: 'info',
+        tags: { feature: 'camera-capture', phase: 'start_scan' },
+        extra: { destUri: destFile.uri },
       });
       startScan('image', destFile.uri);
     } catch (error) {
@@ -289,9 +311,12 @@ export default function ScanScreen() {
   return (
     <View style={styles.container}>
       <CameraView ref={cameraRef} style={styles.camera} facing={facing} />
-      <View style={styles.overlay}>
+      {/* box-none: overlay itself doesn't intercept touches, but its Pressable
+          children still receive them. Without this, iOS was swallowing the
+          shutter press on top of the CameraView. */}
+      <View style={styles.overlay} pointerEvents="box-none">
         {modeToggle}
-        <View style={[styles.frame, { borderColor: theme.colors.primary }]} />
+        <View style={[styles.frame, { borderColor: theme.colors.primary }]} pointerEvents="none" />
         <View style={styles.cameraControls}>
           <Pressable
             style={styles.flipButton}
