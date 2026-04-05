@@ -31,6 +31,30 @@ brew install --cask zulu@17
 Or use a version manager with the committed `.tool-versions` file at the
 repo root (`java zulu-17.64.17`): `asdf install` / `mise install`.
 
+## First-time local Android setup
+
+After cloning, before your first `npx expo run:android`, you need two things:
+
+**1. JDK 17 on `JAVA_HOME`** (see the section above).
+
+**2. A local debug keystore.** `frontend/android/app/debug.keystore` is
+gitignored (CI generates a throwaway one at build time). Generate one locally
+with the standard Android debug credentials so AGP's default signing config
+picks it up:
+
+```bash
+keytool -genkey -v \
+  -keystore frontend/android/app/debug.keystore \
+  -alias androiddebugkey \
+  -keyalg RSA -keysize 2048 -validity 10000 \
+  -storepass android -keypass android \
+  -dname "CN=Android Debug,O=Android,C=US"
+```
+
+You only need to do this once per clone. If you ever see
+`Keystore file '.../debug.keystore' not found for signing config 'debug'`
+at `:app:validateSigningDebug`, re-run the command above.
+
 ## Why `npm ci` must run before Gradle
 
 `node_modules/` is gitignored. Gradle's `settings.gradle` calls
