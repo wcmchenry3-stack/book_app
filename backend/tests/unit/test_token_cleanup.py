@@ -1,8 +1,7 @@
 """Unit tests for the refresh token cleanup background task."""
 
 import asyncio
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch, call
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -30,13 +29,12 @@ class TestCleanupExpiredTokens:
     @pytest.mark.asyncio
     async def test_deletes_expired_tokens_and_logs(self, caplog) -> None:
         """A single cleanup run must execute a DELETE and commit."""
-        import logging
 
         mock_factory, mock_session, mock_result = _make_db_mock(rowcount=5)
 
-        with patch("app.services.token_cleanup.AsyncSessionLocal", mock_factory), \
-             patch("app.services.token_cleanup._INITIAL_DELAY_SECONDS", 0), \
-             patch("app.services.token_cleanup._INTERVAL_SECONDS", 0):
+        with patch("app.services.token_cleanup.AsyncSessionLocal", mock_factory), patch(
+            "app.services.token_cleanup._INITIAL_DELAY_SECONDS", 0
+        ), patch("app.services.token_cleanup._INTERVAL_SECONDS", 0):
 
             # Run two ticks then cancel
             with pytest.raises(asyncio.CancelledError):
@@ -52,15 +50,12 @@ class TestCleanupExpiredTokens:
     @pytest.mark.asyncio
     async def test_delete_filters_by_expires_at(self) -> None:
         """The DELETE statement must filter on expires_at < now."""
-        from sqlalchemy import delete as sa_delete
-
-        from app.models.refresh_token import RefreshToken
 
         mock_factory, mock_session, _ = _make_db_mock()
 
-        with patch("app.services.token_cleanup.AsyncSessionLocal", mock_factory), \
-             patch("app.services.token_cleanup._INITIAL_DELAY_SECONDS", 0), \
-             patch("app.services.token_cleanup._INTERVAL_SECONDS", 9999):
+        with patch("app.services.token_cleanup.AsyncSessionLocal", mock_factory), patch(
+            "app.services.token_cleanup._INITIAL_DELAY_SECONDS", 0
+        ), patch("app.services.token_cleanup._INTERVAL_SECONDS", 9999):
 
             with pytest.raises(asyncio.CancelledError):
                 task = asyncio.create_task(cleanup_expired_tokens())
@@ -94,10 +89,11 @@ class TestCleanupExpiredTokens:
         mock_factory, mock_session, _ = _make_db_mock()
         mock_session.execute = flaky_execute
 
-        with patch("app.services.token_cleanup.AsyncSessionLocal", mock_factory), \
-             patch("app.services.token_cleanup._INITIAL_DELAY_SECONDS", 0), \
-             patch("app.services.token_cleanup._INTERVAL_SECONDS", 0), \
-             caplog.at_level(logging.ERROR, logger="app.services.token_cleanup"):
+        with patch("app.services.token_cleanup.AsyncSessionLocal", mock_factory), patch(
+            "app.services.token_cleanup._INITIAL_DELAY_SECONDS", 0
+        ), patch("app.services.token_cleanup._INTERVAL_SECONDS", 0), caplog.at_level(
+            logging.ERROR, logger="app.services.token_cleanup"
+        ):
 
             with pytest.raises(asyncio.CancelledError):
                 task = asyncio.create_task(cleanup_expired_tokens())
@@ -116,8 +112,9 @@ class TestCleanupExpiredTokens:
         """asyncio.CancelledError must propagate so the lifespan can await the task."""
         mock_factory, mock_session, _ = _make_db_mock()
 
-        with patch("app.services.token_cleanup.AsyncSessionLocal", mock_factory), \
-             patch("app.services.token_cleanup._INITIAL_DELAY_SECONDS", 0):
+        with patch("app.services.token_cleanup.AsyncSessionLocal", mock_factory), patch(
+            "app.services.token_cleanup._INITIAL_DELAY_SECONDS", 0
+        ):
 
             task = asyncio.create_task(cleanup_expired_tokens())
             await asyncio.sleep(0)

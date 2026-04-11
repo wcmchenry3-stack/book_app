@@ -5,7 +5,6 @@ pytest -m security -v tests/security/test_file_sanitization.py
 """
 
 import io
-import struct
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -42,7 +41,6 @@ def _make_webp(width: int = 10, height: int = 10) -> bytes:
 def _jpeg_with_exif() -> bytes:
     """Build a minimal JPEG that includes an EXIF GPS tag."""
     from PIL import Image
-    from PIL.ExifTags import TAGS
 
     buf = io.BytesIO()
     img = Image.new("RGB", (10, 10), color=(128, 128, 128))
@@ -112,9 +110,13 @@ class TestImageSanitization:
 
         from app.core.file_security import sanitize_image
 
-        garbage = b"\x00\x00\x00\x18ftypheic" + b"\x00" * 100  # minimal HEIC-like header
+        garbage = (
+            b"\x00\x00\x00\x18ftypheic" + b"\x00" * 100
+        )  # minimal HEIC-like header
 
-        with patch("PIL.Image.open", side_effect=UnidentifiedImageError("cannot identify")):
+        with patch(
+            "PIL.Image.open", side_effect=UnidentifiedImageError("cannot identify")
+        ):
             result = sanitize_image(garbage)
 
         assert result == garbage  # falls back to original
@@ -164,8 +166,10 @@ class TestClamAVScan:
         mock_cd = MagicMock()
         mock_cd.instream.return_value = {"stream": ("OK", None)}
 
-        with patch("app.core.file_security.settings") as mock_settings, \
-             patch.dict("sys.modules", {"clamd": MagicMock(ClamdNetworkSocket=MagicMock(return_value=mock_cd))}):
+        with patch("app.core.file_security.settings") as mock_settings, patch.dict(
+            "sys.modules",
+            {"clamd": MagicMock(ClamdNetworkSocket=MagicMock(return_value=mock_cd))},
+        ):
             mock_settings.clamav_enabled = True
             mock_settings.clamav_host = "localhost"
             mock_settings.clamav_port = 3310
@@ -178,8 +182,10 @@ class TestClamAVScan:
         mock_cd = MagicMock()
         mock_cd.instream.return_value = {"stream": ("FOUND", "Eicar-Test-Signature")}
 
-        with patch("app.core.file_security.settings") as mock_settings, \
-             patch.dict("sys.modules", {"clamd": MagicMock(ClamdNetworkSocket=MagicMock(return_value=mock_cd))}):
+        with patch("app.core.file_security.settings") as mock_settings, patch.dict(
+            "sys.modules",
+            {"clamd": MagicMock(ClamdNetworkSocket=MagicMock(return_value=mock_cd))},
+        ):
             mock_settings.clamav_enabled = True
             mock_settings.clamav_host = "localhost"
             mock_settings.clamav_port = 3310
@@ -196,10 +202,13 @@ class TestClamAVScan:
         from app.core.file_security import scan_for_malware
 
         mock_clamd = MagicMock()
-        mock_clamd.ClamdNetworkSocket.side_effect = ConnectionRefusedError("daemon down")
+        mock_clamd.ClamdNetworkSocket.side_effect = ConnectionRefusedError(
+            "daemon down"
+        )
 
-        with patch("app.core.file_security.settings") as mock_settings, \
-             patch.dict("sys.modules", {"clamd": mock_clamd}):
+        with patch("app.core.file_security.settings") as mock_settings, patch.dict(
+            "sys.modules", {"clamd": mock_clamd}
+        ):
             mock_settings.clamav_enabled = True
             mock_settings.clamav_host = "localhost"
             mock_settings.clamav_port = 3310

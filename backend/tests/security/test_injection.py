@@ -409,7 +409,9 @@ class TestInputLengthLimits:
 
     def test_wishlist_cover_url_too_long(self) -> None:
         with pytest.raises(ValidationError):
-            WishlistRequest(title="Title", author="Author", cover_url="https://x.com/" + "a" * 2040)
+            WishlistRequest(
+                title="Title", author="Author", cover_url="https://x.com/" + "a" * 2040
+            )
 
     def test_wishlist_cover_url_at_limit_accepted(self) -> None:
         url = "https://x.com/" + "a" * (2048 - len("https://x.com/"))
@@ -456,8 +458,8 @@ class TestSSRFPrevention:
             "https://172.16.0.1/private",
             "https://172.31.255.255/private",
             "https://192.168.1.1/router",
-            "https://169.254.169.254/latest/meta-data/",   # AWS metadata
-            "https://169.254.169.254/computeMetadata/v1/", # GCP metadata
+            "https://169.254.169.254/latest/meta-data/",  # AWS metadata
+            "https://169.254.169.254/computeMetadata/v1/",  # GCP metadata
         ],
     )
     def test_private_ip_urls_rejected(self, url: str) -> None:
@@ -517,6 +519,7 @@ class TestTurnstileRequired:
 
         async def _run():
             from app.main import _validate_config
+
             with patch("app.main.settings", cfg):
                 await _validate_config()
 
@@ -538,6 +541,7 @@ class TestTurnstileRequired:
 
         async def _run():
             from app.main import _validate_config
+
             with patch("app.main.settings", cfg):
                 await _validate_config()
 
@@ -558,6 +562,7 @@ class TestTurnstileRequired:
 
         async def _run():
             from app.main import _validate_config
+
             with patch("app.main.settings", cfg):
                 await _validate_config()
 
