@@ -26,6 +26,7 @@ from app.core.database import AsyncSessionLocal
 from app.core.limiter import limiter
 from app.core.logging import configure_logging, new_request_id, request_id_var
 from app.core.sentry_context import SentryContextMiddleware
+from app.services.token_cleanup import cleanup_expired_tokens
 
 configure_logging()
 
@@ -129,7 +130,13 @@ async def _validate_config() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await _validate_config()
+    cleanup_task = asyncio.create_task(cleanup_expired_tokens())
     yield
+    cleanup_task.cancel()
+    try:
+        await cleanup_task
+    except asyncio.CancelledError:
+        pass
 
 
 app = FastAPI(

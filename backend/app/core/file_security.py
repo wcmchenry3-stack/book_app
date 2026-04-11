@@ -102,9 +102,12 @@ def sanitize_image(raw_bytes: bytes) -> bytes:
         try:
             img = Image.open(buf)
             img.load()  # fully decode — catches truncated files
-        except UnidentifiedImageError:
-            # Pillow cannot handle this format (e.g. HEIC without pillow-heif).
-            # The file is already magic-byte validated; pass through unchanged.
+        except (UnidentifiedImageError, OSError):
+            # UnidentifiedImageError: Pillow cannot handle this format (e.g. HEIC
+            #   without pillow-heif installed).
+            # OSError: image file is truncated or otherwise unreadable by Pillow.
+            # In both cases the file has already passed magic-bytes validation so
+            # it is a genuine image; pass through the original bytes unchanged.
             logger.debug("Pillow could not decode image; skipping sanitization")
             return raw_bytes
 
