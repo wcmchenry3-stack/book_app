@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.book import BookRead, EditionPreview, EditionRead
 
@@ -14,12 +14,12 @@ BookStatus = Literal["wishlisted", "purchased", "reading", "read"]
 class WishlistRequest(BaseModel):
     """Body for POST /wishlist — full book data from scan (book may not exist in DB yet)."""
 
-    open_library_work_id: str | None = None
-    google_books_id: str | None = None
-    title: str
-    author: str
-    description: str | None = None
-    cover_url: str | None = None
+    open_library_work_id: str | None = Field(None, max_length=50)
+    google_books_id: str | None = Field(None, max_length=50)
+    title: str = Field(..., min_length=1, max_length=500)
+    author: str = Field(..., min_length=1, max_length=500)
+    description: str | None = Field(None, max_length=5000)
+    cover_url: str | None = Field(None, max_length=2048)
     subjects: list[str] = []
     editions: list["EditionPreview"] = []  # noqa: F821
 
@@ -43,7 +43,7 @@ class UserBookUpdate(BaseModel):
     """Body for PATCH /user-books/{id}."""
 
     status: BookStatus | None = None
-    notes: str | None = None
+    notes: str | None = Field(None, max_length=10000)
     rating: int | None = None
 
     @field_validator("rating")

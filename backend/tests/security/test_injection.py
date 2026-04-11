@@ -367,3 +367,66 @@ class TestAuthBypassAttempts:
         )
         # FastAPI's HTTPBearer rejects non-Bearer schemes with 401 or 403
         assert response.status_code in (401, 403)
+
+
+# ---------------------------------------------------------------------------
+# A03/A04 — Input length limits (schema-level enforcement)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.security
+class TestInputLengthLimits:
+    """
+    All user-supplied string fields must be bounded.
+    Exceeding max_length must raise Pydantic ValidationError at the schema layer
+    before any business logic or database query is reached.
+    """
+
+    def test_wishlist_title_too_long(self) -> None:
+        with pytest.raises(ValidationError):
+            WishlistRequest(title="a" * 501, author="Author")
+
+    def test_wishlist_title_at_limit_accepted(self) -> None:
+        req = WishlistRequest(title="a" * 500, author="Author")
+        assert len(req.title) == 500
+
+    def test_wishlist_author_too_long(self) -> None:
+        with pytest.raises(ValidationError):
+            WishlistRequest(title="Title", author="a" * 501)
+
+    def test_wishlist_author_at_limit_accepted(self) -> None:
+        req = WishlistRequest(title="Title", author="a" * 500)
+        assert len(req.author) == 500
+
+    def test_wishlist_description_too_long(self) -> None:
+        with pytest.raises(ValidationError):
+            WishlistRequest(title="Title", author="Author", description="a" * 5001)
+
+    def test_wishlist_description_at_limit_accepted(self) -> None:
+        req = WishlistRequest(title="Title", author="Author", description="a" * 5000)
+        assert req.description is not None and len(req.description) == 5000
+
+    def test_wishlist_cover_url_too_long(self) -> None:
+        with pytest.raises(ValidationError):
+            WishlistRequest(title="Title", author="Author", cover_url="https://x.com/" + "a" * 2040)
+
+    def test_wishlist_cover_url_at_limit_accepted(self) -> None:
+        url = "https://x.com/" + "a" * (2048 - len("https://x.com/"))
+        req = WishlistRequest(title="Title", author="Author", cover_url=url)
+        assert req.cover_url is not None and len(req.cover_url) == 2048
+
+    def test_user_book_update_notes_too_long(self) -> None:
+        with pytest.raises(ValidationError):
+            UserBookUpdate(notes="a" * 10001)
+
+    def test_user_book_update_notes_at_limit_accepted(self) -> None:
+        update = UserBookUpdate(notes="a" * 10000)
+        assert update.notes is not None and len(update.notes) == 10000
+
+    def test_wishlist_empty_title_rejected(self) -> None:
+        with pytest.raises(ValidationError):
+            WishlistRequest(title="", author="Author")
+
+    def test_wishlist_empty_author_rejected(self) -> None:
+        with pytest.raises(ValidationError):
+            WishlistRequest(title="Title", author="")
