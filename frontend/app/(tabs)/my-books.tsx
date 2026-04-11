@@ -133,40 +133,39 @@ export default function MyBooksScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.tabs}
+        contentContainerStyle={styles.tabsContainer}
       >
-        {STATUS_TAB_KEYS.map((key) => {
-          const active = activeTab === key;
-          const label = t(`statusTab.${key}`);
-          return (
-            <Pressable
-              key={key}
-              style={[
-                styles.tab,
-                {
-                  backgroundColor: active ? theme.colors.primary : theme.colors.surface,
-                  borderColor: theme.colors.border,
-                },
-              ]}
-              onPress={() => handleTabChange(key)}
-              accessibilityRole="button"
-              accessibilityLabel={t('filterBy', { label })}
-              accessibilityState={{ selected: active }}
-            >
-              <Text
+        <View style={[styles.tabsTrack, { backgroundColor: theme.colors.surfaceContainerLow }]}>
+          {STATUS_TAB_KEYS.map((key) => {
+            const active = activeTab === key;
+            const label = t(`statusTab.${key}`);
+            return (
+              <Pressable
+                key={key}
                 style={[
-                  styles.tabText,
-                  {
-                    color: active ? '#FFFFFF' : theme.colors.text,
-                    fontSize: theme.typography.fontSizeSM,
-                  },
+                  styles.tab,
+                  active && { backgroundColor: theme.colors.primary },
                 ]}
+                onPress={() => handleTabChange(key)}
+                accessibilityRole="button"
+                accessibilityLabel={t('filterBy', { label })}
+                accessibilityState={{ selected: active }}
               >
-                {label}
-              </Text>
-            </Pressable>
-          );
-        })}
+                <Text
+                  style={[
+                    styles.tabText,
+                    {
+                      color: active ? theme.colors.onPrimary : theme.colors.secondary,
+                      fontSize: theme.typography.fontSizeSM,
+                    },
+                  ]}
+                >
+                  {label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </ScrollView>
 
       {books.length === 0 ? (
@@ -199,7 +198,7 @@ export default function MyBooksScreen() {
             <Pressable
               style={[
                 styles.card,
-                { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                { backgroundColor: theme.colors.surfaceContainerLow },
               ]}
               onPress={() => setSelected(item)}
               accessibilityRole="button"
@@ -245,9 +244,32 @@ export default function MyBooksScreen() {
                   {item.book.author}
                 </Text>
                 <View
-                  style={[styles.statusBadge, { backgroundColor: theme.colors.primary + '22' }]}
+                  style={[
+                    styles.statusBadge,
+                    {
+                      backgroundColor:
+                        item.status === 'reading'
+                          ? theme.colors.primary
+                          : item.status === 'read'
+                          ? theme.colors.secondaryContainer
+                          : theme.colors.surfaceContainerHigh,
+                    },
+                  ]}
                 >
-                  <Text style={[styles.statusText, { color: theme.colors.primary, fontSize: 11 }]}>
+                  <Text
+                    style={[
+                      styles.statusText,
+                      {
+                        color:
+                          item.status === 'reading'
+                            ? theme.colors.onPrimary
+                            : item.status === 'read'
+                            ? theme.colors.onSecondaryContainer
+                            : theme.colors.onSurfaceVariant,
+                        fontSize: 11,
+                      },
+                    ]}
+                  >
                     {t(`status.${item.status}`, item.status)}
                   </Text>
                 </View>
@@ -266,7 +288,7 @@ export default function MyBooksScreen() {
         accessibilityViewIsModal
       >
         {selected && (
-          <View style={[styles.sheet, { backgroundColor: theme.colors.background }]}>
+          <View style={[styles.sheet, { backgroundColor: theme.colors.surface }]}>
             <View style={[styles.sheetHeader, { borderBottomColor: theme.colors.border }]}>
               <Text
                 style={[
@@ -347,7 +369,7 @@ export default function MyBooksScreen() {
               )}
 
               <Pressable
-                style={[styles.sheetButton, { backgroundColor: theme.colors.border }]}
+                style={[styles.sheetButton, { backgroundColor: theme.colors.surfaceContainerHigh }]}
                 onPress={() => handleRemove(selected)}
                 accessibilityRole="button"
                 accessibilityLabel={t('removeBookA11y', { title: selected.book.title })}
@@ -355,7 +377,7 @@ export default function MyBooksScreen() {
                 <Text
                   style={[
                     styles.sheetButtonText,
-                    { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeBase },
+                    { color: theme.colors.onSurfaceVariant, fontSize: theme.typography.fontSizeBase },
                   ]}
                 >
                   {t('removeFromList')}
@@ -371,12 +393,17 @@ export default function MyBooksScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  tabs: { paddingHorizontal: 16, paddingVertical: 12, gap: 8 },
+  tabsContainer: { paddingHorizontal: 16, paddingVertical: 12 },
+  tabsTrack: {
+    flexDirection: 'row',
+    borderRadius: 12,
+    padding: 4,
+    gap: 2,
+  },
   tab: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 10,
     minHeight: 36,
     justifyContent: 'center',
   },
@@ -386,8 +413,7 @@ const styles = StyleSheet.create({
   emptyText: { textAlign: 'center' },
   card: {
     flexDirection: 'row',
-    borderRadius: 8,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 12,
     overflow: 'hidden',
     minHeight: 44,
   },

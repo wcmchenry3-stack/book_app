@@ -127,7 +127,7 @@ export default function WishlistScreen() {
           <View
             style={[
               styles.card,
-              { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+              { backgroundColor: theme.colors.surfaceContainerLow },
             ]}
           >
             {item.book.cover_url ? (
@@ -187,7 +187,7 @@ export default function WishlistScreen() {
                   </Text>
                 </Pressable>
                 <Pressable
-                  style={[styles.actionButton, { backgroundColor: theme.colors.border }]}
+                  style={[styles.actionButton, { backgroundColor: theme.colors.surfaceContainerHigh }]}
                   onPress={() => handleRemove(item)}
                   accessibilityRole="button"
                   accessibilityLabel={t('removeA11y', { title: item.book.title })}
@@ -195,7 +195,7 @@ export default function WishlistScreen() {
                   <Text
                     style={[
                       styles.actionText,
-                      { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeSM },
+                      { color: theme.colors.onSurfaceVariant, fontSize: theme.typography.fontSizeSM },
                     ]}
                   >
                     {t('remove')}
@@ -217,8 +217,7 @@ const styles = StyleSheet.create({
   emptyText: { textAlign: 'center', lineHeight: 24 },
   card: {
     flexDirection: 'row',
-    borderRadius: 8,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 12,
     overflow: 'hidden',
     minHeight: 44,
   },

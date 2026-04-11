@@ -145,6 +145,31 @@ export function ScanJobProvider({ children }: { children: React.ReactNode }) {
         ],
       });
     } catch (err) {
+      // A status-0 / no-response error almost always means the OS suspended
+      // the upload mid-flight (app backgrounded). Auto-queue so it drains
+      // on return instead of asking the user to manually retry. (#213)
+      const isNetworkSuspend =
+        err != null &&
+        typeof err === 'object' &&
+        'response' in err &&
+        (err as { response: unknown }).response == null;
+
+      if (isNetworkSuspend) {
+        Sentry.addBreadcrumb({
+          category: 'scan',
+          message: 'Scan upload interrupted by backgrounding — auto-queued',
+          level: 'warning',
+          data: { jobId: job.id },
+        });
+        updateJob(job.id, { status: 'queued' });
+        showBanner({
+          message: t('savedOffline'),
+          type: 'info',
+          duration: 4000,
+        });
+        return;
+      }
+
       Sentry.captureException(err, {
         tags: { feature: 'scan', action: 'execute_scan', jobType: job.type },
       });

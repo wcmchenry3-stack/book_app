@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import { useTheme } from '../hooks/useTheme';
@@ -17,10 +17,10 @@ export function ThemeToggleButton() {
       accessibilityRole="button"
       hitSlop={8}
     >
-      <Ionicons
-        name={mode === 'light' ? 'moon-outline' : 'sunny-outline'}
+      <MaterialIcons
+        name="dark-mode"
         size={22}
-        color={theme.colors.iconActive}
+        color={theme.colors.primary}
       />
     </Pressable>
   );

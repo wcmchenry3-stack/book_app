@@ -1,31 +1,55 @@
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import { useTheme } from '../../hooks/useTheme';
+
+type MaterialIconName = React.ComponentProps<typeof MaterialIcons>['name'];
+
+interface TabIconProps {
+  name: MaterialIconName;
+  focused: boolean;
+  color: string;
+  size: number;
+}
+
+function TabIcon({ name, focused, color, size }: TabIconProps) {
+  return <MaterialIcons name={name} size={size} color={color} />;
+}
 
 export default function TabLayout() {
   const { theme } = useTheme();
   const { t } = useTranslation('tabs');
 
+  const tabBarStyle = StyleSheet.flatten([
+    styles.tabBar,
+    { backgroundColor: theme.colors.surfaceContainerLow },
+  ]);
+
   return (
     <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: theme.colors.iconActive,
-        tabBarInactiveTintColor: theme.colors.iconInactive,
-        tabBarStyle: { backgroundColor: theme.colors.surface },
-        headerStyle: { backgroundColor: theme.colors.surface },
-        headerTintColor: theme.colors.text,
-        headerShown: false, // root _layout.tsx handles header
-      }}
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarStyle,
+        tabBarShowLabel: true,
+        tabBarLabelStyle: styles.label,
+        tabBarActiveTintColor: theme.colors.onPrimary,
+        tabBarInactiveTintColor: theme.colors.secondary,
+        tabBarItemStyle: styles.tabItem,
+        tabBarButton: undefined,
+        // Active tab gets a filled primary pill background; inactive is transparent.
+        tabBarActiveBackgroundColor: theme.colors.primary,
+        tabBarInactiveBackgroundColor: 'transparent',
+      })}
     >
       <Tabs.Screen
         name="scan"
         options={{
           title: t('scan'),
           tabBarAccessibilityLabel: t('scanA11y'),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="camera-outline" size={size} color={color} />
+          tabBarIcon: ({ focused, color, size }) => (
+            <TabIcon name="document-scanner" focused={focused} color={color} size={size} />
           ),
         }}
       />
@@ -34,8 +58,8 @@ export default function TabLayout() {
         options={{
           title: t('wishlist'),
           tabBarAccessibilityLabel: t('wishlistA11y'),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="bookmark-outline" size={size} color={color} />
+          tabBarIcon: ({ focused, color, size }) => (
+            <TabIcon name="auto-stories" focused={focused} color={color} size={size} />
           ),
         }}
       />
@@ -44,8 +68,8 @@ export default function TabLayout() {
         options={{
           title: t('myBooks'),
           tabBarAccessibilityLabel: t('myBooksA11y'),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="library-outline" size={size} color={color} />
+          tabBarIcon: ({ focused, color, size }) => (
+            <TabIcon name="library-books" focused={focused} color={color} size={size} />
           ),
         }}
       />
@@ -54,11 +78,34 @@ export default function TabLayout() {
         options={{
           title: t('settings'),
           tabBarAccessibilityLabel: t('settingsA11y'),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings-outline" size={size} color={color} />
+          tabBarIcon: ({ focused, color, size }) => (
+            <TabIcon name="settings" focused={focused} color={color} size={size} />
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    borderTopWidth: 0,
+    elevation: 0,
+    paddingHorizontal: 8,
+    paddingBottom: Platform.OS === 'ios' ? 16 : 8,
+    paddingTop: 8,
+    height: Platform.OS === 'ios' ? 80 : 64,
+  },
+  tabItem: {
+    borderRadius: 12,
+    marginHorizontal: 4,
+    paddingVertical: 4,
+  },
+  label: {
+    fontSize: 10,
+    fontWeight: '500',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 2,
+  },
+});
