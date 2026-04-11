@@ -355,7 +355,7 @@ export default function MyBooksScreen() {
                   })}
                 >
                   <Text
-                    style={[styles.sheetButtonText, { fontSize: theme.typography.fontSizeBase }]}
+                    style={[styles.sheetButtonText, { fontSize: theme.typography.fontSizeBase, color: theme.colors.onPrimary }]}
                   >
                     {t('markAs', { status: t(`status.${NEXT_STATUS[selected.status]}`) })}
                   </Text>
@@ -449,5 +449,5 @@ const styles = StyleSheet.create({
     minHeight: 44,
     justifyContent: 'center',
   },
-  sheetButtonText: { fontWeight: '600', color: '#FFFFFF' },
+  sheetButtonText: { fontWeight: '600' },
 });

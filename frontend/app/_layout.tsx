@@ -39,7 +39,7 @@ function HeaderLogo() {
   return (
     <View style={headerStyles.row}>
       <Image
-        source={require('../assets/logo.png')}
+        source={require('../assets/icon.png')}
         style={headerStyles.logo}
         accessibilityLabel="BookshelfAI"
         accessibilityRole="image"
@@ -102,7 +102,9 @@ function RootLayout() {
                   headerStyle: { backgroundColor: 'transparent' },
                   headerShadowVisible: false,
                 }}
-              />
+              >
+                <Stack.Screen name="(tabs)" options={{ title: '' }} />
+              </Stack>
               <GlobalBookPicker />
             </ScanJobProvider>
           </AuthProvider>

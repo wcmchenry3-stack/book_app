@@ -42,7 +42,7 @@ export const tokens = {
     onErrorContainer: { light: '#93000a', dark: '#ffdad6' },
 
     // ── Surface ────────────────────────────────────────────────────────────
-    surface: { light: '#fbf9f5', dark: '#131210' },
+    surface: { light: '#edf2f8', dark: '#131210' },
     onSurface: { light: '#1b1c1a', dark: '#e5e3df' },
     surfaceVariant: { light: '#e4e2de', dark: '#43483f' },
     onSurfaceVariant: { light: '#42474f', dark: '#c4c9c1' },
@@ -51,7 +51,7 @@ export const tokens = {
     surfaceContainer: { light: '#efeeea', dark: '#1f201e' },
     surfaceContainerHigh: { light: '#eae8e4', dark: '#292a28' },
     surfaceContainerHighest: { light: '#e4e2de', dark: '#343532' },
-    surfaceBright: { light: '#fbf9f5', dark: '#393937' },
+    surfaceBright: { light: '#edf2f8', dark: '#393937' },
     surfaceDim: { light: '#dbdad6', dark: '#131210' },
     inverseSurface: { light: '#30312e', dark: '#e5e3df' },
     inverseOnSurface: { light: '#f2f0ed', dark: '#1b1c1a' },
@@ -62,11 +62,12 @@ export const tokens = {
     outlineVariant: { light: '#c2c7d0', dark: '#42474f' },
 
     // ── Convenience aliases (backward-compat) ──────────────────────────────
-    background: { light: '#fbf9f5', dark: '#131210' },
+    background: { light: '#edf2f8', dark: '#131210' },
     text: { light: '#1b1c1a', dark: '#e5e3df' },
     textSecondary: { light: '#42474f', dark: '#c4c9c1' },
     border: { light: '#c2c7d0', dark: '#42474f' },
     success: { light: '#16A34A', dark: '#4ADE80' },
+    onSuccess: { light: '#ffffff', dark: '#052e16' },
     iconActive: { light: '#0f426f', dark: '#a0cafe' },
     iconInactive: { light: '#47645d', dark: '#adcdc4' },
   },

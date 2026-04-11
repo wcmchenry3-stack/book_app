@@ -62,6 +62,7 @@ export const lightTheme = {
     textSecondary: c.textSecondary.light,
     border: c.border.light,
     success: c.success.light,
+    onSuccess: c.onSuccess.light,
     iconActive: c.iconActive.light,
     iconInactive: c.iconInactive.light,
   },

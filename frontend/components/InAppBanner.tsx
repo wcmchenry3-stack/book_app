@@ -52,6 +52,13 @@ export function InAppBanner() {
         ? theme.colors.error
         : theme.colors.primary;
 
+  const textColor =
+    banner.type === 'success'
+      ? theme.colors.onSuccess
+      : banner.type === 'error'
+        ? theme.colors.onError
+        : theme.colors.onPrimary;
+
   return (
     <Animated.View
       style={[styles.container, { backgroundColor: bgColor, transform: [{ translateY }] }]}
@@ -59,7 +66,7 @@ export function InAppBanner() {
       accessibilityLiveRegion="assertive"
     >
       <Pressable onPress={dismiss} style={styles.content}>
-        <Text style={styles.message} numberOfLines={2}>
+        <Text style={[styles.message, { color: textColor }]} numberOfLines={2}>
           {banner.message}
         </Text>
         {banner.actions && banner.actions.length > 0 && (
@@ -75,7 +82,7 @@ export function InAppBanner() {
                 accessibilityRole="button"
                 accessibilityLabel={action.label}
               >
-                <Text style={styles.actionText}>{action.label}</Text>
+                <Text style={[styles.actionText, { color: textColor }]}>{action.label}</Text>
               </Pressable>
             ))}
           </View>
@@ -104,7 +111,6 @@ const styles = StyleSheet.create({
   },
   message: {
     flex: 1,
-    color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 14,
   },
@@ -123,7 +129,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   actionText: {
-    color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 13,
   },
