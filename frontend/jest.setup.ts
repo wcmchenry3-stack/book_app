@@ -1,3 +1,8 @@
+// useHeaderHeight throws when rendered outside a navigator; return 0 in tests.
+jest.mock('@react-navigation/elements', () => ({
+  useHeaderHeight: () => 0,
+}));
+
 // Initialize i18n with English resources before every test.
 // en translations are bundled as static imports and available synchronously;
 // components calling useTranslation() will get the correct English strings.

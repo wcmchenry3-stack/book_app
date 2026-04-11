@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { useFocusEffect } from 'expo-router';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { useTranslation } from 'react-i18next';
 
 import { LoadingSpinner } from '../../components/LoadingSpinner';
@@ -33,6 +34,9 @@ interface UserBook {
 export default function WishlistScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation('wishlist');
+  const headerHeight = useHeaderHeight();
+  // Transparent header only in dark mode — push list content below it.
+  const topPad = theme.isDark ? headerHeight : 0;
   // Gold tertiary in dark mode, primary in light mode — active/CTA accent.
   const activeColor = theme.isDark ? theme.colors.tertiary : theme.colors.primary;
   const onActiveColor = theme.isDark ? theme.colors.onTertiary : theme.colors.onPrimary;
@@ -155,7 +159,7 @@ export default function WishlistScreen() {
       <FlatList
         data={books}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingTop: topPad }]}
         ListHeaderComponent={listHeader}
         refreshControl={
           <RefreshControl
