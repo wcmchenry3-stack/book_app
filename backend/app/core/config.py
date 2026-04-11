@@ -30,6 +30,13 @@ class Settings(BaseSettings):
     # Leave empty in development to skip the check.
     turnstile_secret_key: str = ""
 
+    # ClamAV antivirus — optional malware scan on uploaded images.
+    # Requires a running ClamAV daemon (clamd) and pyclamd installed.
+    # Set CLAMAV_ENABLED=true when the Render instance has sufficient RAM (~300 MB).
+    clamav_enabled: bool = False
+    clamav_host: str = "localhost"
+    clamav_port: int = 3310
+
     # Testing (dev/staging only — never set in production)
     test_auth_secret: str = ""
 

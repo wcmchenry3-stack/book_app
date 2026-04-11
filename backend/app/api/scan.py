@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.dependencies import get_current_user
 from app.core.config import settings
 from app.core.database import get_db
+from app.core.file_security import sanitize_image, scan_for_malware
 from app.core.file_validation import validate_magic_bytes
 from app.core.limiter import limiter
 from app.models.user import User
@@ -99,6 +100,14 @@ async def scan(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             detail="File content does not match declared type",
         )
+
+    # Antivirus scan (optional, controlled by CLAMAV_ENABLED setting).
+    # Runs on the original bytes before any re-encoding.
+    scan_for_malware(image_bytes)
+
+    # Strip all metadata (EXIF/XMP/IPTC) and neutralise polyglot payloads by
+    # re-encoding to JPEG.  Consistent with the data:image/jpeg type sent to OpenAI.
+    image_bytes = sanitize_image(image_bytes)
 
     identifier = ChatGPTVisionIdentifier()
     try:
