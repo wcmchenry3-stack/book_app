@@ -11,6 +11,41 @@ jobs:
     uses: wcmchenry3-stack/.github/.github/workflows/called-gate-main-source.yml@main
     secrets: inherit
 
+  # --- Validation: backend health + Expo compat (Linux, ~free) --------------
+
+  backend-health:
+    uses: wcmchenry3-stack/.github/.github/workflows/called-backend-health.yml@main
+    with:
+      # Direct Render origin intentionally used here instead of bookshelfapi.buffingchi.com.
+      # Cloudflare Bot Fight Mode blocks GHA runner IPs (Azure cloud ranges) before
+      # the WAF skip rule fires — health checks must bypass the proxy.
+      # See wcmchenry3-stack/.github#45.
+      backend-url: 'https://bookshelf-api-rxp3.onrender.com'
+      health-path: '/health'
+    secrets: inherit
+
+  expo-compat:
+    uses: wcmchenry3-stack/.github/.github/workflows/called-expo-compat.yml@main
+    with:
+      working-directory: frontend
+    secrets: inherit
+
+  local-path-check:
+    uses: wcmchenry3-stack/.github/.github/workflows/called-local-path-check.yml@main
+    with:
+      scan-paths: 'frontend/ios/BookShelfAI.xcodeproj,frontend/android'
+      file-patterns: '*.pbxproj,*.xcconfig,*.gradle,*.properties'
+    secrets: inherit
+
+  sentry-check:
+    uses: wcmchenry3-stack/.github/.github/workflows/called-sentry-check.yml@main
+    with:
+      working-directory: backend
+    secrets:
+      SENTRY_DSN: ${{ secrets.SENTRY_BC_BOOKSHELF }}
+
+  # --- Existing checks ------------------------------------------------------
+
   openai-policy:
     uses: wcmchenry3-stack/.github/.github/workflows/called-openai-policy.yml@main
     secrets: inherit
@@ -56,9 +91,6 @@ jobs:
     uses: wcmchenry3-stack/.github/.github/workflows/called-cve-frontend.yml@main
     with:
       working-directory: frontend
-      # Expo 51 bundles a vulnerable version of `send` inside @expo/cli.
-      # Threshold kept at `critical` until the Expo 51→55 upgrade lands.
-      # tar CVEs already mitigated via package.json overrides.
       audit-level: critical
     secrets: inherit
 
@@ -68,8 +100,8 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - name: Install bandit
@@ -90,7 +122,7 @@ jobs:
               sys.exit(1)
           print(f'Bandit OK: {len(issues)} total issues, 0 HIGH/MEDIUM.')
           "
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: bandit-report
@@ -117,8 +149,8 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - name: Install dependencies
@@ -136,3 +168,146 @@ jobs:
           DATABASE_URL: postgresql://test:test@localhost:5432/test
         run: alembic downgrade -1
 
+  # --- Podfile.lock staleness check -------------------------------------------
+  # If Podfile was modified but Podfile.lock was not, the developer forgot to
+  # run `pod install` locally. A stale lock file causes pod version drift and
+  # runtime crashes on Xcode Cloud.
+
+  podfile-lock-check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Check Podfile.lock is updated when Podfile changes
+        run: |
+          CHANGED_FILES=$(git diff --name-only "${{ github.event.pull_request.base.sha }}"...HEAD)
+          if echo "$CHANGED_FILES" | grep -q 'frontend/ios/Podfile$'; then
+            if ! echo "$CHANGED_FILES" | grep -q 'frontend/ios/Podfile.lock'; then
+              echo "::error::Podfile was modified but Podfile.lock was not updated. Run 'pod install' locally and commit the lock file."
+              exit 1
+            fi
+          fi
+          echo "Podfile.lock check passed"
+
+  # --- Phase 5: JS bundle validation (Linux, fast) ---------------------------
+  # Catches silent bundling failures BEFORE they reach Xcode Cloud.
+  # The Xcode build check below only compiles in Debug mode (SKIP_BUNDLING=1),
+  # so it cannot detect issues with the JS bundler or entry-point resolution.
+
+  js-bundle-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Create iOS JS bundle
+        run: |
+          ENTRY_FILE=$(node -e "require('expo/scripts/resolveAppEntry')" . ios absolute | tail -n 1)
+          npx expo export:embed \
+            --platform ios \
+            --dev false \
+            --entry-file "$ENTRY_FILE" \
+            --bundle-output /tmp/main.jsbundle \
+            --assets-dest /tmp/assets
+      - name: Validate bundle
+        run: |
+          if [ ! -f /tmp/main.jsbundle ]; then
+            echo "::error::main.jsbundle was not created — the iOS app will crash on launch"
+            exit 1
+          fi
+          BUNDLE_SIZE=$(stat --printf="%s" /tmp/main.jsbundle)
+          if [ "$BUNDLE_SIZE" -lt 1000 ]; then
+            echo "::error::main.jsbundle is only ${BUNDLE_SIZE} bytes — likely corrupted"
+            exit 1
+          fi
+          echo "✓ main.jsbundle created successfully (${BUNDLE_SIZE} bytes)"
+
+  # --- Phase 6: Android JS bundle validation (Linux, fast) -------------------
+  # Catches silent bundling failures BEFORE they reach EAS Build.
+  # The Android build check below only compiles in Debug mode (skips bundling),
+  # so it cannot detect issues with the JS bundler or entry-point resolution.
+
+  android-bundle-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Create Android JS bundle
+        run: |
+          ENTRY_FILE=$(node -e "require('expo/scripts/resolveAppEntry')" . android absolute | tail -n 1)
+          npx expo export:embed \
+            --platform android \
+            --dev false \
+            --entry-file "$ENTRY_FILE" \
+            --bundle-output /tmp/index.android.bundle \
+            --assets-dest /tmp/assets
+      - name: Validate bundle
+        run: |
+          if [ ! -f /tmp/index.android.bundle ]; then
+            echo "::error::index.android.bundle was not created — the Android app will crash on launch"
+            exit 1
+          fi
+          BUNDLE_SIZE=$(stat --printf="%s" /tmp/index.android.bundle)
+          if [ "$BUNDLE_SIZE" -lt 1000 ]; then
+            echo "::error::index.android.bundle is only ${BUNDLE_SIZE} bytes — likely corrupted"
+            exit 1
+          fi
+          echo "Android JS bundle created successfully (${BUNDLE_SIZE} bytes)"
+
+  # --- Phase 7: Xcode build validation (macOS, moderate) --------------------
+
+  ios-build-check:
+    uses: wcmchenry3-stack/.github/.github/workflows/called-ios-build-check.yml@main
+    with:
+      working-directory: frontend
+      workspace-name: 'BookShelfAI.xcworkspace'
+      scheme: 'BookShelfAI'
+    secrets: inherit
+
+  # --- Phase 8: Android build validation (Linux, moderate) ------------------
+
+  android-build-check:
+    uses: wcmchenry3-stack/.github/.github/workflows/called-android-build-check.yml@main
+    with:
+      working-directory: frontend
+    secrets: inherit
+
+  # --- Phase 9: Gradle wrapper validation -----------------------------------
+  # Validates the Gradle wrapper JAR checksum to prevent supply-chain attacks.
+  # Equivalent of podfile-lock-check for the Android build toolchain.
+
+  gradle-wrapper-check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
+      - name: Check Gradle build file consistency
+        run: |
+          CHANGED_FILES=$(git diff --name-only "${{ github.event.pull_request.base.sha }}"...HEAD)
+          if echo "$CHANGED_FILES" | grep -qE 'frontend/android/(app/)?build\.gradle|frontend/android/settings\.gradle'; then
+            echo "::notice::Android Gradle build files changed — ensure gradle.properties settings (SDK versions, Hermes, architectures) are still correct."
+          fi
+          echo "Gradle wrapper validation passed"

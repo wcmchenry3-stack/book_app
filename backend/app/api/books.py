@@ -44,7 +44,10 @@ def _volume_to_candidate(volume: dict) -> BookCandidate:
 async def search_books(
     request: Request,
     q: str = Query(
-        ..., min_length=2, description="Free-text query, e.g. 'John Adams McCullough'"
+        ...,
+        min_length=2,
+        max_length=256,
+        description="Free-text query, e.g. 'John Adams McCullough'",
     ),
     current_user: User = Depends(get_current_user),
 ) -> list[EnrichedBook]:

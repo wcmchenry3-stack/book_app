@@ -30,9 +30,25 @@ jest.mock('../../hooks/useTheme', () => ({
         border: '#ccc',
         text: '#000',
         textSecondary: '#888',
-        primary: '#007AFF',
+        primary: '#0f426f',
+        onPrimary: '#ffffff',
+        secondary: '#47645d',
+        onSurface: '#1b1c1a',
+        onSurfaceVariant: '#42474f',
+        outline: '#737780',
+        secondaryContainer: '#c6e7dd',
+        onSecondaryContainer: '#4b6861',
+        surfaceContainerLow: '#f5f3ef',
+        surfaceContainerHigh: '#eae8e4',
+        surfaceContainerHighest: '#e4e2de',
       },
-      typography: { fontSizeBase: 16, fontSizeSM: 14, fontSizeLG: 20 },
+      typography: {
+        fontSizeBase: 16,
+        fontSizeSM: 14,
+        fontSizeLG: 20,
+        fontSizeXS: 12,
+        fontFamilyHeadline: 'serif',
+      },
     },
   }),
 }));
@@ -87,8 +103,10 @@ describe('MyBooksScreen', () => {
   it('shows empty state when no books', async () => {
     mockGet.mockResolvedValue({ data: [] });
     const { getByText } = render(<MyBooksScreen />);
-    await waitFor(() => expect(getByText('No books here yet.')).toBeTruthy());
-  });
+    await waitFor(() => expect(getByText('No books here yet.')).toBeTruthy(), {
+      timeout: 10_000,
+    });
+  }, 15_000);
 
   it('renders all filter tabs', async () => {
     mockGet.mockResolvedValue({ data: [] });

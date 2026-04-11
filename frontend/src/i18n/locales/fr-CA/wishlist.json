@@ -1,4 +1,8 @@
 {
+  "title": "Ma liste",
+  "heroSubtitle": "Livres que tu veux acheter",
+  "categoryLabel": "LISTE",
+  "archiveSummary": "livres sur ta liste",
   "loading": "Chargement de la liste…",
   "empty": "Votre liste est vide.\nScannez une couverture pour ajouter.",
   "markPurchased": "Marquer acheté",

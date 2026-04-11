@@ -1,0 +1,79 @@
+name: Set Sentry DSNs on Render
+
+on:
+  workflow_dispatch:
+    inputs:
+      sentry_dsn_backend:
+        description: 'SENTRY_DSN for bookshelf-api (FastAPI backend)'
+        required: true
+        type: string
+      sentry_dsn_frontend:
+        description: 'EXPO_PUBLIC_SENTRY_DSN for bookshelf-web (Expo web frontend)'
+        required: true
+        type: string
+
+jobs:
+  set-sentry-env-vars:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mask DSN inputs in logs
+        run: |
+          echo "::add-mask::${{ inputs.sentry_dsn_backend }}"
+          echo "::add-mask::${{ inputs.sentry_dsn_frontend }}"
+
+      - name: Get Render service IDs
+        id: svc
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: |
+          API_ID=$(curl -sf -H "Authorization: Bearer $RENDER_API_KEY" \
+            "https://api.render.com/v1/services?name=bookshelf-api&limit=1" \
+            | jq -r '.[0].service.id')
+          WEB_ID=$(curl -sf -H "Authorization: Bearer $RENDER_API_KEY" \
+            "https://api.render.com/v1/services?name=bookshelf-web&limit=1" \
+            | jq -r '.[0].service.id')
+          echo "api_id=$API_ID" >> "$GITHUB_OUTPUT"
+          echo "web_id=$WEB_ID" >> "$GITHUB_OUTPUT"
+          echo "Backend service ID: $API_ID"
+          echo "Frontend service ID: $WEB_ID"
+
+      - name: Check current env vars (read-only)
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          API_ID: ${{ steps.svc.outputs.api_id }}
+          WEB_ID: ${{ steps.svc.outputs.web_id }}
+        run: |
+          BACKEND=$(curl -sf -H "Authorization: Bearer $RENDER_API_KEY" \
+            "https://api.render.com/v1/services/$API_ID/env-vars" \
+            | jq -r '.[] | select(.key=="SENTRY_DSN") | "already set"')
+          FRONTEND=$(curl -sf -H "Authorization: Bearer $RENDER_API_KEY" \
+            "https://api.render.com/v1/services/$WEB_ID/env-vars" \
+            | jq -r '.[] | select(.key=="EXPO_PUBLIC_SENTRY_DSN") | "already set"')
+          echo "Backend SENTRY_DSN: ${BACKEND:-not set}"
+          echo "Frontend EXPO_PUBLIC_SENTRY_DSN: ${FRONTEND:-not set}"
+
+      - name: Set SENTRY_DSN on backend (POST — does not touch other vars)
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          API_ID: ${{ steps.svc.outputs.api_id }}
+          DSN: ${{ inputs.sentry_dsn_backend }}
+        run: |
+          curl -sf -X POST \
+            -H "Authorization: Bearer $RENDER_API_KEY" \
+            -H "Content-Type: application/json" \
+            "https://api.render.com/v1/services/$API_ID/env-vars" \
+            -d "[{\"key\":\"SENTRY_DSN\",\"value\":\"$DSN\"}]"
+          echo "SENTRY_DSN set on bookshelf-api"
+
+      - name: Set EXPO_PUBLIC_SENTRY_DSN on frontend (POST — does not touch other vars)
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          WEB_ID: ${{ steps.svc.outputs.web_id }}
+          DSN: ${{ inputs.sentry_dsn_frontend }}
+        run: |
+          curl -sf -X POST \
+            -H "Authorization: Bearer $RENDER_API_KEY" \
+            -H "Content-Type: application/json" \
+            "https://api.render.com/v1/services/$WEB_ID/env-vars" \
+            -d "[{\"key\":\"EXPO_PUBLIC_SENTRY_DSN\",\"value\":\"$DSN\"}]"
+          echo "EXPO_PUBLIC_SENTRY_DSN set on bookshelf-web"

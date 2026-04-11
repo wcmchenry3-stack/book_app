@@ -25,5 +25,11 @@
   "closeDetail": "Close detail",
   "errorLoadBooks": "Could not load books.",
   "errorUpdateStatus": "Could not update status.",
-  "errorRemoveBook": "Could not remove book."
+  "errorRemoveBook": "Could not remove book.",
+  "searchPlaceholder": "Search your library...",
+  "searchA11y": "Search your library",
+  "sectionTitle": "My Library",
+  "bookCount": "{{count}} volumes in your collection.",
+  "heroSubtitle": "Your reading life in one place",
+  "archiveSummary": "books tracked"
 }

@@ -62,9 +62,13 @@ class ChatGPTVisionIdentifier:
             logger.warning("OpenAI vision request timed out: %s", exc)
             raise ScanUnavailableError("Vision API timed out") from exc
         except httpx.HTTPStatusError as exc:
-            logger.warning(
-                "OpenAI vision request failed with HTTP %s", exc.response.status_code
-            )
+            if exc.response.status_code == 429:
+                logger.warning("OpenAI rate limit exceeded (429)")
+            else:
+                logger.warning(
+                    "OpenAI vision request failed with HTTP %s",
+                    exc.response.status_code,
+                )
             raise ScanUnavailableError("Vision API returned an error") from exc
 
         content = resp.json()["choices"][0]["message"]["content"].strip()

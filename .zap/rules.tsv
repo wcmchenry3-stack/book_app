@@ -15,6 +15,10 @@
 # ── WARN: track but do not fail the build ─────────────────────────────────────
 10055	WARN	CSP Scanner — CSP is set; warnings are for review only
 10202	WARN	Absence of Anti-CSRF Tokens — API uses JWT Bearer tokens, not cookie-based sessions
+10098	WARN	Cross-Domain Misconfiguration — review after Cloudflare proxy is active
+10105	WARN	Weak Authentication Method — JWT Bearer is used; flag if ZAP misidentifies scheme
+90022	WARN	Application Error Disclosure — any detail in error bodies warrants review
+10207	WARN	Permissions Policy Header Not Set — header IS set by middleware; alert if ZAP reports absent
 
 # ── FAIL: hard failures — any finding blocks the pipeline ─────────────────────
 40012	FAIL	Cross-Site Scripting (Reflected)

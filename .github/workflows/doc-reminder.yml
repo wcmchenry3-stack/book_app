@@ -1,0 +1,126 @@
+name: Doc-update reminder
+
+# Informational PR comment that flags which docs in docs/ might need
+# updating based on which code paths were changed. Never fails the check.
+# Comment is updated in place on subsequent pushes (not spammed).
+#
+# See the documentation-overhaul plan + wcmchenry3-stack/book_app#196
+# for the full path → doc mapping rationale.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  doc-reminder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Flag docs and upsert reminder comment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pr = context.payload.pull_request;
+
+            // Path pattern → doc flags.
+            const mapping = [
+              { pattern: /^backend\/app\/api\//,             docs: ['docs/api.md', 'docs/features.md'] },
+              { pattern: /^backend\/app\/models\//,          docs: ['docs/data-model.md'] },
+              { pattern: /^backend\/app\/services\//,        docs: ['docs/integrations.md', 'docs/architecture.md'] },
+              { pattern: /^backend\/app\/core\/config\.py$/, docs: ['docs/getting-started.md', 'docs/deployment.md'] },
+              { pattern: /^backend\/app\/main\.py$/,         docs: ['docs/architecture.md'] },
+              { pattern: /^frontend\/app\/\(tabs\)\//,       docs: ['docs/features.md'] },
+              { pattern: /^frontend\/app\/\(auth\)\//,       docs: ['docs/features.md'] },
+              { pattern: /^frontend\/contexts\//,            docs: ['docs/features.md', 'docs/architecture.md'] },
+              { pattern: /^frontend\/src\/i18n\//,           docs: ['docs/features.md'] },
+              { pattern: /^\.github\/workflows\//,           docs: ['docs/deployment.md', 'docs/testing.md'] },
+              { pattern: /^render\.yaml$/,                   docs: ['docs/deployment.md'] },
+              { pattern: /^Procfile$/,                       docs: ['docs/deployment.md'] },
+            ];
+
+            const changedFiles = await github.paginate(
+              github.rest.pulls.listFiles,
+              { owner, repo, pull_number: pr.number, per_page: 100 }
+            );
+            const changed = changedFiles.map(f => f.filename);
+
+            const flaggedDocs = new Set();
+            const triggers = [];
+            for (const m of mapping) {
+              const hits = changed.filter(p => m.pattern.test(p));
+              if (hits.length) {
+                for (const d of m.docs) flaggedDocs.add(d);
+                triggers.push({ pattern: String(m.pattern), hits, docs: m.docs });
+              }
+            }
+
+            const marker = '<!-- doc-reminder:v1 -->';
+
+            // Nothing flagged → delete any stale comment we previously posted, then exit.
+            if (flaggedDocs.size === 0) {
+              const comments = await github.paginate(
+                github.rest.issues.listComments,
+                { owner, repo, issue_number: pr.number, per_page: 100 }
+              );
+              const stale = comments.find(c => c.body && c.body.includes(marker));
+              if (stale) {
+                await github.rest.issues.deleteComment({ owner, repo, comment_id: stale.id });
+              }
+              core.info('No flagged docs for this change set.');
+              return;
+            }
+
+            // Build the comment body.
+            const docsTouched = changed.filter(p => flaggedDocs.has(p));
+            const allCovered = [...flaggedDocs].every(d => docsTouched.includes(d));
+
+            const lines = [marker, '## 📚 Doc-update reminder', ''];
+            if (allCovered) {
+              lines.push('✅ This PR already touches every flagged doc for the change set — looks good.');
+              lines.push('');
+            } else {
+              lines.push('Changes in this PR touch code paths that typically call for doc updates.');
+              lines.push('Consider whether each doc below needs edits; this check is informational and never fails CI.');
+              lines.push('');
+              lines.push('### Flagged docs');
+              lines.push('');
+              for (const d of [...flaggedDocs].sort()) {
+                const status = docsTouched.includes(d) ? '✅' : '⏳';
+                lines.push('- ' + status + ' `' + d + '`');
+              }
+              lines.push('');
+            }
+            lines.push('### Why these were flagged');
+            lines.push('');
+            for (const t of triggers) {
+              const firstThree = t.hits.slice(0, 3).map(h => '`' + h + '`').join(', ');
+              const extra = t.hits.length > 3 ? ' _(+' + (t.hits.length - 3) + ' more)_' : '';
+              const docList = t.docs.map(d => '`' + d + '`').join(', ');
+              lines.push('- `' + t.pattern + '` matched: ' + firstThree + extra + ' → flags ' + docList);
+            }
+            lines.push('');
+            lines.push('<sub>Full mapping lives in `.github/workflows/doc-reminder.yml`. PRs that consciously ship without doc updates can tick the "N/A" box in the PR template.</sub>');
+            const body = lines.join('\n');
+
+            // Upsert: find existing marker comment or create new.
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number: pr.number, per_page: 100 }
+            );
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+
+            if (existing) {
+              if (existing.body === body) {
+                core.info('Comment already up to date.');
+              } else {
+                await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+                core.info('Updated existing reminder comment.');
+              }
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number: pr.number, body });
+              core.info('Created new reminder comment.');
+            }

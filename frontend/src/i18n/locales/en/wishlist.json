@@ -1,4 +1,8 @@
 {
+  "title": "Wishlist",
+  "heroSubtitle": "Books you plan to buy",
+  "categoryLabel": "WISHLIST",
+  "archiveSummary": "books on your wishlist",
   "loading": "Loading wishlist…",
   "empty": "Your wishlist is empty.\nScan a book cover to add one.",
   "markPurchased": "Mark Purchased",

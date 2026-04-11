@@ -1,8 +1,9 @@
 import axios from 'axios';
 
+import { Sentry } from './sentry';
 import * as storage from './storage';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8001';
 
 export const ACCESS_TOKEN_KEY = 'bookshelf_access_token';
 export const REFRESH_TOKEN_KEY = 'bookshelf_refresh_token';
@@ -12,8 +13,13 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Inject access token on every request
+// Inject access token on every request and add Sentry breadcrumb
 api.interceptors.request.use(async (config) => {
+  Sentry.addBreadcrumb({
+    category: 'http',
+    message: `${(config.method ?? 'GET').toUpperCase()} ${config.url}`,
+    level: 'info',
+  });
   const token = await storage.getItem(ACCESS_TOKEN_KEY);
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

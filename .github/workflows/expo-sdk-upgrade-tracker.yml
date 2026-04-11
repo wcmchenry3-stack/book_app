@@ -1,0 +1,176 @@
+name: Expo SDK Upgrade Tracker
+
+# Runs weekly and probes the latest Expo SDK major version against the
+# currently installed dependencies. Creates (or updates) a single GitHub
+# issue labelled `expo-upgrade-tracker` to show what is still blocking an
+# upgrade — and flips the issue to "ready" when everything clears.
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday at 09:00 UTC
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # -----------------------------------------------------------------------
+      # Resolve current vs latest Expo SDK major versions
+      # -----------------------------------------------------------------------
+      - name: Get Expo SDK versions
+        id: versions
+        run: |
+          CURRENT=$(node -p "require('./package.json').dependencies.expo.replace(/[\^~]/, '')")
+          LATEST=$(npm show expo version)
+          CURRENT_MAJOR=$(echo "$CURRENT" | cut -d. -f1)
+          LATEST_MAJOR=$(echo "$LATEST" | cut -d. -f1)
+
+          echo "current=$CURRENT"         >> "$GITHUB_OUTPUT"
+          echo "latest=$LATEST"           >> "$GITHUB_OUTPUT"
+
+          if [ "$LATEST_MAJOR" -gt "$CURRENT_MAJOR" ]; then
+            echo "upgrade_available=true" >> "$GITHUB_OUTPUT"
+            echo "Upgrade available: $CURRENT → $LATEST"
+          else
+            echo "upgrade_available=false" >> "$GITHUB_OUTPUT"
+            echo "Already on latest major ($CURRENT). Nothing to do."
+          fi
+
+      # -----------------------------------------------------------------------
+      # Install current locked deps, then probe latest Expo SDK on top
+      # -----------------------------------------------------------------------
+      - name: Install dependencies
+        if: steps.versions.outputs.upgrade_available == 'true'
+        run: npm ci
+
+      - name: Probe latest Expo SDK compatibility
+        if: steps.versions.outputs.upgrade_available == 'true'
+        id: compat
+        run: |
+          # Install latest expo over the current install without saving to
+          # package.json — we only want to probe, not commit anything.
+          # --legacy-peer-deps lets npm resolve past the peer conflicts that
+          # are exactly what we are trying to measure.
+          npm install expo@latest --legacy-peer-deps --no-save 2>/dev/null
+
+          # expo install --check exits non-zero when any package is out of
+          # range for the newly installed SDK version.
+          set +e
+          npx expo install --check > /tmp/expo-check.log 2>&1
+          EXIT_CODE=$?
+          set -e
+
+          echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+
+          # Capture only the lines that name specific blocking packages
+          BLOCKERS=$(grep -E "should be updated|expected version" /tmp/expo-check.log || true)
+          {
+            echo "blockers<<EOBLOCK"
+            echo "$BLOCKERS"
+            echo "EOBLOCK"
+          } >> "$GITHUB_OUTPUT"
+
+      # -----------------------------------------------------------------------
+      # Create or update the single tracking issue
+      # -----------------------------------------------------------------------
+      - name: Manage tracking issue
+        if: steps.versions.outputs.upgrade_available == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CURRENT: ${{ steps.versions.outputs.current }}
+          LATEST: ${{ steps.versions.outputs.latest }}
+          EXIT_CODE: ${{ steps.compat.outputs.exit_code }}
+          BLOCKERS: ${{ steps.compat.outputs.blockers }}
+        run: |
+          LABEL="expo-upgrade-tracker"
+          DATE=$(date -u +"%Y-%m-%d")
+          REPO="${{ github.repository }}"
+
+          # Create label if it doesn't exist yet
+          gh label create "$LABEL" \
+            --color "0075ca" \
+            --description "Tracks Expo SDK upgrade readiness" \
+            --repo "$REPO" 2>/dev/null || true
+
+          # Find any open issue already carrying this label
+          EXISTING=$(gh issue list \
+            --label "$LABEL" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty' \
+            --repo "$REPO")
+
+          if [ "$EXIT_CODE" = "0" ]; then
+            TITLE="Expo SDK upgrade ready: $CURRENT → $LATEST"
+            BODY="$(cat <<EOBODY
+## All blockers cleared — upgrade is ready
+
+Every installed package is compatible with Expo SDK **$LATEST**.
+
+| | |
+|---|---|
+| Current | \`$CURRENT\` |
+| Target | \`$LATEST\` |
+
+### Steps to upgrade
+1. In \`frontend/package.json\` set \`"expo": "^$LATEST"\`
+2. Run \`npx expo install --fix\` — this re-pins all managed dependencies to the new SDK range
+3. Run \`npm install\` and commit the updated \`package-lock.json\`
+4. Run \`expo prebuild --platform android\` and commit any \`android/\` changes
+5. Open a PR targeting \`dev\` — CI will validate everything
+
+_Checked automatically · $DATE_
+EOBODY
+)"
+          else
+            TITLE="Expo SDK upgrade blocked: $CURRENT → $LATEST"
+            BODY="$(cat <<EOBODY
+## Upgrade to Expo SDK $LATEST is not yet ready
+
+The following packages need new versions before the SDK can be bumped:
+
+\`\`\`
+$BLOCKERS
+\`\`\`
+
+This issue updates automatically every Monday. No action needed until all blockers clear.
+
+| | |
+|---|---|
+| Current | \`$CURRENT\` |
+| Target | \`$LATEST\` |
+
+_Last checked: $DATE_
+EOBODY
+)"
+          fi
+
+          if [ -n "$EXISTING" ]; then
+            gh issue edit "$EXISTING" \
+              --title "$TITLE" \
+              --body "$BODY" \
+              --repo "$REPO"
+            echo "Updated issue #$EXISTING"
+          else
+            gh issue create \
+              --title "$TITLE" \
+              --body "$BODY" \
+              --label "$LABEL" \
+              --repo "$REPO"
+            echo "Created new tracking issue"
+          fi

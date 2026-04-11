@@ -75,6 +75,16 @@ class TestGoogleAuth:
             resp = client.post("/auth/google", json={"id_token": "bad"})
         assert resp.status_code == 401
 
+    def test_auth_error_does_not_leak_exception_message(self, client):
+        """Exception details must not appear in the HTTP response body (info disclosure)."""
+        with patch(
+            "app.api.auth.verify_google_id_token",
+            side_effect=Exception("signature mismatch internal detail"),
+        ):
+            resp = client.post("/auth/google", json={"id_token": "bad"})
+        assert resp.status_code == 401
+        assert "signature mismatch internal detail" not in resp.json()["detail"]
+
     def test_returns_401_for_unverified_email(self, client):
         claims = {**GOOGLE_CLAIMS, "email_verified": False}
         with patch("app.api.auth.verify_google_id_token", return_value=claims):

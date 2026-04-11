@@ -1,4 +1,8 @@
 {
+  "title": "Wunschliste",
+  "heroSubtitle": "Bücher, die du kaufen möchtest",
+  "categoryLabel": "WUNSCHLISTE",
+  "archiveSummary": "Bücher auf deiner Wunschliste",
   "loading": "Wunschliste laden…",
   "empty": "Deine Wunschliste ist leer.\nScanne ein Buchcover, um eins hinzuzufügen.",
   "markPurchased": "Als gekauft markieren",

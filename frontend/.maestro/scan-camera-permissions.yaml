@@ -1,0 +1,35 @@
+appId: com.buffingchi.bookshelf
+name: Scan — camera permission prompt
+tags:
+  - scan
+  - permissions
+---
+# Precondition: app is launched, user is logged in, camera permission NOT yet granted.
+# Reset permissions before running: maestro clear-state com.buffingchi.bookshelf
+
+# Navigate to scan tab
+- tapOn:
+    text: 'Camera'
+
+# Should see permission prompt instead of camera
+- assertVisible:
+    text: 'Camera access is required to scan books.'
+- assertVisible:
+    label: 'Grant camera permission'
+
+# Tap allow — iOS system dialog will appear
+- tapOn:
+    label: 'Grant camera permission'
+
+# Accept the iOS system permission dialog
+- tapOn:
+    text: 'Allow'
+    optional: true
+    timeout: 3000
+
+# After granting, camera controls should appear
+- assertVisible:
+    label: 'Capture book cover'
+    timeout: 5000
+- assertVisible:
+    label: 'Flip camera'

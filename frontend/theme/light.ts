@@ -1,17 +1,70 @@
 import { tokens } from './tokens';
 
+const c = tokens.colors;
+
 export const lightTheme = {
   colors: {
-    background: tokens.colors.background.light,
-    surface: tokens.colors.surface.light,
-    primary: tokens.colors.primary.light,
-    text: tokens.colors.text.light,
-    textSecondary: tokens.colors.textSecondary.light,
-    border: tokens.colors.border.light,
-    error: tokens.colors.error.light,
-    success: tokens.colors.success.light,
-    iconActive: tokens.colors.iconActive.light,
-    iconInactive: tokens.colors.iconInactive.light,
+    // MD3 roles
+    primary: c.primary.light,
+    onPrimary: c.onPrimary.light,
+    primaryContainer: c.primaryContainer.light,
+    onPrimaryContainer: c.onPrimaryContainer.light,
+    primaryFixed: c.primaryFixed.light,
+    primaryFixedDim: c.primaryFixedDim.light,
+    onPrimaryFixed: c.onPrimaryFixed.light,
+    onPrimaryFixedVariant: c.onPrimaryFixedVariant.light,
+    inversePrimary: c.inversePrimary.light,
+
+    secondary: c.secondary.light,
+    onSecondary: c.onSecondary.light,
+    secondaryContainer: c.secondaryContainer.light,
+    onSecondaryContainer: c.onSecondaryContainer.light,
+    secondaryFixed: c.secondaryFixed.light,
+    secondaryFixedDim: c.secondaryFixedDim.light,
+    onSecondaryFixed: c.onSecondaryFixed.light,
+    onSecondaryFixedVariant: c.onSecondaryFixedVariant.light,
+
+    tertiary: c.tertiary.light,
+    onTertiary: c.onTertiary.light,
+    tertiaryContainer: c.tertiaryContainer.light,
+    onTertiaryContainer: c.onTertiaryContainer.light,
+    tertiaryFixed: c.tertiaryFixed.light,
+    tertiaryFixedDim: c.tertiaryFixedDim.light,
+    onTertiaryFixed: c.onTertiaryFixed.light,
+    onTertiaryFixedVariant: c.onTertiaryFixedVariant.light,
+
+    error: c.error.light,
+    onError: c.onError.light,
+    errorContainer: c.errorContainer.light,
+    onErrorContainer: c.onErrorContainer.light,
+
+    surface: c.surface.light,
+    onSurface: c.onSurface.light,
+    surfaceVariant: c.surfaceVariant.light,
+    onSurfaceVariant: c.onSurfaceVariant.light,
+    surfaceContainerLowest: c.surfaceContainerLowest.light,
+    surfaceContainerLow: c.surfaceContainerLow.light,
+    surfaceContainer: c.surfaceContainer.light,
+    surfaceContainerHigh: c.surfaceContainerHigh.light,
+    surfaceContainerHighest: c.surfaceContainerHighest.light,
+    surfaceBright: c.surfaceBright.light,
+    surfaceDim: c.surfaceDim.light,
+    inverseSurface: c.inverseSurface.light,
+    inverseOnSurface: c.inverseOnSurface.light,
+    surfaceTint: c.surfaceTint.light,
+
+    outline: c.outline.light,
+    outlineVariant: c.outlineVariant.light,
+
+    // Convenience aliases
+    background: c.background.light,
+    text: c.text.light,
+    textSecondary: c.textSecondary.light,
+    border: c.border.light,
+    success: c.success.light,
+    onSuccess: c.onSuccess.light,
+    iconActive: c.iconActive.light,
+    iconInactive: c.iconInactive.light,
   },
   typography: tokens.typography,
   spacing: tokens.spacing,
@@ -20,4 +73,12 @@ export const lightTheme = {
   isDark: false,
 } as const;
 
-export type Theme = typeof lightTheme;
+// Theme type: colors are string (not literal) so darkTheme can use different hex values.
+export type Theme = {
+  colors: Record<keyof typeof lightTheme.colors, string>;
+  typography: typeof lightTheme.typography;
+  spacing: typeof lightTheme.spacing;
+  radius: typeof lightTheme.radius;
+  touchTarget: typeof lightTheme.touchTarget;
+  isDark: boolean;
+};

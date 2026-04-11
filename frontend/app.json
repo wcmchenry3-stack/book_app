@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Bookshelf",
+    "name": "BookShelfAI",
     "slug": "bookshelf",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,17 +13,42 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.bookshelf.app"
+      "deploymentTarget": "16.0",
+      "bundleIdentifier": "com.buffingchi.bookshelf",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.648904540482-07ckrnvv97q5if96fh3sjjj2kmet306n"
+            ]
+          }
+        ]
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          }
+        ],
+        "NSPrivacyCollectedDataTypes": [],
+        "NSPrivacyTracking": false,
+        "NSPrivacyTrackingDomains": []
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0f426f"
       },
-      "package": "com.bookshelf.app"
+      "package": "com.buffingchi.bookshelf",
+      "versionCode": 1,
+      "permissions": ["CAMERA"]
     },
     "web": {
-      "favicon": "./assets/favicon.png",
+      "favicon": "./assets/logo.png",
       "bundler": "metro"
     },
     "plugins": [
@@ -34,7 +59,9 @@
         {
           "cameraPermission": "Allow Bookshelf to use the camera to scan book covers."
         }
-      ]
+      ],
+      "@sentry/react-native/expo",
+      "expo-web-browser"
     ],
     "scheme": "bookshelf"
   }

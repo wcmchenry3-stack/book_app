@@ -12,13 +12,14 @@ GOOGLE_CERTS_URL = "https://www.googleapis.com/oauth2/v3/certs"
 async def verify_google_id_token(id_token: str) -> dict:
     """Verify a Google ID token against Google's JWKS and return its claims."""
     logger.info("Fetching Google JWKS from %s", GOOGLE_CERTS_URL)
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=httpx.Timeout(5.0)) as client:
         resp = await client.get(GOOGLE_CERTS_URL)
         resp.raise_for_status()
         jwks = resp.json()
     logger.info("JWKS fetched — %d keys", len(jwks.get("keys", [])))
 
-    logger.info("Decoding token — expected aud=%s", settings.google_client_id)
+    allowed_auds = settings.google_client_ids
+    logger.info("Decoding token — allowed aud values: %s", allowed_auds)
     claims = authlib_jwt.decode(
         id_token,
         jwks,
@@ -29,7 +30,7 @@ async def verify_google_id_token(id_token: str) -> dict:
             },
             "aud": {
                 "essential": True,
-                "value": settings.google_client_id,
+                "values": allowed_auds,
             },
         },
     )

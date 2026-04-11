@@ -12,6 +12,7 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from app.main import app  # noqa: F401 — side-effect: registers routers and middleware
+from app.core.url_validator import validate_safe_url
 from app.schemas.user_book import UserBookUpdate, WishlistRequest
 
 # ---------------------------------------------------------------------------
@@ -262,6 +263,20 @@ class TestCORSEnforcement:
         response = client.get("/health", headers={"Origin": "https://attacker.io"})
         assert response.headers.get("access-control-allow-origin", "") != "*"
 
+    def test_preflight_disallows_put_method(self) -> None:
+        """PUT is not in the explicit allow_methods list; must not appear in the
+        Access-Control-Allow-Methods response header for a cross-origin preflight."""
+        client = TestClient(app)
+        response = client.options(
+            "/health",
+            headers={
+                "Origin": "https://bookshelfai.buffingchi.com",
+                "Access-Control-Request-Method": "PUT",
+            },
+        )
+        allowed = response.headers.get("access-control-allow-methods", "")
+        assert "PUT" not in allowed.upper()
+
 
 # ---------------------------------------------------------------------------
 # A04 — Rate limit enforcement
@@ -353,3 +368,265 @@ class TestAuthBypassAttempts:
         )
         # FastAPI's HTTPBearer rejects non-Bearer schemes with 401 or 403
         assert response.status_code in (401, 403)
+
+
+# ---------------------------------------------------------------------------
+# A03/A04 — Input length limits (schema-level enforcement)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.security
+class TestInputLengthLimits:
+    """
+    All user-supplied string fields must be bounded.
+    Exceeding max_length must raise Pydantic ValidationError at the schema layer
+    before any business logic or database query is reached.
+    """
+
+    def test_wishlist_title_too_long(self) -> None:
+        with pytest.raises(ValidationError):
+            WishlistRequest(title="a" * 501, author="Author")
+
+    def test_wishlist_title_at_limit_accepted(self) -> None:
+        req = WishlistRequest(title="a" * 500, author="Author")
+        assert len(req.title) == 500
+
+    def test_wishlist_author_too_long(self) -> None:
+        with pytest.raises(ValidationError):
+            WishlistRequest(title="Title", author="a" * 501)
+
+    def test_wishlist_author_at_limit_accepted(self) -> None:
+        req = WishlistRequest(title="Title", author="a" * 500)
+        assert len(req.author) == 500
+
+    def test_wishlist_description_too_long(self) -> None:
+        with pytest.raises(ValidationError):
+            WishlistRequest(title="Title", author="Author", description="a" * 5001)
+
+    def test_wishlist_description_at_limit_accepted(self) -> None:
+        req = WishlistRequest(title="Title", author="Author", description="a" * 5000)
+        assert req.description is not None and len(req.description) == 5000
+
+    def test_wishlist_cover_url_too_long(self) -> None:
+        with pytest.raises(ValidationError):
+            WishlistRequest(
+                title="Title", author="Author", cover_url="https://x.com/" + "a" * 2040
+            )
+
+    def test_wishlist_cover_url_at_limit_accepted(self) -> None:
+        url = "https://x.com/" + "a" * (2048 - len("https://x.com/"))
+        req = WishlistRequest(title="Title", author="Author", cover_url=url)
+        assert req.cover_url is not None and len(req.cover_url) == 2048
+
+    def test_user_book_update_notes_too_long(self) -> None:
+        with pytest.raises(ValidationError):
+            UserBookUpdate(notes="a" * 10001)
+
+    def test_user_book_update_notes_at_limit_accepted(self) -> None:
+        update = UserBookUpdate(notes="a" * 10000)
+        assert update.notes is not None and len(update.notes) == 10000
+
+    def test_wishlist_empty_title_rejected(self) -> None:
+        with pytest.raises(ValidationError):
+            WishlistRequest(title="", author="Author")
+
+    def test_wishlist_empty_author_rejected(self) -> None:
+        with pytest.raises(ValidationError):
+            WishlistRequest(title="Title", author="")
+
+
+# ---------------------------------------------------------------------------
+# A10 — SSRF prevention on user-supplied URL fields
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.security
+class TestSSRFPrevention:
+    """
+    User-supplied URLs must resolve to public IPs only.
+    Private, loopback, and link-local addresses must be rejected with a
+    Pydantic ValidationError (→ 422 at the HTTP layer).
+    """
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "https://127.0.0.1/secret",
+            "https://127.0.0.1:8080/admin",
+            "https://10.0.0.1/internal",
+            "https://10.255.255.255/internal",
+            "https://172.16.0.1/private",
+            "https://172.31.255.255/private",
+            "https://192.168.1.1/router",
+            "https://169.254.169.254/latest/meta-data/",  # AWS metadata
+            "https://169.254.169.254/computeMetadata/v1/",  # GCP metadata
+        ],
+    )
+    def test_private_ip_urls_rejected(self, url: str) -> None:
+        with pytest.raises(ValueError, match="private or reserved"):
+            validate_safe_url(url)
+
+    def test_http_scheme_rejected(self) -> None:
+        with pytest.raises(ValueError, match="https"):
+            validate_safe_url("http://example.com/cover.jpg")
+
+    def test_ftp_scheme_rejected(self) -> None:
+        with pytest.raises(ValueError, match="https"):
+            validate_safe_url("ftp://example.com/cover.jpg")
+
+    def test_none_is_allowed(self) -> None:
+        assert validate_safe_url(None) is None
+
+    def test_private_ip_rejected_via_schema(self) -> None:
+        with pytest.raises(ValidationError):
+            WishlistRequest(
+                title="Title",
+                author="Author",
+                cover_url="https://192.168.1.1/cover.jpg",
+            )
+
+    def test_missing_hostname_rejected(self) -> None:
+        with pytest.raises(ValueError):
+            validate_safe_url("https:///no-host")
+
+
+# ---------------------------------------------------------------------------
+# A01 — Ownership isolation: cross-user access on PATCH/DELETE user-books
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.security
+class TestOwnershipIsolation:
+    """
+    OWASP A01 — Broken Access Control.
+
+    A user must not be able to mutate a user_book record they do not own.
+    Both PATCH and DELETE scope their DB query to current_user.id, so a
+    cross-user request simply finds no record and returns 404 (information hiding).
+    """
+
+    _USER_A_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+    _USER_B_ID = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+    _USER_BOOK_ID = "cccccccc-cccc-cccc-cccc-cccccccccccc"
+
+    @staticmethod
+    def _client_as_user_b():
+        """TestClient authenticated as User B with an empty DB (User A owns the record)."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        from app.auth.dependencies import get_current_user
+        from app.core.database import get_db
+        from app.models.user import User
+
+        user_b = User()
+        user_b.id = TestOwnershipIsolation._USER_B_ID
+        user_b.email = "userb@example.com"
+
+        # Empty result set — simulates no record matching user_b.id
+        empty_result = MagicMock()
+        empty_result.scalar_one_or_none.return_value = None
+
+        async def _fake_db():
+            db = AsyncMock()
+            db.execute = AsyncMock(return_value=empty_result)
+            yield db
+
+        app.dependency_overrides[get_current_user] = lambda: user_b
+        app.dependency_overrides[get_db] = _fake_db
+        return TestClient(app, raise_server_exceptions=False)
+
+    def test_patch_returns_404_for_other_users_record(self) -> None:
+        """User B cannot PATCH a user_book owned by User A."""
+        client = self._client_as_user_b()
+        resp = client.patch(
+            f"/user-books/{self._USER_BOOK_ID}",
+            json={"status": "purchased"},
+        )
+        app.dependency_overrides.clear()
+        assert resp.status_code == 404
+
+    def test_delete_returns_404_for_other_users_record(self) -> None:
+        """User B cannot DELETE a user_book owned by User A."""
+        client = self._client_as_user_b()
+        resp = client.delete(f"/user-books/{self._USER_BOOK_ID}")
+        app.dependency_overrides.clear()
+        assert resp.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# A05 — Turnstile required by default (misconfiguration guard)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.security
+class TestTurnstileRequired:
+    """
+    The startup validator must prevent the app from serving requests when
+    TURNSTILE_REQUIRED=true but no secret key is configured.
+    When disabled explicitly (TURNSTILE_REQUIRED=false), startup succeeds
+    regardless of whether a key is present.
+    """
+
+    def test_startup_raises_when_required_and_no_key(self) -> None:
+        """Startup must raise RuntimeError when Turnstile is required but unconfigured."""
+        import asyncio
+        from unittest.mock import patch
+
+        from app.core.config import Settings
+
+        cfg = Settings(
+            database_url="postgresql+asyncpg://u:p@localhost/db",
+            turnstile_required=True,
+            turnstile_secret_key="",
+        )
+
+        async def _run():
+            from app.main import _validate_config
+
+            with patch("app.main.settings", cfg):
+                await _validate_config()
+
+        with pytest.raises(RuntimeError, match="TURNSTILE_SECRET_KEY"):
+            asyncio.run(_run())
+
+    def test_startup_succeeds_when_required_and_key_present(self) -> None:
+        """Startup must not raise when Turnstile is required and key is configured."""
+        import asyncio
+        from unittest.mock import patch
+
+        from app.core.config import Settings
+
+        cfg = Settings(
+            database_url="postgresql+asyncpg://u:p@localhost/db",
+            turnstile_required=True,
+            turnstile_secret_key="a-real-secret-key",
+        )
+
+        async def _run():
+            from app.main import _validate_config
+
+            with patch("app.main.settings", cfg):
+                await _validate_config()
+
+        asyncio.run(_run())  # must not raise
+
+    def test_startup_succeeds_when_explicitly_disabled(self) -> None:
+        """TURNSTILE_REQUIRED=false must allow startup even with no key."""
+        import asyncio
+        from unittest.mock import patch
+
+        from app.core.config import Settings
+
+        cfg = Settings(
+            database_url="postgresql+asyncpg://u:p@localhost/db",
+            turnstile_required=False,
+            turnstile_secret_key="",
+        )
+
+        async def _run():
+            from app.main import _validate_config
+
+            with patch("app.main.settings", cfg):
+                await _validate_config()
+
+        asyncio.run(_run())  # must not raise

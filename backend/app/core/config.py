@@ -10,6 +10,8 @@ class Settings(BaseSettings):
 
     # Auth
     google_client_id: str = ""
+    google_ios_client_id: str = ""
+    google_android_client_id: str = ""
     google_client_secret: str = ""
     jwt_private_key: str = ""
     jwt_public_key: str = ""
@@ -22,6 +24,27 @@ class Settings(BaseSettings):
     openai_max_tokens: int = 512
     google_books_api_key: str = ""
     open_library_base_url: str = "https://openlibrary.org"
+
+    # Cloudflare Turnstile — bot protection on /scan.
+    # turnstile_required=true (default) means every /scan request must supply a valid
+    # cf-turnstile-response token.  If turnstile_secret_key is absent at startup the
+    # app refuses to start, preventing a misconfigured production deploy.
+    # Set TURNSTILE_REQUIRED=false to explicitly opt out (dev / test environments).
+    turnstile_secret_key: str = ""
+    turnstile_required: bool = True
+
+    # ClamAV antivirus — optional malware scan on uploaded images.
+    # Requires a running ClamAV daemon (clamd) and pyclamd installed.
+    # Set CLAMAV_ENABLED=true when the Render instance has sufficient RAM (~300 MB).
+    clamav_enabled: bool = False
+    clamav_host: str = "localhost"
+    clamav_port: int = 3310
+
+    # Testing (dev/staging only — never set in production)
+    test_auth_secret: str = ""
+
+    # Observability
+    sentry_dsn: str = ""
 
     # App
     environment: str = "development"
@@ -49,6 +72,19 @@ class Settings(BaseSettings):
         import re
 
         return re.sub(r"^postgres(ql)?://", "postgresql+asyncpg://", self.database_url)
+
+    @property
+    def google_client_ids(self) -> list[str]:
+        """All valid Google OAuth client IDs (web, iOS, Android)."""
+        return [
+            cid
+            for cid in [
+                self.google_client_id,
+                self.google_ios_client_id,
+                self.google_android_client_id,
+            ]
+            if cid
+        ]
 
     @property
     def allowed_emails_list(self) -> list[str]:

@@ -51,30 +51,42 @@ describe('storage — native (non-web)', () => {
   });
 });
 
-describe('storage — web', () => {
+describe('storage — web (in-memory, no localStorage)', () => {
+  const localStorageSetSpy = jest.spyOn(mockLocalStorage, 'setItem');
+  const localStorageGetSpy = jest.spyOn(mockLocalStorage, 'getItem');
+  const localStorageRemoveSpy = jest.spyOn(mockLocalStorage, 'removeItem');
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockLocalStorage.clear();
     Object.defineProperty(Platform, 'OS', { value: 'web', configurable: true });
   });
 
-  it('getItem uses localStorage', async () => {
-    mockLocalStorage.setItem('k', 'v');
-    const result = await getItem('k');
-    expect(result).toBe('v');
-    expect(SecureStore.getItemAsync).not.toHaveBeenCalled();
-  });
-
-  it('setItem uses localStorage', async () => {
-    await setItem('k', 'v');
-    expect(mockLocalStorage.getItem('k')).toBe('v');
+  it('setItem stores value in memory and never calls localStorage', async () => {
+    await setItem('web-key-set', 'web-val');
     expect(SecureStore.setItemAsync).not.toHaveBeenCalled();
+    expect(localStorageSetSpy).not.toHaveBeenCalled();
   });
 
-  it('deleteItem uses localStorage', async () => {
-    mockLocalStorage.setItem('k', 'v');
-    await deleteItem('k');
-    expect(mockLocalStorage.getItem('k')).toBeNull();
+  it('getItem retrieves value previously stored in memory', async () => {
+    await setItem('web-key-get', 'stored');
+    const result = await getItem('web-key-get');
+    expect(result).toBe('stored');
+    expect(SecureStore.getItemAsync).not.toHaveBeenCalled();
+    expect(localStorageGetSpy).not.toHaveBeenCalled();
+  });
+
+  it('getItem returns null for unknown key', async () => {
+    const result = await getItem('web-key-missing');
+    expect(result).toBeNull();
+  });
+
+  it('deleteItem removes the value from memory and never calls localStorage', async () => {
+    await setItem('web-key-del', 'to-delete');
+    await deleteItem('web-key-del');
+    const result = await getItem('web-key-del');
+    expect(result).toBeNull();
     expect(SecureStore.deleteItemAsync).not.toHaveBeenCalled();
+    expect(localStorageRemoveSpy).not.toHaveBeenCalled();
   });
 });

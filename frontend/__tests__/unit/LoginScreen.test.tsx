@@ -1,4 +1,5 @@
 import React from 'react';
+import { Alert } from 'react-native';
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 
 import LoginScreen from '../../app/(auth)/login';
@@ -6,23 +7,36 @@ import LoginScreen from '../../app/(auth)/login';
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
 const mockLogin = jest.fn();
+const mockTestLogin = jest.fn();
 jest.mock('../../hooks/useAuth', () => ({
-  useAuth: () => ({ login: mockLogin }),
+  useAuth: () => ({ login: mockLogin, testLogin: mockTestLogin }),
+}));
+
+jest.mock('../../lib/api', () => ({
+  api: { post: jest.fn() },
+  ACCESS_TOKEN_KEY: 'bookshelf_access_token',
+  REFRESH_TOKEN_KEY: 'bookshelf_refresh_token',
 }));
 
 jest.mock('../../hooks/useTheme', () => ({
   useTheme: () => ({
     theme: {
       colors: {
-        background: '#fff',
-        text: '#111',
-        primary: '#2563EB',
+        background: '#fbf9f5',
+        surface: '#fbf9f5',
+        text: '#1b1c1a',
+        primary: '#0f426f',
+        onSurface: '#1b1c1a',
+        onSurfaceVariant: '#42474f',
+        secondaryContainer: '#c6e7dd',
+        onSecondaryContainer: '#4b6861',
       },
       typography: {
         fontSizeXL: 24,
         fontWeightBold: '700',
+        fontFamilyHeadline: 'NotoSerif_700Bold',
       },
-      spacing: { xl: 32 },
+      spacing: { xl: 32, md: 16 },
     },
   }),
 }));
@@ -55,7 +69,7 @@ beforeEach(() => {
 describe('LoginScreen', () => {
   it('renders the app title', () => {
     const { getByText } = render(<LoginScreen />);
-    expect(getByText('Bookshelf')).toBeTruthy();
+    expect(getByText('BookshelfAI')).toBeTruthy();
   });
 
   it('renders Sign in button when request is ready', () => {
@@ -108,5 +122,18 @@ describe('LoginScreen', () => {
     setupGoogleAuth({ response: null });
     render(<LoginScreen />);
     await waitFor(() => expect(mockLogin).not.toHaveBeenCalled());
+  });
+
+  it('shows error alert when login fails', async () => {
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    setupGoogleAuth({
+      response: { type: 'success', params: { id_token: 'bad-token' } },
+    });
+    mockLogin.mockRejectedValue(new Error('401 Unauthorized'));
+    render(<LoginScreen />);
+    await waitFor(() =>
+      expect(alertSpy).toHaveBeenCalledWith('Error', 'Sign-in failed. Please try again.')
+    );
+    alertSpy.mockRestore();
   });
 });

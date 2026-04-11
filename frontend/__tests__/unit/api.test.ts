@@ -6,6 +6,11 @@
  * real HTTP calls.
  */
 
+// The refresh-retry tests invoke api(original) which triggers the async
+// request interceptor chain (token lookup + Sentry breadcrumb) before
+// failing with a network error. This takes ~8s locally.
+jest.setTimeout(15000);
+
 const mockGetItem = jest.fn();
 const mockSetItem = jest.fn();
 const mockDeleteItem = jest.fn();
@@ -16,14 +21,28 @@ jest.mock('../../lib/storage', () => ({
   deleteItem: (...args: unknown[]) => mockDeleteItem(...args),
 }));
 
+jest.mock('../../lib/sentry', () => ({
+  Sentry: {
+    addBreadcrumb: jest.fn(),
+    captureException: jest.fn(),
+  },
+  initSentry: jest.fn(),
+}));
+
 // Mock axios.post used in the refresh leg of the interceptor.
 // We leave the axios instance itself intact so interceptors run normally.
 const mockAxiosPost = jest.fn();
 jest.mock('axios', () => {
+  // Expo SDK 55's streams polyfill conflicts with axios's fetch adapter
+  // probe at module-evaluation time. Temporarily remove ReadableStream so
+  // axios falls back to the XHR adapter, then restore it.
+  const savedRS = globalThis.ReadableStream;
+  // @ts-expect-error intentional deletion to avoid fetch adapter conflict
+  delete globalThis.ReadableStream;
   const actual = jest.requireActual('axios');
+  globalThis.ReadableStream = savedRS;
   return {
     ...actual,
-    // Override the standalone axios.post (used by the refresh call)
     post: (...args: unknown[]) => mockAxiosPost(...args),
     create: actual.create,
   };

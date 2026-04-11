@@ -12,5 +12,8 @@
   "themeToggle": {
     "toDark": "Switch to dark mode",
     "toLight": "Switch to light mode"
+  },
+  "inAppBanner": {
+    "dismiss": "Dismiss"
   }
 }

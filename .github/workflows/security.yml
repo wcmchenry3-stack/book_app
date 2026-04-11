@@ -8,6 +8,7 @@ on:
     branches: [dev]
     paths:
       - 'backend/app/**'
+      - 'backend/tests/security/**'
       - 'backend/requirements*.txt'
       - '.github/workflows/security.yml'
       - '.zap/**'
@@ -22,8 +23,8 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - run: pip install bandit[toml]==1.8.3
@@ -42,7 +43,7 @@ jobs:
               sys.exit(1)
           print(f'Bandit OK: 0 HIGH/MEDIUM issues.')
           "
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: bandit-report
@@ -57,14 +58,14 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - run: pip install pip-audit==2.7.3
       - name: Run pip-audit
         run: pip-audit -r requirements.txt --format json -o pip-audit-report.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: pip-audit-report
@@ -79,8 +80,8 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: npm
@@ -90,12 +91,28 @@ jobs:
         # Kept at critical until Expo 51→55 upgrade resolves the bundled `send` CVE.
         # Change to --audit-level=high after the Expo upgrade lands.
         run: npm audit --audit-level=critical --json > npm-audit-report.json || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: npm-audit-report
           path: frontend/npm-audit-report.json
           retention-days: 30
+
+  # ── SCA: Trivy filesystem scan (OSV + NVD, complements pip-audit/npm audit) ─
+  sca-trivy:
+    name: Trivy filesystem scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run Trivy in filesystem mode
+        uses: aquasecurity/trivy-action@0.35.0 # 57a97c7e7821a5776cebc9bb87c984fa69cba8f1
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+          format: 'table'
 
   # ── Security-marked pytest suite ──────────────────────────────────────────
   pytest-security:
@@ -105,13 +122,15 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
       - name: Run security test suite
+        env:
+          TURNSTILE_REQUIRED: "false"
         run: pytest -m security -v --tb=short
 
   # ── DAST: OWASP ZAP active scan ───────────────────────────────────────────
@@ -124,20 +143,20 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: ZAP Full Scan
-        uses: zaproxy/action-full-scan@v0.11.0
+        uses: zaproxy/action-full-scan@v0.13.0
         with:
-          target: 'https://bookshelf-api-rxp3.onrender.com'
+          target: 'https://bookshelfapi.buffingchi.com'
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-z "-config scanner.attackStrength=LOW"'
           allow_issue_writing: false
-          # Report findings but don't fail — active scans against production
-          # may surface acceptable known issues. Review the artifact and
-          # promote to fail_action: true once a clean baseline is established.
-          fail_action: false
+          # rules.tsv classifies SQLi, XSS, RCE, and path traversal as FAIL.
+          # WARN/IGNORE rules suppress known false positives for a JSON API.
+          # Promoted from false after security hardening pass (PR #234).
+          fail_action: true
           artifact_name: zap-full-scan-report
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: zap-full-scan-report
