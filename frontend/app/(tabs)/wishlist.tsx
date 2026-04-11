@@ -33,6 +33,9 @@ interface UserBook {
 export default function WishlistScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation('wishlist');
+  // Gold tertiary in dark mode, primary in light mode — active/CTA accent.
+  const activeColor = theme.isDark ? theme.colors.tertiary : theme.colors.primary;
+  const onActiveColor = theme.isDark ? theme.colors.onTertiary : theme.colors.onPrimary;
   const [books, setBooks] = useState<UserBook[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -120,7 +123,7 @@ export default function WishlistScreen() {
               setRefreshing(true);
               fetchWishlist();
             }}
-            tintColor={theme.colors.primary}
+            tintColor={activeColor}
           />
         }
         renderItem={({ item }) => (
@@ -172,12 +175,17 @@ export default function WishlistScreen() {
 
               <View style={styles.actions}>
                 <Pressable
-                  style={[styles.actionButton, { backgroundColor: theme.colors.primary }]}
+                  style={[styles.actionButton, { backgroundColor: activeColor }]}
                   onPress={() => handleMarkPurchased(item)}
                   accessibilityRole="button"
                   accessibilityLabel={t('markPurchasedA11y', { title: item.book.title })}
                 >
-                  <Text style={[styles.actionText, { fontSize: theme.typography.fontSizeSM }]}>
+                  <Text
+                    style={[
+                      styles.actionText,
+                      { fontSize: theme.typography.fontSizeSM, color: onActiveColor },
+                    ]}
+                  >
                     {t('markPurchased')}
                   </Text>
                 </Pressable>
