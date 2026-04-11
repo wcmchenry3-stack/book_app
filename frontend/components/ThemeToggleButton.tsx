@@ -17,11 +17,7 @@ export function ThemeToggleButton() {
       accessibilityRole="button"
       hitSlop={8}
     >
-      <MaterialIcons
-        name="dark-mode"
-        size={22}
-        color={theme.colors.primary}
-      />
+      <MaterialIcons name="dark-mode" size={22} color={theme.colors.primary} />
     </Pressable>
   );
 }

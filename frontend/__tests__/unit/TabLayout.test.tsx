@@ -9,48 +9,47 @@ jest.mock('../../hooks/useTheme', () => ({
   useTheme: () => ({
     theme: {
       colors: {
-        iconActive: '#2563EB',
-        iconInactive: '#9CA3AF',
-        surface: '#FFFFFF',
-        text: '#111827',
+        primary: '#0f426f',
+        onPrimary: '#ffffff',
+        secondary: '#47645d',
+        surfaceContainerLow: '#f5f3ef',
+        iconActive: '#0f426f',
+        iconInactive: '#47645d',
+        surface: '#fbf9f5',
+        text: '#1b1c1a',
       },
     },
   }),
 }));
 
-// Capture Tabs.Screen props for assertion
-const mockScreenProps: Array<{ name: string; options: Record<string, unknown> }> = [];
-
 jest.mock('expo-router', () => {
   const React = require('react');
   const { View, Text } = require('react-native');
 
-  function MockTabs({
-    children,
-    screenOptions,
-  }: {
-    children: React.ReactNode;
-    screenOptions: Record<string, unknown>;
-  }) {
-    return (
-      <View testID="tabs-container" accessibilityHint={JSON.stringify(screenOptions)}>
-        {children}
-      </View>
-    );
+  function MockTabs({ children, screenOptions }) {
+    // screenOptions is a function in the new layout — call it to get the resolved object
+    const resolved =
+      typeof screenOptions === 'function'
+        ? screenOptions({ route: { name: 'scan' } })
+        : screenOptions;
+    // Store on global so test assertions can access it (factories cannot close over outer vars)
+    global.__mockTabScreenOptions = resolved;
+    return React.createElement(View, { testID: 'tabs-container' }, children);
   }
 
-  function MockScreen(props: { name: string; options: Record<string, unknown> }) {
-    mockScreenProps.push({ name: props.name, options: props.options });
-    // Invoke tabBarIcon to exercise the icon render callback
+  function MockScreen(props) {
+    global.__mockScreenProps = (global.__mockScreenProps || []).concat([
+      { name: props.name, options: props.options },
+    ]);
     const icon =
       typeof props.options?.tabBarIcon === 'function'
-        ? props.options.tabBarIcon({ color: '#000', size: 24 })
+        ? props.options.tabBarIcon({ focused: false, color: '#000', size: 24 })
         : null;
-    return (
-      <View testID={`tab-${props.name}`}>
-        <Text>{props.options?.title as string}</Text>
-        {icon}
-      </View>
+    return React.createElement(
+      View,
+      { testID: `tab-${props.name}` },
+      React.createElement(Text, null, props.options?.title),
+      icon
     );
   }
 
@@ -59,17 +58,19 @@ jest.mock('expo-router', () => {
 });
 
 jest.mock('@expo/vector-icons', () => {
+  const React = require('react');
   const { Text } = require('react-native');
+  const MockIcon = ({ name }) => React.createElement(Text, { testID: `icon-${name}` }, name);
   return {
-    Ionicons: ({ name, size, color }: { name: string; size: number; color: string }) => (
-      <Text testID={`icon-${name}`}>{name}</Text>
-    ),
+    Ionicons: MockIcon,
+    MaterialIcons: MockIcon,
   };
 });
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockScreenProps.length = 0;
+  global.__mockScreenProps = [];
+  global.__mockTabScreenOptions = {};
 });
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
@@ -77,28 +78,28 @@ beforeEach(() => {
 describe('TabLayout', () => {
   it('renders 4 tab screens', () => {
     render(<TabLayout />);
-    expect(mockScreenProps).toHaveLength(4);
+    expect(global.__mockScreenProps).toHaveLength(4);
   });
 
   it('includes scan, wishlist, my-books, and settings tabs', () => {
     render(<TabLayout />);
-    const names = mockScreenProps.map((s) => s.name);
+    const names = global.__mockScreenProps.map((s: { name: string }) => s.name);
     expect(names).toEqual(['scan', 'wishlist', 'my-books', 'settings']);
   });
 
   it('tab titles use i18n keys', () => {
     render(<TabLayout />);
-    const titles = mockScreenProps.map((s) => s.options.title);
-    // react-i18next mock returns the key itself
+    const titles = global.__mockScreenProps.map(
+      (s: { options: { title: string } }) => s.options.title
+    );
     expect(titles).toEqual(['Scan', 'Wishlist', 'My Books', 'Settings']);
   });
 
-  it('applies theme colors to tab bar via screenOptions', () => {
-    const { getByTestId } = render(<TabLayout />);
-    const container = getByTestId('tabs-container');
-    const screenOptions = JSON.parse(container.props.accessibilityHint);
-    expect(screenOptions.tabBarActiveTintColor).toBe('#2563EB');
-    expect(screenOptions.tabBarInactiveTintColor).toBe('#9CA3AF');
-    expect(screenOptions.tabBarStyle.backgroundColor).toBe('#FFFFFF');
+  it('applies brand theme colors to tab bar via screenOptions', () => {
+    render(<TabLayout />);
+    const opts = global.__mockTabScreenOptions;
+    expect(opts.tabBarActiveTintColor).toBe('#ffffff');
+    expect(opts.tabBarInactiveTintColor).toBe('#47645d');
+    expect(opts.tabBarStyle?.backgroundColor).toBe('#f5f3ef');
   });
 });

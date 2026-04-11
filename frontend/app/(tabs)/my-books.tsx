@@ -142,10 +142,7 @@ export default function MyBooksScreen() {
             return (
               <Pressable
                 key={key}
-                style={[
-                  styles.tab,
-                  active && { backgroundColor: theme.colors.primary },
-                ]}
+                style={[styles.tab, active && { backgroundColor: theme.colors.primary }]}
                 onPress={() => handleTabChange(key)}
                 accessibilityRole="button"
                 accessibilityLabel={t('filterBy', { label })}
@@ -196,10 +193,7 @@ export default function MyBooksScreen() {
           }
           renderItem={({ item }) => (
             <Pressable
-              style={[
-                styles.card,
-                { backgroundColor: theme.colors.surfaceContainerLow },
-              ]}
+              style={[styles.card, { backgroundColor: theme.colors.surfaceContainerLow }]}
               onPress={() => setSelected(item)}
               accessibilityRole="button"
               accessibilityLabel={t('bookCardA11y', {
@@ -251,8 +245,8 @@ export default function MyBooksScreen() {
                         item.status === 'reading'
                           ? theme.colors.primary
                           : item.status === 'read'
-                          ? theme.colors.secondaryContainer
-                          : theme.colors.surfaceContainerHigh,
+                            ? theme.colors.secondaryContainer
+                            : theme.colors.surfaceContainerHigh,
                     },
                   ]}
                 >
@@ -264,8 +258,8 @@ export default function MyBooksScreen() {
                           item.status === 'reading'
                             ? theme.colors.onPrimary
                             : item.status === 'read'
-                            ? theme.colors.onSecondaryContainer
-                            : theme.colors.onSurfaceVariant,
+                              ? theme.colors.onSecondaryContainer
+                              : theme.colors.onSurfaceVariant,
                         fontSize: 11,
                       },
                     ]}
@@ -377,7 +371,10 @@ export default function MyBooksScreen() {
                 <Text
                   style={[
                     styles.sheetButtonText,
-                    { color: theme.colors.onSurfaceVariant, fontSize: theme.typography.fontSizeBase },
+                    {
+                      color: theme.colors.onSurfaceVariant,
+                      fontSize: theme.typography.fontSizeBase,
+                    },
                   ]}
                 >
                   {t('removeFromList')}

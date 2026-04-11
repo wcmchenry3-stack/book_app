@@ -60,7 +60,10 @@ export default function LoginScreen() {
       />
 
       <Text
-        style={[styles.title, { color: theme.colors.primary, fontFamily: theme.typography.fontFamilyHeadline }]}
+        style={[
+          styles.title,
+          { color: theme.colors.primary, fontFamily: theme.typography.fontFamilyHeadline },
+        ]}
         accessibilityRole="header"
       >
         {t('appTitle')}
@@ -89,9 +92,7 @@ export default function LoginScreen() {
         {!request ? (
           <ActivityIndicator color={theme.colors.surface} />
         ) : (
-          <Text style={[styles.buttonText, { color: theme.colors.surface }]}>
-            {t('signIn')}
-          </Text>
+          <Text style={[styles.buttonText, { color: theme.colors.surface }]}>{t('signIn')}</Text>
         )}
       </Pressable>
 

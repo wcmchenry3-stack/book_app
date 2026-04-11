@@ -124,12 +124,7 @@ export default function WishlistScreen() {
           />
         }
         renderItem={({ item }) => (
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: theme.colors.surfaceContainerLow },
-            ]}
-          >
+          <View style={[styles.card, { backgroundColor: theme.colors.surfaceContainerLow }]}>
             {item.book.cover_url ? (
               <Image
                 source={{ uri: item.book.cover_url }}
@@ -187,7 +182,10 @@ export default function WishlistScreen() {
                   </Text>
                 </Pressable>
                 <Pressable
-                  style={[styles.actionButton, { backgroundColor: theme.colors.surfaceContainerHigh }]}
+                  style={[
+                    styles.actionButton,
+                    { backgroundColor: theme.colors.surfaceContainerHigh },
+                  ]}
                   onPress={() => handleRemove(item)}
                   accessibilityRole="button"
                   accessibilityLabel={t('removeA11y', { title: item.book.title })}
@@ -195,7 +193,10 @@ export default function WishlistScreen() {
                   <Text
                     style={[
                       styles.actionText,
-                      { color: theme.colors.onSurfaceVariant, fontSize: theme.typography.fontSizeSM },
+                      {
+                        color: theme.colors.onSurfaceVariant,
+                        fontSize: theme.typography.fontSizeSM,
+                      },
                     ]}
                   >
                     {t('remove')}

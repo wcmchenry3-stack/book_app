@@ -15,10 +15,7 @@ import '../src/i18n/i18n';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
-import {
-  NotoSerif_700Bold,
-  NotoSerif_800ExtraBold,
-} from '@expo-google-fonts/noto-serif';
+import { NotoSerif_700Bold, NotoSerif_800ExtraBold } from '@expo-google-fonts/noto-serif';
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -47,9 +44,7 @@ function HeaderLogo() {
         accessibilityLabel="BookshelfAI"
         accessibilityRole="image"
       />
-      <Text style={[headerStyles.wordmark, { color: theme.colors.primary }]}>
-        BookshelfAI
-      </Text>
+      <Text style={[headerStyles.wordmark, { color: theme.colors.primary }]}>BookshelfAI</Text>
     </View>
   );
 }

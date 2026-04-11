@@ -103,6 +103,23 @@ jest.mock('@react-native-community/netinfo', () => ({
   },
 }));
 
+// useFonts must return [true] so the layout renders children instead of <View />
+jest.mock('expo-font', () => ({
+  useFonts: jest.fn(() => [true]),
+}));
+
+jest.mock('@expo-google-fonts/noto-serif', () => ({
+  NotoSerif_700Bold: 'NotoSerif_700Bold',
+  NotoSerif_800ExtraBold: 'NotoSerif_800ExtraBold',
+}));
+
+jest.mock('@expo-google-fonts/inter', () => ({
+  Inter_400Regular: 'Inter_400Regular',
+  Inter_500Medium: 'Inter_500Medium',
+  Inter_600SemiBold: 'Inter_600SemiBold',
+  Inter_700Bold: 'Inter_700Bold',
+}));
+
 // ─── Import after mocks ─────────────────────────────────────────────────────
 
 import RootLayoutDefault from '../../app/_layout';
