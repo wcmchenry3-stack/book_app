@@ -1,15 +1,36 @@
 ## Summary
-<!-- 1-3 bullet points describing the change -->
+<!-- What does this PR do? Focus on the why, not the how. -->
+-
 
-## Test plan
-<!-- How was this tested? -->
+## Type of change
+- [ ] `feat` — new feature or behaviour
+- [ ] `fix` — bug fix
+- [ ] `chore` — tooling, deps, config
+- [ ] `test` — adding or updating tests
+- [ ] `docs` — documentation only
+- [ ] `refactor` — code change that is neither fix nor feature
+- [ ] `ci` — CI/CD changes
+- [ ] `a11y` — accessibility improvement
+- [ ] `security` — security hardening
 
-## Docs checklist
-- [ ] Docs updated (or confirmed N/A) — see `docs/` tree
+## Testing done
+<!-- What did you run? Any coverage delta? -->
+- [ ] All tests pass locally
+- [ ] No new lint errors
 
-## iOS Checklist (complete if touching `frontend/ios/` or `ci_scripts/`)
-- [ ] Ran `pod install` locally and committed `Podfile.lock` changes
-- [ ] `js-bundle-check` CI job passes
-- [ ] `ios-build-check` CI job passes
-- [ ] No hardcoded local paths in `.pbxproj` (`local-path-check` passes)
+## Security checklist
+- [ ] No secrets committed (gitleaks passes)
+- [ ] Dependencies reviewed if new ones added
+- [ ] OWASP considerations addressed if auth or data handling was touched
+
+## Accessibility checklist *(web / frontend PRs only)*
+- [ ] axe DevTools — no violations on affected pages
+- [ ] Keyboard navigation tested
+- [ ] Tested at 320px viewport width
+- [ ] Tested at 200% zoom
+
+## Mobile checklist *(iOS / Android PRs only)*
 - [ ] Tested on iOS Simulator or physical device
+- [ ] `ios-build-check` / `android-build-check` CI job passes
+- [ ] No hardcoded local paths in `.pbxproj` (`local-path-check` passes)
+- [ ] `pod install` run locally and `Podfile.lock` changes committed (if applicable)
