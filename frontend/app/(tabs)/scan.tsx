@@ -144,12 +144,7 @@ export default function ScanScreen() {
   }
 
   const modeToggle = (
-    <View
-      style={[
-        styles.modeToggle,
-        { backgroundColor: theme.colors.surfaceContainerLow },
-      ]}
-    >
+    <View style={[styles.modeToggle, { backgroundColor: theme.colors.surfaceContainerLow }]}>
       <Pressable
         style={[
           styles.modeTab,
