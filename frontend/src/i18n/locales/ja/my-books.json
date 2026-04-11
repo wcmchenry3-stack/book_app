@@ -25,5 +25,9 @@
   "closeDetail": "詳細を閉じる",
   "errorLoadBooks": "本を読み込めませんでした。",
   "errorUpdateStatus": "ステータスを更新できませんでした。",
-  "errorRemoveBook": "本を削除できませんでした。"
+  "errorRemoveBook": "本を削除できませんでした。",
+  "searchPlaceholder": "__NEEDS_TRANSLATION__",
+  "searchA11y": "__NEEDS_TRANSLATION__",
+  "sectionTitle": "__NEEDS_TRANSLATION__",
+  "bookCount": "__NEEDS_TRANSLATION__"
 }

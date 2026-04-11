@@ -132,7 +132,7 @@ export function BookCandidatePicker({ visible, candidates, onSelect, onDismiss }
                 )}
                 {book.already_in_library && (
                   <View style={[styles.badge, { backgroundColor: theme.colors.success }]}>
-                    <Text style={[styles.badgeText, { color: '#FFFFFF' }]}>
+                    <Text style={[styles.badgeText, { color: theme.colors.onSuccess }]}>
                       {t('bookCandidatePicker.alreadyOwned')}
                     </Text>
                   </View>

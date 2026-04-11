@@ -25,5 +25,9 @@
   "closeDetail": "Detail schließen",
   "errorLoadBooks": "Bücher konnten nicht geladen werden.",
   "errorUpdateStatus": "Status konnte nicht aktualisiert werden.",
-  "errorRemoveBook": "Buch konnte nicht entfernt werden."
+  "errorRemoveBook": "Buch konnte nicht entfernt werden.",
+  "searchPlaceholder": "__NEEDS_TRANSLATION__",
+  "searchA11y": "__NEEDS_TRANSLATION__",
+  "sectionTitle": "__NEEDS_TRANSLATION__",
+  "bookCount": "__NEEDS_TRANSLATION__"
 }
