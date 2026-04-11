@@ -304,9 +304,7 @@ export default function MyBooksScreen() {
                 style={styles.closeButton}
                 hitSlop={8}
               >
-                <Text
-                  style={{ color: activeColor, fontSize: theme.typography.fontSizeBase }}
-                >
+                <Text style={{ color: activeColor, fontSize: theme.typography.fontSizeBase }}>
                   {t('close', { ns: 'common' })}
                 </Text>
               </Pressable>

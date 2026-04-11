@@ -149,10 +149,7 @@ export default function ScanScreen() {
   const modeToggle = (
     <View style={[styles.modeToggle, { backgroundColor: theme.colors.surfaceContainerLow }]}>
       <Pressable
-        style={[
-          styles.modeTab,
-          inputMode === 'camera' && { backgroundColor: activeColor },
-        ]}
+        style={[styles.modeTab, inputMode === 'camera' && { backgroundColor: activeColor }]}
         onPress={() => setInputMode('camera')}
         accessibilityRole="button"
         accessibilityLabel={t('cameraModeLabel')}
@@ -168,10 +165,7 @@ export default function ScanScreen() {
         </Text>
       </Pressable>
       <Pressable
-        style={[
-          styles.modeTab,
-          inputMode === 'search' && { backgroundColor: activeColor },
-        ]}
+        style={[styles.modeTab, inputMode === 'search' && { backgroundColor: activeColor }]}
         onPress={() => setInputMode('search')}
         accessibilityRole="button"
         accessibilityLabel={t('searchModeLabel')}
@@ -311,21 +305,13 @@ export default function ScanScreen() {
         {/* Viewfinder: corner-bracket markers + scanning line */}
         <View style={styles.frameWrapper} pointerEvents="none">
           {/* Top-left corner */}
-          <View
-            style={[styles.corner, styles.cornerTL, { borderColor: activeColor }]}
-          />
+          <View style={[styles.corner, styles.cornerTL, { borderColor: activeColor }]} />
           {/* Top-right corner */}
-          <View
-            style={[styles.corner, styles.cornerTR, { borderColor: activeColor }]}
-          />
+          <View style={[styles.corner, styles.cornerTR, { borderColor: activeColor }]} />
           {/* Bottom-left corner */}
-          <View
-            style={[styles.corner, styles.cornerBL, { borderColor: activeColor }]}
-          />
+          <View style={[styles.corner, styles.cornerBL, { borderColor: activeColor }]} />
           {/* Bottom-right corner */}
-          <View
-            style={[styles.corner, styles.cornerBR, { borderColor: activeColor }]}
-          />
+          <View style={[styles.corner, styles.cornerBR, { borderColor: activeColor }]} />
           {/* Scanning line — horizontal accent bar across the frame centre */}
           <View
             style={[
