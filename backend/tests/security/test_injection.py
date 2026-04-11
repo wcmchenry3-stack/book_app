@@ -491,6 +491,69 @@ class TestSSRFPrevention:
 
 
 # ---------------------------------------------------------------------------
+# A01 — Ownership isolation: cross-user access on PATCH/DELETE user-books
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.security
+class TestOwnershipIsolation:
+    """
+    OWASP A01 — Broken Access Control.
+
+    A user must not be able to mutate a user_book record they do not own.
+    Both PATCH and DELETE scope their DB query to current_user.id, so a
+    cross-user request simply finds no record and returns 404 (information hiding).
+    """
+
+    _USER_A_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+    _USER_B_ID = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+    _USER_BOOK_ID = "cccccccc-cccc-cccc-cccc-cccccccccccc"
+
+    @staticmethod
+    def _client_as_user_b():
+        """TestClient authenticated as User B with an empty DB (User A owns the record)."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        from app.auth.dependencies import get_current_user
+        from app.core.database import get_db
+        from app.models.user import User
+
+        user_b = User()
+        user_b.id = TestOwnershipIsolation._USER_B_ID
+        user_b.email = "userb@example.com"
+
+        # Empty result set — simulates no record matching user_b.id
+        empty_result = MagicMock()
+        empty_result.scalar_one_or_none.return_value = None
+
+        async def _fake_db():
+            db = AsyncMock()
+            db.execute = AsyncMock(return_value=empty_result)
+            yield db
+
+        app.dependency_overrides[get_current_user] = lambda: user_b
+        app.dependency_overrides[get_db] = _fake_db
+        return TestClient(app, raise_server_exceptions=False)
+
+    def test_patch_returns_404_for_other_users_record(self) -> None:
+        """User B cannot PATCH a user_book owned by User A."""
+        client = self._client_as_user_b()
+        resp = client.patch(
+            f"/user-books/{self._USER_BOOK_ID}",
+            json={"status": "purchased"},
+        )
+        app.dependency_overrides.clear()
+        assert resp.status_code == 404
+
+    def test_delete_returns_404_for_other_users_record(self) -> None:
+        """User B cannot DELETE a user_book owned by User A."""
+        client = self._client_as_user_b()
+        resp = client.delete(f"/user-books/{self._USER_BOOK_ID}")
+        app.dependency_overrides.clear()
+        assert resp.status_code == 404
+
+
+# ---------------------------------------------------------------------------
 # A05 — Turnstile required by default (misconfiguration guard)
 # ---------------------------------------------------------------------------
 
