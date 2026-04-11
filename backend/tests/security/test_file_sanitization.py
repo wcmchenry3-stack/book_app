@@ -11,7 +11,6 @@ import pytest
 from fastapi import HTTPException
 from PIL import Image
 
-
 # ---------------------------------------------------------------------------
 # Helpers — build minimal valid image bytes in memory
 # ---------------------------------------------------------------------------

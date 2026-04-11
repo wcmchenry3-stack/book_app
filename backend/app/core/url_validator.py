@@ -11,7 +11,6 @@ import ipaddress
 import socket
 from urllib.parse import urlparse
 
-
 # Private and reserved IP networks per RFC 1918, RFC 4291, RFC 3927, etc.
 _BLOCKED_NETWORKS: list[ipaddress.IPv4Network | ipaddress.IPv6Network] = [
     # IPv4
