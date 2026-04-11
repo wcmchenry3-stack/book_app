@@ -1,4 +1,8 @@
 {
+  "title": "위시리스트",
+  "heroSubtitle": "구매할 책 목록",
+  "categoryLabel": "위시리스트",
+  "archiveSummary": "권이 목록에 있음",
   "loading": "위시리스트 불러오는 중…",
   "empty": "위시리스트가 비어 있습니다.\n책 표지를 스캔해 추가하세요.",
   "markPurchased": "구매 완료",
