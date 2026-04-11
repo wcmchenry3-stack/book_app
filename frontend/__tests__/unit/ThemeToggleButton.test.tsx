@@ -15,6 +15,7 @@ jest.mock('../../hooks/useTheme', () => ({
 
 jest.mock('@expo/vector-icons', () => ({
   Ionicons: () => null,
+  MaterialIcons: () => null,
 }));
 
 describe('ThemeToggleButton', () => {

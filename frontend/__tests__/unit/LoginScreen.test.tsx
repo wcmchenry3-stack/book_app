@@ -22,15 +22,21 @@ jest.mock('../../hooks/useTheme', () => ({
   useTheme: () => ({
     theme: {
       colors: {
-        background: '#fff',
-        text: '#111',
-        primary: '#2563EB',
+        background: '#fbf9f5',
+        surface: '#fbf9f5',
+        text: '#1b1c1a',
+        primary: '#0f426f',
+        onSurface: '#1b1c1a',
+        onSurfaceVariant: '#42474f',
+        secondaryContainer: '#c6e7dd',
+        onSecondaryContainer: '#4b6861',
       },
       typography: {
         fontSizeXL: 24,
         fontWeightBold: '700',
+        fontFamilyHeadline: 'NotoSerif_700Bold',
       },
-      spacing: { xl: 32 },
+      spacing: { xl: 32, md: 16 },
     },
   }),
 }));
@@ -63,7 +69,7 @@ beforeEach(() => {
 describe('LoginScreen', () => {
   it('renders the app title', () => {
     const { getByText } = render(<LoginScreen />);
-    expect(getByText('Bookshelf')).toBeTruthy();
+    expect(getByText('BookshelfAI')).toBeTruthy();
   });
 
   it('renders Sign in button when request is ready', () => {

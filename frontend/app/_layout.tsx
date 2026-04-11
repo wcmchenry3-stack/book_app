@@ -12,7 +12,16 @@ Sentry.addBreadcrumb({
 
 import '../src/i18n/i18n';
 
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { Stack } from 'expo-router';
+import { useFonts } from 'expo-font';
+import { NotoSerif_700Bold, NotoSerif_800ExtraBold } from '@expo-google-fonts/noto-serif';
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 
 import { BookCandidatePicker } from '../components/BookCandidatePicker';
 import { ErrorBoundary } from '../components/ErrorBoundary';
@@ -22,7 +31,34 @@ import { AuthProvider } from '../contexts/AuthContext';
 import { BannerProvider } from '../contexts/BannerContext';
 import { ScanJobProvider } from '../contexts/ScanJobContext';
 import { useScanJobs } from '../hooks/useScanJobs';
+import { useTheme } from '../hooks/useTheme';
 import { ThemeProvider } from '../theme';
+
+function HeaderLogo() {
+  const { theme } = useTheme();
+  return (
+    <View style={headerStyles.row}>
+      <Image
+        source={require('../assets/logo.png')}
+        style={headerStyles.logo}
+        accessibilityLabel="BookshelfAI"
+        accessibilityRole="image"
+      />
+      <Text style={[headerStyles.wordmark, { color: theme.colors.primary }]}>BookshelfAI</Text>
+    </View>
+  );
+}
+
+const headerStyles = StyleSheet.create({
+  row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  logo: { width: 28, height: 28, borderRadius: 6 },
+  wordmark: {
+    fontSize: 20,
+    fontFamily: 'NotoSerif_700Bold',
+    fontWeight: '700',
+    letterSpacing: -0.3,
+  },
+});
 
 function GlobalBookPicker() {
   const { reviewingJob, dismissReview, handleSelectBook } = useScanJobs();
@@ -38,6 +74,20 @@ function GlobalBookPicker() {
 }
 
 function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    NotoSerif_700Bold,
+    NotoSerif_800ExtraBold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+
+  // Hold the splash until fonts are ready; system fonts render if load fails.
+  if (!fontsLoaded) {
+    return <View />;
+  }
+
   return (
     <ErrorBoundary>
       <ThemeProvider>
@@ -47,7 +97,10 @@ function RootLayout() {
               <InAppBanner />
               <Stack
                 screenOptions={{
+                  headerLeft: () => <HeaderLogo />,
                   headerRight: () => <ThemeToggleButton />,
+                  headerStyle: { backgroundColor: 'transparent' },
+                  headerShadowVisible: false,
                 }}
               />
               <GlobalBookPicker />

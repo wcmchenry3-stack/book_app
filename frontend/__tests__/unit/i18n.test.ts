@@ -60,9 +60,9 @@ describe('en namespace content', () => {
     expect(Object.keys(data).length).toBeGreaterThan(0);
   });
 
-  it('en/auth.appTitle is "Bookshelf"', () => {
+  it('en/auth.appTitle is "BookshelfAI"', () => {
     const data = require('../../src/i18n/locales/en/auth.json');
-    expect(data.appTitle).toBe('Bookshelf');
+    expect(data.appTitle).toBe('BookshelfAI');
   });
 
   it('en/tabs has all 4 tab keys', () => {

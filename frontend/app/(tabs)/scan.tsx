@@ -46,14 +46,6 @@ export default function ScanScreen() {
 
   // Native: camera shutter — take photo, persist to document dir, start background scan.
   async function handleCapture() {
-    // Diagnostic event — fires on every press so we can confirm the button's
-    // onPress is actually reaching us (breadcrumbs alone don't reach Sentry
-    // unless an exception is later captured).
-    Sentry.captureMessage('camera_capture_pressed', {
-      level: 'info',
-      tags: { feature: 'camera-capture', phase: 'press' },
-      extra: { hasCameraRef: !!cameraRef.current, capturing },
-    });
     if (!cameraRef.current || capturing) return;
     setCapturing(true);
     Sentry.addBreadcrumb({
@@ -125,13 +117,6 @@ export default function ScanScreen() {
         level: 'info',
         data: { destUri: destFile.uri },
       });
-      // Diagnostic event confirming we reached startScan — paired with
-      // camera_capture_pressed, this tells us exactly where the flow drops.
-      Sentry.captureMessage('camera_capture_started_scan', {
-        level: 'info',
-        tags: { feature: 'camera-capture', phase: 'start_scan' },
-        extra: { destUri: destFile.uri },
-      });
       startScan('image', destFile.uri);
     } catch (error) {
       Sentry.captureException(error, {
@@ -159,12 +144,7 @@ export default function ScanScreen() {
   }
 
   const modeToggle = (
-    <View
-      style={[
-        styles.modeToggle,
-        { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-      ]}
-    >
+    <View style={[styles.modeToggle, { backgroundColor: theme.colors.surfaceContainerLow }]}>
       <Pressable
         style={[
           styles.modeTab,
@@ -178,7 +158,7 @@ export default function ScanScreen() {
         <Text
           style={[
             styles.modeTabText,
-            { color: inputMode === 'camera' ? '#fff' : theme.colors.text },
+            { color: inputMode === 'camera' ? theme.colors.onPrimary : theme.colors.secondary },
           ]}
         >
           {t('cameraTab')}
@@ -197,7 +177,7 @@ export default function ScanScreen() {
         <Text
           style={[
             styles.modeTabText,
-            { color: inputMode === 'search' ? '#fff' : theme.colors.text },
+            { color: inputMode === 'search' ? theme.colors.onPrimary : theme.colors.secondary },
           ]}
         >
           {t('searchTab')}
@@ -216,9 +196,8 @@ export default function ScanScreen() {
             style={[
               styles.searchInput,
               {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.border,
-                color: theme.colors.text,
+                backgroundColor: theme.colors.surfaceContainerHighest,
+                color: theme.colors.onSurface,
                 fontSize: theme.typography.fontSizeBase,
               },
             ]}
@@ -353,14 +332,15 @@ const styles = StyleSheet.create({
   },
   modeToggle: {
     flexDirection: 'row',
-    borderRadius: 8,
-    borderWidth: 1,
+    borderRadius: 12,
     overflow: 'hidden',
     margin: 16,
+    padding: 4,
   },
   modeTab: {
     paddingHorizontal: 24,
-    paddingVertical: 10,
+    paddingVertical: 8,
+    borderRadius: 10,
     minHeight: 44,
     justifyContent: 'center',
   },
@@ -372,7 +352,7 @@ const styles = StyleSheet.create({
     width: 240,
     height: 340,
     borderWidth: 2,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   cameraControls: {
     flexDirection: 'row',

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { useTranslation } from 'react-i18next';
@@ -50,18 +50,35 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.surface }]}>
+      {/* Brand mark */}
+      <Image
+        source={require('../../assets/logo.png')}
+        style={styles.logo}
+        accessibilityLabel="BookshelfAI"
+        accessibilityRole="image"
+      />
+
       <Text
-        style={{ color: theme.colors.text, fontSize: theme.typography.fontSizeXL }}
+        style={[
+          styles.title,
+          { color: theme.colors.primary, fontFamily: theme.typography.fontFamilyHeadline },
+        ]}
         accessibilityRole="header"
       >
         {t('appTitle')}
       </Text>
+
+      <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
+        {t('signInPrompt')}
+      </Text>
+
+      {/* Google sign-in */}
       <Pressable
         style={[
           styles.button,
           {
-            backgroundColor: theme.colors.primary,
+            backgroundColor: theme.colors.onSurface,
             marginTop: theme.spacing.xl,
             opacity: request ? 1 : 0.6,
           },
@@ -73,19 +90,18 @@ export default function LoginScreen() {
         accessibilityHint={t('signInHint')}
       >
         {!request ? (
-          <ActivityIndicator color="#FFFFFF" />
+          <ActivityIndicator color={theme.colors.surface} />
         ) : (
-          <Text style={{ color: '#FFFFFF', fontWeight: theme.typography.fontWeightBold }}>
-            {t('signIn')}
-          </Text>
+          <Text style={[styles.buttonText, { color: theme.colors.surface }]}>{t('signIn')}</Text>
         )}
       </Pressable>
+
       {showTestLogin && (
         <Pressable
           style={[
             styles.button,
             {
-              backgroundColor: theme.colors.secondary ?? '#6B7280',
+              backgroundColor: theme.colors.secondaryContainer,
               marginTop: theme.spacing.md,
             },
           ]}
@@ -96,9 +112,9 @@ export default function LoginScreen() {
           accessibilityHint="Dev-only: bypasses Google OAuth for E2E testing"
         >
           {testLoading ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color={theme.colors.onSecondaryContainer} />
           ) : (
-            <Text style={{ color: '#FFFFFF', fontWeight: theme.typography.fontWeightBold }}>
+            <Text style={[styles.buttonText, { color: theme.colors.onSecondaryContainer }]}>
               Test Login
             </Text>
           )}
@@ -113,14 +129,37 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  logo: {
+    width: 96,
+    height: 96,
+    borderRadius: 20,
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: '700',
+    letterSpacing: -0.5,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 24,
   },
   button: {
     paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-    minWidth: 220,
+    paddingVertical: 14,
+    borderRadius: 12,
+    minWidth: 240,
     minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  buttonText: {
+    fontWeight: '600',
+    fontSize: 16,
   },
 });

@@ -1,7 +1,7 @@
 # Frontend Conventions
 
 ## Stack
-Expo SDK 51 · Expo Router · React Native · TypeScript · TanStack Query · axios · expo-secure-store
+Expo SDK 55 · Expo Router · React Native · TypeScript · axios · expo-secure-store
 
 ## Running Locally
 
@@ -18,6 +18,44 @@ npx expo start
 - **All colours must come from `useTheme()`** — zero hardcoded colour values, ever
 - Import: `import { useTheme } from '../hooks/useTheme'`
 - Use `theme.colors.*`, `theme.spacing.*`, `theme.typography.*`, `theme.radius.*`
+- Color tokens follow the **Material Design 3** role naming convention (e.g. `primary`, `onPrimary`, `surfaceContainerLow`, `secondaryContainer`). See `frontend/theme/tokens.ts` for the full set.
+- Convenience aliases `background`, `text`, `textSecondary`, `border`, `iconActive`, `iconInactive`, `success` are kept for backward compatibility but prefer MD3 role names in new code.
+
+### Design System
+
+#### Colors (MD3 roles — light / dark)
+Defined in `frontend/theme/tokens.ts`. Key roles:
+
+| Role | Light | Dark | Use |
+|---|---|---|---|
+| `primary` | `#0f426f` | `#a0cafe` | Brand, active states, filled buttons |
+| `onPrimary` | `#ffffff` | `#003258` | Text/icon on primary bg |
+| `secondary` | `#47645d` | `#adcdc4` | Inactive tab icons, secondary text |
+| `secondaryContainer` | `#c6e7dd` | `#2f4c45` | "Read" status badge bg |
+| `surface` | `#fbf9f5` | `#131210` | Screen backgrounds |
+| `surfaceContainerLow` | `#f5f3ef` | `#1b1c1a` | Card backgrounds, tab bar bg |
+| `surfaceContainerHighest` | `#e4e2de` | `#343532` | Input fields |
+| `onSurface` | `#1b1c1a` | `#e5e3df` | Primary text |
+| `onSurfaceVariant` | `#42474f` | `#c4c9c1` | Secondary text, ghost button text |
+| `outline` | `#737780` | `#8e9299` | Borders, dividers |
+
+#### Typography
+- **Headline font**: Noto Serif (`NotoSerif_700Bold`, `NotoSerif_800ExtraBold`) — loaded via `useFonts` in `app/_layout.tsx`
+- **Body / label font**: Inter (`Inter_400Regular`, `Inter_500Medium`, `Inter_600SemiBold`, `Inter_700Bold`)
+- Token: `theme.typography.fontFamilyHeadline` → `'NotoSerif_700Bold'`
+- Token: `theme.typography.fontFamilyBody` → `'Inter_400Regular'`
+- Size scale: `fontSizeDisplay` (48) · `fontSizeH1` (40) · `fontSizeH2` (32) · `fontSizeH3` (24) · `fontSizeLG` (20) · `fontSizeBase` (16) · `fontSizeSM` (14)
+
+#### Icons
+- Library: **MaterialIcons** from `@expo/vector-icons`
+- Tab icons: `document-scanner` (Scan) · `auto-stories` (Wishlist) · `library-books` (My Books) · `settings` (Settings)
+- Header: `dark-mode` for theme toggle
+- Do **not** use Ionicons — it has been replaced
+
+#### Logo / App Icon
+- Source asset: `frontend/assets/logo.png` (chihuahua + open book on navy, 1024×1024)
+- Configured in `app.json` as iOS icon, Android adaptive foreground (`backgroundColor: #0f426f`), and web favicon
+- Rendered in-app via `<Image source={require('../assets/logo.png')} />` in the header (`app/_layout.tsx`)
 
 ### Accessibility
 See [~/.claude/standards/accessibility.md](~/.claude/standards/accessibility.md). WCAG 2.2 AA required on every interactive element. React Native: `accessibilityLabel`, `accessibilityRole`, `accessibilityHint` (if non-obvious), `minWidth/minHeight: 44` on all `Pressable`.
