@@ -486,3 +486,79 @@ class TestSSRFPrevention:
     def test_missing_hostname_rejected(self) -> None:
         with pytest.raises(ValueError):
             validate_safe_url("https:///no-host")
+
+
+# ---------------------------------------------------------------------------
+# A05 — Turnstile required by default (misconfiguration guard)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.security
+class TestTurnstileRequired:
+    """
+    The startup validator must prevent the app from serving requests when
+    TURNSTILE_REQUIRED=true but no secret key is configured.
+    When disabled explicitly (TURNSTILE_REQUIRED=false), startup succeeds
+    regardless of whether a key is present.
+    """
+
+    def test_startup_raises_when_required_and_no_key(self) -> None:
+        """Startup must raise RuntimeError when Turnstile is required but unconfigured."""
+        import asyncio
+        from unittest.mock import patch
+
+        from app.core.config import Settings
+
+        cfg = Settings(
+            database_url="postgresql+asyncpg://u:p@localhost/db",
+            turnstile_required=True,
+            turnstile_secret_key="",
+        )
+
+        async def _run():
+            from app.main import _validate_config
+            with patch("app.main.settings", cfg):
+                await _validate_config()
+
+        with pytest.raises(RuntimeError, match="TURNSTILE_SECRET_KEY"):
+            asyncio.run(_run())
+
+    def test_startup_succeeds_when_required_and_key_present(self) -> None:
+        """Startup must not raise when Turnstile is required and key is configured."""
+        import asyncio
+        from unittest.mock import patch
+
+        from app.core.config import Settings
+
+        cfg = Settings(
+            database_url="postgresql+asyncpg://u:p@localhost/db",
+            turnstile_required=True,
+            turnstile_secret_key="a-real-secret-key",
+        )
+
+        async def _run():
+            from app.main import _validate_config
+            with patch("app.main.settings", cfg):
+                await _validate_config()
+
+        asyncio.run(_run())  # must not raise
+
+    def test_startup_succeeds_when_explicitly_disabled(self) -> None:
+        """TURNSTILE_REQUIRED=false must allow startup even with no key."""
+        import asyncio
+        from unittest.mock import patch
+
+        from app.core.config import Settings
+
+        cfg = Settings(
+            database_url="postgresql+asyncpg://u:p@localhost/db",
+            turnstile_required=False,
+            turnstile_secret_key="",
+        )
+
+        async def _run():
+            from app.main import _validate_config
+            with patch("app.main.settings", cfg):
+                await _validate_config()
+
+        asyncio.run(_run())  # must not raise

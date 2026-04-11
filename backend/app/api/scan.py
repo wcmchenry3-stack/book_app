@@ -54,8 +54,10 @@ async def scan(
     db: AsyncSession = Depends(get_db),
     cf_turnstile_response: str | None = Form(None, alias="cf-turnstile-response"),
 ) -> list[EnrichedBook]:
-    # --- Cloudflare Turnstile bot check (when TURNSTILE_SECRET_KEY is configured) ---
-    if settings.turnstile_secret_key:
+    # --- Cloudflare Turnstile bot check ---
+    # Enabled when TURNSTILE_REQUIRED=true (the default).
+    # The startup handler already confirmed the secret key is present when required.
+    if settings.turnstile_required:
         if not cf_turnstile_response:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
