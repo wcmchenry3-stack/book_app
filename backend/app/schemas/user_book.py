@@ -6,6 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.core.url_validator import validate_safe_url
 from app.schemas.book import BookRead, EditionPreview, EditionRead
 
 BookStatus = Literal["wishlisted", "purchased", "reading", "read"]
@@ -22,6 +23,11 @@ class WishlistRequest(BaseModel):
     cover_url: str | None = Field(None, max_length=2048)
     subjects: list[str] = []
     editions: list["EditionPreview"] = []  # noqa: F821
+
+    @field_validator("cover_url", mode="before")
+    @classmethod
+    def cover_url_must_be_safe(cls, v: str | None) -> str | None:
+        return validate_safe_url(v)
 
 
 class UserBookCreate(BaseModel):

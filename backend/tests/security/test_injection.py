@@ -12,6 +12,7 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from app.main import app  # noqa: F401 — side-effect: registers routers and middleware
+from app.core.url_validator import validate_safe_url
 from app.schemas.user_book import UserBookUpdate, WishlistRequest
 
 # ---------------------------------------------------------------------------
@@ -430,3 +431,58 @@ class TestInputLengthLimits:
     def test_wishlist_empty_author_rejected(self) -> None:
         with pytest.raises(ValidationError):
             WishlistRequest(title="Title", author="")
+
+
+# ---------------------------------------------------------------------------
+# A10 — SSRF prevention on user-supplied URL fields
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.security
+class TestSSRFPrevention:
+    """
+    User-supplied URLs must resolve to public IPs only.
+    Private, loopback, and link-local addresses must be rejected with a
+    Pydantic ValidationError (→ 422 at the HTTP layer).
+    """
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "https://127.0.0.1/secret",
+            "https://127.0.0.1:8080/admin",
+            "https://10.0.0.1/internal",
+            "https://10.255.255.255/internal",
+            "https://172.16.0.1/private",
+            "https://172.31.255.255/private",
+            "https://192.168.1.1/router",
+            "https://169.254.169.254/latest/meta-data/",   # AWS metadata
+            "https://169.254.169.254/computeMetadata/v1/", # GCP metadata
+        ],
+    )
+    def test_private_ip_urls_rejected(self, url: str) -> None:
+        with pytest.raises(ValueError, match="private or reserved"):
+            validate_safe_url(url)
+
+    def test_http_scheme_rejected(self) -> None:
+        with pytest.raises(ValueError, match="https"):
+            validate_safe_url("http://example.com/cover.jpg")
+
+    def test_ftp_scheme_rejected(self) -> None:
+        with pytest.raises(ValueError, match="https"):
+            validate_safe_url("ftp://example.com/cover.jpg")
+
+    def test_none_is_allowed(self) -> None:
+        assert validate_safe_url(None) is None
+
+    def test_private_ip_rejected_via_schema(self) -> None:
+        with pytest.raises(ValidationError):
+            WishlistRequest(
+                title="Title",
+                author="Author",
+                cover_url="https://192.168.1.1/cover.jpg",
+            )
+
+    def test_missing_hostname_rejected(self) -> None:
+        with pytest.raises(ValueError):
+            validate_safe_url("https:///no-host")
