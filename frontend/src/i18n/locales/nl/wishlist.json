@@ -1,4 +1,8 @@
 {
+  "title": "Verlanglijst",
+  "heroSubtitle": "Boeken die je wilt kopen",
+  "categoryLabel": "VERLANGLIJST",
+  "archiveSummary": "boeken op verlanglijst",
   "loading": "Verlanglijst laden…",
   "empty": "Je verlanglijst is leeg.\nScan een boekomslag om toe te voegen.",
   "markPurchased": "Markeer gekocht",

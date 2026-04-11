@@ -110,12 +110,53 @@ export default function WishlistScreen() {
     );
   }
 
+  const listHeader = (
+    <View style={styles.listHeader}>
+      {/* Hero */}
+      <Text
+        style={[
+          styles.heroTitle,
+          {
+            color: theme.colors.text,
+            fontFamily: theme.typography.fontFamilyHeadline,
+            fontSize: theme.typography.fontSizeH1,
+          },
+        ]}
+      >
+        {t('title')}
+      </Text>
+      <Text
+        style={[
+          styles.heroSubtitle,
+          { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeSM },
+        ]}
+      >
+        {t('heroSubtitle')}
+      </Text>
+
+      {/* Archive summary card */}
+      <View style={[styles.summaryCard, { backgroundColor: theme.colors.surfaceContainerHigh }]}>
+        <View style={[styles.summaryAccent, { backgroundColor: activeColor }]} />
+        <Text style={[styles.summaryCount, { color: theme.colors.text }]}>{books.length}</Text>
+        <Text
+          style={[
+            styles.summaryLabel,
+            { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeSM },
+          ]}
+        >
+          {t('archiveSummary')}
+        </Text>
+      </View>
+    </View>
+  );
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <FlatList
         data={books}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
+        ListHeaderComponent={listHeader}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -127,11 +168,21 @@ export default function WishlistScreen() {
           />
         }
         renderItem={({ item }) => (
-          <View style={[styles.card, { backgroundColor: theme.colors.surfaceContainerLow }]}>
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: theme.colors.surfaceContainerLow,
+                borderLeftColor: activeColor,
+              },
+            ]}
+          >
+            {/* Cover */}
             {item.book.cover_url ? (
               <Image
                 source={{ uri: item.book.cover_url }}
                 style={styles.cover}
+                resizeMode="cover"
                 accessibilityLabel={t('coverAlt', { ns: 'common', title: item.book.title })}
               />
             ) : (
@@ -145,7 +196,18 @@ export default function WishlistScreen() {
               />
             )}
 
-            <View style={styles.info}>
+            {/* Content */}
+            <View style={styles.content}>
+              {/* Category label */}
+              <Text
+                style={[
+                  styles.categoryLabel,
+                  { color: activeColor, fontSize: theme.typography.fontSizeXS },
+                ]}
+              >
+                {t('categoryLabel')}
+              </Text>
+
               <Text
                 style={[
                   styles.bookTitle,
@@ -155,18 +217,22 @@ export default function WishlistScreen() {
               >
                 {item.book.title}
               </Text>
+
               <Text
                 style={[
+                  styles.bookAuthor,
                   { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeSM },
                 ]}
                 numberOfLines={1}
               >
                 {item.book.author}
               </Text>
+
               {item.edition?.publish_year ? (
                 <Text
                   style={[
-                    { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeSM },
+                    styles.bookYear,
+                    { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeXS },
                   ]}
                 >
                   {item.edition.publish_year}
@@ -183,7 +249,7 @@ export default function WishlistScreen() {
                   <Text
                     style={[
                       styles.actionText,
-                      { fontSize: theme.typography.fontSizeSM, color: onActiveColor },
+                      { fontSize: theme.typography.fontSizeXS, color: onActiveColor },
                     ]}
                   >
                     {t('markPurchased')}
@@ -192,7 +258,7 @@ export default function WishlistScreen() {
                 <Pressable
                   style={[
                     styles.actionButton,
-                    { backgroundColor: theme.colors.surfaceContainerHigh },
+                    { backgroundColor: theme.colors.secondaryContainer },
                   ]}
                   onPress={() => handleRemove(item)}
                   accessibilityRole="button"
@@ -202,8 +268,8 @@ export default function WishlistScreen() {
                     style={[
                       styles.actionText,
                       {
-                        color: theme.colors.onSurfaceVariant,
-                        fontSize: theme.typography.fontSizeSM,
+                        color: theme.colors.onSecondaryContainer,
+                        fontSize: theme.typography.fontSizeXS,
                       },
                     ]}
                   >
@@ -224,17 +290,50 @@ const styles = StyleSheet.create({
   list: { padding: 16, gap: 12 },
   emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
   emptyText: { textAlign: 'center', lineHeight: 24 },
+
+  // Hero + summary
+  listHeader: { marginBottom: 8, gap: 6 },
+  heroTitle: {
+    fontWeight: '700',
+    lineHeight: 48,
+    letterSpacing: -0.5,
+  },
+  heroSubtitle: { lineHeight: 20, marginBottom: 4 },
+  summaryCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    overflow: 'hidden',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+    marginTop: 4,
+  },
+  summaryAccent: { width: 3, height: 32, borderRadius: 2 },
+  summaryCount: { fontSize: 28, fontWeight: '700', lineHeight: 32 },
+  summaryLabel: { flex: 1, lineHeight: 18 },
+
+  // Bento card
   card: {
     flexDirection: 'row',
     borderRadius: 12,
     overflow: 'hidden',
-    minHeight: 44,
+    minHeight: 120,
+    borderLeftWidth: 4,
   },
-  cover: { width: 72, height: 108 },
+  cover: { width: 110, alignSelf: 'stretch' },
   coverPlaceholder: { opacity: 0.4 },
-  info: { flex: 1, padding: 12, gap: 4 },
-  bookTitle: { fontWeight: '600' },
-  actions: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  content: { flex: 1, padding: 12, gap: 4 },
+  categoryLabel: {
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  bookTitle: { fontWeight: '600', lineHeight: 22 },
+  bookAuthor: { lineHeight: 18 },
+  bookYear: { lineHeight: 16 },
+  actions: { flexDirection: 'row', gap: 8, marginTop: 8, flexWrap: 'wrap' },
   actionButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,

@@ -1,4 +1,8 @@
 {
+  "title": "愿望清单",
+  "heroSubtitle": "您计划购买的书籍",
+  "categoryLabel": "愿望清单",
+  "archiveSummary": "本书在愿望清单中",
   "loading": "加载愿望清单…",
   "empty": "您的愿望清单为空。\n扫描书籍封面以添加。",
   "markPurchased": "标记已购",

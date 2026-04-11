@@ -1,4 +1,8 @@
 {
+  "title": "ウィッシュリスト",
+  "heroSubtitle": "購入予定の本",
+  "categoryLabel": "ウィッシュリスト",
+  "archiveSummary": "冊がリストに",
   "loading": "ウィッシュリストを読み込み中…",
   "empty": "ウィッシュリストは空です。\n本のカバーをスキャンして追加。",
   "markPurchased": "購入済みにする",

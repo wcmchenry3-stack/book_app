@@ -1,4 +1,8 @@
 {
+  "title": "قائمتي",
+  "heroSubtitle": "كتب تخطط لشرائها",
+  "categoryLabel": "القائمة",
+  "archiveSummary": "كتب في قائمتك",
   "loading": "جارٍ تحميل القائمة…",
   "empty": "قائمتك فارغة.\nامسح غلاف كتاب لإضافة واحد.",
   "markPurchased": "وضع كمُشترى",
