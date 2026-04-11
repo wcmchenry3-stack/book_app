@@ -63,6 +63,7 @@ export const darkTheme: Theme = {
     textSecondary: c.textSecondary.dark,
     border: c.border.dark,
     success: c.success.dark,
+    onSuccess: c.onSuccess.dark,
     iconActive: c.iconActive.dark,
     iconInactive: c.iconInactive.dark,
   },

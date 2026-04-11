@@ -17,9 +17,11 @@ jest.mock('../../lib/sentry', () => ({
 
 jest.mock('expo-router', () => {
   const { View } = require('react-native');
-  return {
-    Stack: ({ children }: { children?: React.ReactNode }) => <View testID="stack">{children}</View>,
-  };
+  const MockStack = ({ children }: { children?: React.ReactNode }) => (
+    <View testID="stack">{children}</View>
+  );
+  MockStack.Screen = () => null;
+  return { Stack: MockStack };
 });
 
 jest.mock('../../hooks/useTheme', () => ({
