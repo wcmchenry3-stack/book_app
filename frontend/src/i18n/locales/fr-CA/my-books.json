@@ -25,5 +25,9 @@
   "closeDetail": "Fermer le détail",
   "errorLoadBooks": "Impossible de charger les livres.",
   "errorUpdateStatus": "Impossible de mettre à jour le statut.",
-  "errorRemoveBook": "Impossible de supprimer le livre."
+  "errorRemoveBook": "Impossible de supprimer le livre.",
+  "searchPlaceholder": "__NEEDS_TRANSLATION__",
+  "searchA11y": "__NEEDS_TRANSLATION__",
+  "sectionTitle": "__NEEDS_TRANSLATION__",
+  "bookCount": "__NEEDS_TRANSLATION__"
 }

@@ -466,7 +466,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   webCaptureButtonText: {
-    color: '#fff',
     fontWeight: '600',
     fontSize: 18,
   },
@@ -490,7 +489,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   searchButtonText: {
-    color: '#fff',
     fontWeight: '600',
     fontSize: 16,
   },
@@ -507,7 +505,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   permissionButtonText: {
-    color: '#FFFFFF',
     fontWeight: '600',
   },
 });

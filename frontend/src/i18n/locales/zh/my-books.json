@@ -25,5 +25,9 @@
   "closeDetail": "关闭详情",
   "errorLoadBooks": "无法加载书籍。",
   "errorUpdateStatus": "无法更新状态。",
-  "errorRemoveBook": "无法移除书籍。"
+  "errorRemoveBook": "无法移除书籍。",
+  "searchPlaceholder": "__NEEDS_TRANSLATION__",
+  "searchA11y": "__NEEDS_TRANSLATION__",
+  "sectionTitle": "__NEEDS_TRANSLATION__",
+  "bookCount": "__NEEDS_TRANSLATION__"
 }

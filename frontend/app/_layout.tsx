@@ -39,7 +39,7 @@ function HeaderLogo() {
   return (
     <View style={headerStyles.row}>
       <Image
-        source={require('../assets/logo.png')}
+        source={require('../assets/icon.png')}
         style={headerStyles.logo}
         accessibilityLabel="BookshelfAI"
         accessibilityRole="image"
@@ -65,7 +65,9 @@ function InnerStack() {
         headerShadowVisible: false,
         headerTransparent: theme.isDark,
       }}
-    />
+    >
+      <Stack.Screen name="(tabs)" options={{ title: '' }} />
+    </Stack>
   );
 }
 

@@ -242,5 +242,5 @@ const styles = StyleSheet.create({
     minHeight: 32,
     justifyContent: 'center',
   },
-  actionText: { fontWeight: '600', color: '#FFFFFF' },
+  actionText: { fontWeight: '600' },
 });
