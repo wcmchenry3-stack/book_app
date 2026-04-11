@@ -69,9 +69,12 @@ class Settings(BaseSettings):
     @property
     def async_database_url(self) -> str:
         # Normalize any postgres:// or postgresql:// scheme to postgresql+asyncpg://
+        # and sqlite:// to sqlite+aiosqlite:// (used by schema-check CI with SQLite)
         import re
 
-        return re.sub(r"^postgres(ql)?://", "postgresql+asyncpg://", self.database_url)
+        url = re.sub(r"^postgres(ql)?://", "postgresql+asyncpg://", self.database_url)
+        url = re.sub(r"^sqlite:///", "sqlite+aiosqlite:///", url)
+        return url
 
     @property
     def google_client_ids(self) -> list[str]:
