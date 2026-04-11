@@ -22,9 +22,30 @@ export default function TabLayout() {
   const { theme } = useTheme();
   const { t } = useTranslation('tabs');
 
+  // In dark mode use the gold tertiary accent for active tabs; primary in light mode.
+  const activeTabBg = theme.isDark ? theme.colors.tertiary : theme.colors.primary;
+  const activeTabTint = theme.isDark ? theme.colors.onTertiary : theme.colors.onPrimary;
+
+  // Dark mode: frosted-glass bottom nav with rounded top and subtle border.
+  const tabBarBg = theme.isDark ? 'rgba(17,19,23,0.85)' : theme.colors.surfaceContainerLow;
   const tabBarStyle = StyleSheet.flatten([
     styles.tabBar,
-    { backgroundColor: theme.colors.surfaceContainerLow },
+    {
+      backgroundColor: tabBarBg,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: theme.isDark
+        ? 'rgba(69,71,76,0.4)' // outlineVariant at ~40% opacity
+        : 'transparent',
+      ...(theme.isDark
+        ? {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 12,
+            elevation: 20,
+          }
+        : {}),
+    },
   ]);
 
   return (
@@ -34,12 +55,12 @@ export default function TabLayout() {
         tabBarStyle,
         tabBarShowLabel: true,
         tabBarLabelStyle: styles.label,
-        tabBarActiveTintColor: theme.colors.onPrimary,
+        tabBarActiveTintColor: activeTabTint,
         tabBarInactiveTintColor: theme.colors.secondary,
         tabBarItemStyle: styles.tabItem,
         tabBarButton: undefined,
-        // Active tab gets a filled primary pill background; inactive is transparent.
-        tabBarActiveBackgroundColor: theme.colors.primary,
+        // Active tab gets a filled pill background; gold in dark mode, primary in light.
+        tabBarActiveBackgroundColor: activeTabBg,
         tabBarInactiveBackgroundColor: 'transparent',
       })}
     >
@@ -95,6 +116,8 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 16 : 8,
     paddingTop: 8,
     height: Platform.OS === 'ios' ? 80 : 64,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
   },
   tabItem: {
     borderRadius: 12,

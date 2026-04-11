@@ -15,6 +15,9 @@ type CameraFacing = 'back' | 'front';
 export default function ScanScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation('scan');
+  // Gold tertiary in dark mode, primary in light mode — active/CTA accent.
+  const activeColor = theme.isDark ? theme.colors.tertiary : theme.colors.primary;
+  const onActiveColor = theme.isDark ? theme.colors.onTertiary : theme.colors.onPrimary;
   const { startScan } = useScanJobs();
   const { showBanner } = useBanner();
   const [permission, requestPermission] = useCameraPermissions();
@@ -148,7 +151,7 @@ export default function ScanScreen() {
       <Pressable
         style={[
           styles.modeTab,
-          inputMode === 'camera' && { backgroundColor: theme.colors.primary },
+          inputMode === 'camera' && { backgroundColor: activeColor },
         ]}
         onPress={() => setInputMode('camera')}
         accessibilityRole="button"
@@ -158,7 +161,7 @@ export default function ScanScreen() {
         <Text
           style={[
             styles.modeTabText,
-            { color: inputMode === 'camera' ? theme.colors.onPrimary : theme.colors.secondary },
+            { color: inputMode === 'camera' ? onActiveColor : theme.colors.secondary },
           ]}
         >
           {t('cameraTab')}
@@ -167,7 +170,7 @@ export default function ScanScreen() {
       <Pressable
         style={[
           styles.modeTab,
-          inputMode === 'search' && { backgroundColor: theme.colors.primary },
+          inputMode === 'search' && { backgroundColor: activeColor },
         ]}
         onPress={() => setInputMode('search')}
         accessibilityRole="button"
@@ -177,7 +180,7 @@ export default function ScanScreen() {
         <Text
           style={[
             styles.modeTabText,
-            { color: inputMode === 'search' ? theme.colors.onPrimary : theme.colors.secondary },
+            { color: inputMode === 'search' ? onActiveColor : theme.colors.secondary },
           ]}
         >
           {t('searchTab')}
@@ -210,12 +213,14 @@ export default function ScanScreen() {
             accessibilityLabel={t('searchInputA11y')}
           />
           <Pressable
-            style={[styles.searchButton, { backgroundColor: theme.colors.primary }]}
+            style={[styles.searchButton, { backgroundColor: activeColor }]}
             onPress={handleSearch}
             accessibilityRole="button"
             accessibilityLabel={t('searchButtonA11y')}
           >
-            <Text style={styles.searchButtonText}>{t('searchButton')}</Text>
+            <Text style={[styles.searchButtonText, { color: onActiveColor }]}>
+              {t('searchButton')}
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -238,13 +243,15 @@ export default function ScanScreen() {
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
           {modeToggle}
           <Pressable
-            style={[styles.webCaptureButton, { backgroundColor: theme.colors.primary }]}
+            style={[styles.webCaptureButton, { backgroundColor: activeColor }]}
             onPress={() => webInputRef.current?.click()}
             accessibilityRole="button"
             accessibilityLabel={t('captureA11y')}
             accessibilityHint={t('captureHint')}
           >
-            <Text style={styles.webCaptureButtonText}>{t('takePhoto')}</Text>
+            <Text style={[styles.webCaptureButtonText, { color: onActiveColor }]}>
+              {t('takePhoto')}
+            </Text>
           </Pressable>
         </View>
       </>
@@ -273,12 +280,17 @@ export default function ScanScreen() {
           {t('permissionText')}
         </Text>
         <Pressable
-          style={[styles.permissionButton, { backgroundColor: theme.colors.primary }]}
+          style={[styles.permissionButton, { backgroundColor: activeColor }]}
           onPress={requestPermission}
           accessibilityRole="button"
           accessibilityLabel={t('allowCameraA11y')}
         >
-          <Text style={[styles.permissionButtonText, { fontSize: theme.typography.fontSizeBase }]}>
+          <Text
+            style={[
+              styles.permissionButtonText,
+              { fontSize: theme.typography.fontSizeBase, color: onActiveColor },
+            ]}
+          >
             {t('allowCamera')}
           </Text>
         </Pressable>
@@ -295,7 +307,40 @@ export default function ScanScreen() {
           shutter press on top of the CameraView. */}
       <View style={styles.overlay} pointerEvents="box-none">
         {modeToggle}
-        <View style={[styles.frame, { borderColor: theme.colors.primary }]} pointerEvents="none" />
+
+        {/* Viewfinder: corner-bracket markers + scanning line */}
+        <View style={styles.frameWrapper} pointerEvents="none">
+          {/* Top-left corner */}
+          <View
+            style={[styles.corner, styles.cornerTL, { borderColor: activeColor }]}
+          />
+          {/* Top-right corner */}
+          <View
+            style={[styles.corner, styles.cornerTR, { borderColor: activeColor }]}
+          />
+          {/* Bottom-left corner */}
+          <View
+            style={[styles.corner, styles.cornerBL, { borderColor: activeColor }]}
+          />
+          {/* Bottom-right corner */}
+          <View
+            style={[styles.corner, styles.cornerBR, { borderColor: activeColor }]}
+          />
+          {/* Scanning line — horizontal accent bar across the frame centre */}
+          <View
+            style={[
+              styles.scanLine,
+              {
+                backgroundColor: activeColor,
+                shadowColor: activeColor,
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.6,
+                shadowRadius: 4,
+              },
+            ]}
+          />
+        </View>
+
         <View style={styles.cameraControls}>
           <Pressable
             style={styles.flipButton}
@@ -305,15 +350,16 @@ export default function ScanScreen() {
           >
             <Text style={styles.flipButtonText}>{t('flipCamera')}</Text>
           </Pressable>
+          {/* Shutter: outer ring in activeColor, inner disc in onSurface */}
           <Pressable
-            style={[styles.captureButton, { backgroundColor: theme.colors.primary }]}
+            style={[styles.captureButton, { borderColor: activeColor }]}
             onPress={handleCapture}
             disabled={capturing}
             accessibilityRole="button"
             accessibilityLabel={t('captureA11y')}
             accessibilityHint={t('captureHint')}
           >
-            <View style={[styles.captureInner, { backgroundColor: theme.colors.background }]} />
+            <View style={[styles.captureInner, { backgroundColor: theme.colors.onSurface }]} />
           </Pressable>
         </View>
       </View>
@@ -348,11 +394,49 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 14,
   },
-  frame: {
+  // Viewfinder frame area — contains corner brackets and scan line.
+  frameWrapper: {
     width: 240,
     height: 340,
-    borderWidth: 2,
-    borderRadius: 12,
+    position: 'relative',
+  },
+  // Each corner is a 40×40 view with only 2 border sides visible.
+  corner: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    borderWidth: 3,
+  },
+  cornerTL: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0, borderTopLeftRadius: 8 },
+  cornerTR: {
+    top: 0,
+    right: 0,
+    borderLeftWidth: 0,
+    borderBottomWidth: 0,
+    borderTopRightRadius: 8,
+  },
+  cornerBL: {
+    bottom: 0,
+    left: 0,
+    borderRightWidth: 0,
+    borderTopWidth: 0,
+    borderBottomLeftRadius: 8,
+  },
+  cornerBR: {
+    bottom: 0,
+    right: 0,
+    borderLeftWidth: 0,
+    borderTopWidth: 0,
+    borderBottomRightRadius: 8,
+  },
+  // Horizontal scan line centred vertically in the frame.
+  scanLine: {
+    position: 'absolute',
+    top: '50%',
+    left: 8,
+    right: 8,
+    height: 1,
+    opacity: 0.5,
   },
   cameraControls: {
     flexDirection: 'row',
@@ -377,6 +461,8 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
+    borderWidth: 3,
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
   },

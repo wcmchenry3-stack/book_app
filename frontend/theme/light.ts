@@ -72,4 +72,12 @@ export const lightTheme = {
   isDark: false,
 } as const;
 
-export type Theme = typeof lightTheme;
+// Theme type: colors are string (not literal) so darkTheme can use different hex values.
+export type Theme = {
+  colors: Record<keyof typeof lightTheme.colors, string>;
+  typography: typeof lightTheme.typography;
+  spacing: typeof lightTheme.spacing;
+  radius: typeof lightTheme.radius;
+  touchTarget: typeof lightTheme.touchTarget;
+  isDark: boolean;
+};

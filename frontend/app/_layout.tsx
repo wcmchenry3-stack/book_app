@@ -12,7 +12,7 @@ Sentry.addBreadcrumb({
 
 import '../src/i18n/i18n';
 
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, Platform, StyleSheet, Text, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { NotoSerif_700Bold, NotoSerif_800ExtraBold } from '@expo-google-fonts/noto-serif';
@@ -46,6 +46,26 @@ function HeaderLogo() {
       />
       <Text style={[headerStyles.wordmark, { color: theme.colors.primary }]}>BookshelfAI</Text>
     </View>
+  );
+}
+
+// Separate component so useTheme() can be called inside ThemeProvider.
+function InnerStack() {
+  const { theme } = useTheme();
+  // Dark mode: semi-transparent frosted-glass header; light mode: transparent.
+  const headerBg = theme.isDark ? 'rgba(17,19,23,0.7)' : 'transparent';
+  const webStyle = Platform.OS === 'web' && theme.isDark ? { backdropFilter: 'blur(20px)' } : {};
+
+  return (
+    <Stack
+      screenOptions={{
+        headerLeft: () => <HeaderLogo />,
+        headerRight: () => <ThemeToggleButton />,
+        headerStyle: { backgroundColor: headerBg, ...webStyle },
+        headerShadowVisible: false,
+        headerTransparent: theme.isDark,
+      }}
+    />
   );
 }
 
@@ -95,14 +115,7 @@ function RootLayout() {
           <AuthProvider>
             <ScanJobProvider>
               <InAppBanner />
-              <Stack
-                screenOptions={{
-                  headerLeft: () => <HeaderLogo />,
-                  headerRight: () => <ThemeToggleButton />,
-                  headerStyle: { backgroundColor: 'transparent' },
-                  headerShadowVisible: false,
-                }}
-              />
+              <InnerStack />
               <GlobalBookPicker />
             </ScanJobProvider>
           </AuthProvider>

@@ -54,6 +54,9 @@ const NEXT_STATUS: Record<string, string> = {
 export default function MyBooksScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation('my-books');
+  // Gold tertiary in dark mode, primary in light mode — active/CTA accent.
+  const activeColor = theme.isDark ? theme.colors.tertiary : theme.colors.primary;
+  const onActiveColor = theme.isDark ? theme.colors.onTertiary : theme.colors.onPrimary;
   const [books, setBooks] = useState<UserBook[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -142,7 +145,7 @@ export default function MyBooksScreen() {
             return (
               <Pressable
                 key={key}
-                style={[styles.tab, active && { backgroundColor: theme.colors.primary }]}
+                style={[styles.tab, active && { backgroundColor: activeColor }]}
                 onPress={() => handleTabChange(key)}
                 accessibilityRole="button"
                 accessibilityLabel={t('filterBy', { label })}
@@ -152,7 +155,7 @@ export default function MyBooksScreen() {
                   style={[
                     styles.tabText,
                     {
-                      color: active ? theme.colors.onPrimary : theme.colors.secondary,
+                      color: active ? onActiveColor : theme.colors.secondary,
                       fontSize: theme.typography.fontSizeSM,
                     },
                   ]}
@@ -188,7 +191,7 @@ export default function MyBooksScreen() {
                 setRefreshing(true);
                 fetchBooks();
               }}
-              tintColor={theme.colors.primary}
+              tintColor={activeColor}
             />
           }
           renderItem={({ item }) => (
@@ -243,7 +246,7 @@ export default function MyBooksScreen() {
                     {
                       backgroundColor:
                         item.status === 'reading'
-                          ? theme.colors.primary
+                          ? activeColor
                           : item.status === 'read'
                             ? theme.colors.secondaryContainer
                             : theme.colors.surfaceContainerHigh,
@@ -256,7 +259,7 @@ export default function MyBooksScreen() {
                       {
                         color:
                           item.status === 'reading'
-                            ? theme.colors.onPrimary
+                            ? onActiveColor
                             : item.status === 'read'
                               ? theme.colors.onSecondaryContainer
                               : theme.colors.onSurfaceVariant,
@@ -302,7 +305,7 @@ export default function MyBooksScreen() {
                 hitSlop={8}
               >
                 <Text
-                  style={{ color: theme.colors.primary, fontSize: theme.typography.fontSizeBase }}
+                  style={{ color: activeColor, fontSize: theme.typography.fontSizeBase }}
                 >
                   {t('close', { ns: 'common' })}
                 </Text>
@@ -347,7 +350,7 @@ export default function MyBooksScreen() {
 
               {NEXT_STATUS[selected.status] && (
                 <Pressable
-                  style={[styles.sheetButton, { backgroundColor: theme.colors.primary }]}
+                  style={[styles.sheetButton, { backgroundColor: activeColor }]}
                   onPress={() => handleAdvanceStatus(selected)}
                   accessibilityRole="button"
                   accessibilityLabel={t('markAsA11y', {
@@ -355,7 +358,10 @@ export default function MyBooksScreen() {
                   })}
                 >
                   <Text
-                    style={[styles.sheetButtonText, { fontSize: theme.typography.fontSizeBase }]}
+                    style={[
+                      styles.sheetButtonText,
+                      { fontSize: theme.typography.fontSizeBase, color: onActiveColor },
+                    ]}
                   >
                     {t('markAs', { status: t(`status.${NEXT_STATUS[selected.status]}`) })}
                   </Text>
