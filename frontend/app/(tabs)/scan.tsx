@@ -215,7 +215,9 @@ export default function ScanScreen() {
             accessibilityRole="button"
             accessibilityLabel={t('searchButtonA11y')}
           >
-            <Text style={[styles.searchButtonText, { color: theme.colors.onPrimary }]}>{t('searchButton')}</Text>
+            <Text style={[styles.searchButtonText, { color: theme.colors.onPrimary }]}>
+              {t('searchButton')}
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -244,7 +246,9 @@ export default function ScanScreen() {
             accessibilityLabel={t('captureA11y')}
             accessibilityHint={t('captureHint')}
           >
-            <Text style={[styles.webCaptureButtonText, { color: theme.colors.onPrimary }]}>{t('takePhoto')}</Text>
+            <Text style={[styles.webCaptureButtonText, { color: theme.colors.onPrimary }]}>
+              {t('takePhoto')}
+            </Text>
           </Pressable>
         </View>
       </>
@@ -278,7 +282,12 @@ export default function ScanScreen() {
           accessibilityRole="button"
           accessibilityLabel={t('allowCameraA11y')}
         >
-          <Text style={[styles.permissionButtonText, { fontSize: theme.typography.fontSizeBase, color: theme.colors.onPrimary }]}>
+          <Text
+            style={[
+              styles.permissionButtonText,
+              { fontSize: theme.typography.fontSizeBase, color: theme.colors.onPrimary },
+            ]}
+          >
             {t('allowCamera')}
           </Text>
         </Pressable>

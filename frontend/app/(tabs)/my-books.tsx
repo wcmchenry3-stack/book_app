@@ -63,11 +63,24 @@ function cardWidth() {
   return (screenWidth - SCREEN_PADDING * 2 - COLUMN_GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
 }
 
-function statusBadgeColors(status: string, theme: ReturnType<typeof import('../../hooks/useTheme').useTheme>['theme']) {
-  if (status === 'reading') return { bg: theme.colors.primary, text: theme.colors.onPrimary, overlay: true };
-  if (status === 'read') return { bg: theme.colors.secondaryContainer, text: theme.colors.onSecondaryContainer, overlay: true };
+function statusBadgeColors(
+  status: string,
+  theme: ReturnType<typeof import('../../hooks/useTheme').useTheme>['theme']
+) {
+  if (status === 'reading')
+    return { bg: theme.colors.primary, text: theme.colors.onPrimary, overlay: true };
+  if (status === 'read')
+    return {
+      bg: theme.colors.secondaryContainer,
+      text: theme.colors.onSecondaryContainer,
+      overlay: true,
+    };
   // wishlisted / purchased — subtle chip below author
-  return { bg: theme.colors.surfaceContainerHigh, text: theme.colors.onSurfaceVariant, overlay: false };
+  return {
+    bg: theme.colors.surfaceContainerHigh,
+    text: theme.colors.onSurfaceVariant,
+    overlay: false,
+  };
 }
 
 export default function MyBooksScreen() {
@@ -143,8 +156,7 @@ export default function MyBooksScreen() {
     if (!query.trim()) return books;
     const q = query.toLowerCase();
     return books.filter(
-      (b) =>
-        b.book.title.toLowerCase().includes(q) || b.book.author.toLowerCase().includes(q)
+      (b) => b.book.title.toLowerCase().includes(q) || b.book.author.toLowerCase().includes(q)
     );
   }, [books, query]);
 
@@ -164,10 +176,7 @@ export default function MyBooksScreen() {
       {/* Search bar */}
       <View style={styles.searchRow}>
         <View
-          style={[
-            styles.searchWrap,
-            { backgroundColor: theme.colors.surfaceContainerHighest },
-          ]}
+          style={[styles.searchWrap, { backgroundColor: theme.colors.surfaceContainerHighest }]}
         >
           <MaterialIcons
             name="search"
@@ -294,7 +303,11 @@ export default function MyBooksScreen() {
                 <View
                   style={[
                     styles.coverWrap,
-                    { width: cw, height: coverHeight, backgroundColor: theme.colors.surfaceContainerHighest },
+                    {
+                      width: cw,
+                      height: coverHeight,
+                      backgroundColor: theme.colors.surfaceContainerHighest,
+                    },
                   ]}
                 >
                   {item.book.cover_url ? (
@@ -449,10 +462,7 @@ export default function MyBooksScreen() {
               )}
 
               <Pressable
-                style={[
-                  styles.sheetButton,
-                  { backgroundColor: theme.colors.surfaceContainerHigh },
-                ]}
+                style={[styles.sheetButton, { backgroundColor: theme.colors.surfaceContainerHigh }]}
                 onPress={() => handleRemove(selected)}
                 accessibilityRole="button"
                 accessibilityLabel={t('removeBookA11y', { title: selected.book.title })}

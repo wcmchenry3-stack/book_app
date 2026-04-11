@@ -177,7 +177,12 @@ export default function WishlistScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={t('markPurchasedA11y', { title: item.book.title })}
                 >
-                  <Text style={[styles.actionText, { fontSize: theme.typography.fontSizeSM, color: theme.colors.onPrimary }]}>
+                  <Text
+                    style={[
+                      styles.actionText,
+                      { fontSize: theme.typography.fontSizeSM, color: theme.colors.onPrimary },
+                    ]}
+                  >
                     {t('markPurchased')}
                   </Text>
                 </Pressable>
