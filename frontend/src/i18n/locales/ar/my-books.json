@@ -25,5 +25,9 @@
   "closeDetail": "إغلاق التفاصيل",
   "errorLoadBooks": "تعذر تحميل الكتب.",
   "errorUpdateStatus": "تعذر تحديث الحالة.",
-  "errorRemoveBook": "تعذر إزالة الكتاب."
+  "errorRemoveBook": "تعذر إزالة الكتاب.",
+  "searchPlaceholder": "__NEEDS_TRANSLATION__",
+  "searchA11y": "__NEEDS_TRANSLATION__",
+  "sectionTitle": "__NEEDS_TRANSLATION__",
+  "bookCount": "__NEEDS_TRANSLATION__"
 }

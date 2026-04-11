@@ -25,5 +25,9 @@
   "closeDetail": "Sluit detail",
   "errorLoadBooks": "Kon boeken niet laden.",
   "errorUpdateStatus": "Kon status niet bijwerken.",
-  "errorRemoveBook": "Kon boek niet verwijderen."
+  "errorRemoveBook": "Kon boek niet verwijderen.",
+  "searchPlaceholder": "__NEEDS_TRANSLATION__",
+  "searchA11y": "__NEEDS_TRANSLATION__",
+  "sectionTitle": "__NEEDS_TRANSLATION__",
+  "bookCount": "__NEEDS_TRANSLATION__"
 }

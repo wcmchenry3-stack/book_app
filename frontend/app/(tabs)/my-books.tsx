@@ -1,6 +1,7 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
+  Dimensions,
   FlatList,
   Image,
   Modal,
@@ -9,8 +10,10 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -51,6 +54,22 @@ const NEXT_STATUS: Record<string, string> = {
   reading: 'read',
 };
 
+const SCREEN_PADDING = 16;
+const COLUMN_GAP = 12;
+const NUM_COLUMNS = 2;
+
+function cardWidth() {
+  const screenWidth = Dimensions.get('window').width;
+  return (screenWidth - SCREEN_PADDING * 2 - COLUMN_GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
+}
+
+function statusBadgeColors(status: string, theme: ReturnType<typeof import('../../hooks/useTheme').useTheme>['theme']) {
+  if (status === 'reading') return { bg: theme.colors.primary, text: theme.colors.onPrimary, overlay: true };
+  if (status === 'read') return { bg: theme.colors.secondaryContainer, text: theme.colors.onSecondaryContainer, overlay: true };
+  // wishlisted / purchased — subtle chip below author
+  return { bg: theme.colors.surfaceContainerHigh, text: theme.colors.onSurfaceVariant, overlay: false };
+}
+
 export default function MyBooksScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation('my-books');
@@ -59,6 +78,7 @@ export default function MyBooksScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<Status>('all');
   const [selected, setSelected] = useState<UserBook | null>(null);
+  const [query, setQuery] = useState('');
 
   async function fetchBooks(tab: Status = activeTab) {
     try {
@@ -82,6 +102,7 @@ export default function MyBooksScreen() {
 
   function handleTabChange(tab: Status) {
     setActiveTab(tab);
+    setQuery('');
     setLoading(true);
     fetchBooks(tab);
   }
@@ -89,7 +110,6 @@ export default function MyBooksScreen() {
   async function handleAdvanceStatus(item: UserBook) {
     const next = NEXT_STATUS[item.status];
     if (!next) return;
-    // Optimistic: on "all" tab update status in-place; on filtered tabs remove the item
     setBooks((prev) =>
       activeTab === 'all'
         ? prev.map((b) => (b.id === item.id ? { ...b, status: next } : b))
@@ -119,6 +139,18 @@ export default function MyBooksScreen() {
     }
   }
 
+  const filteredBooks = useMemo(() => {
+    if (!query.trim()) return books;
+    const q = query.toLowerCase();
+    return books.filter(
+      (b) =>
+        b.book.title.toLowerCase().includes(q) || b.book.author.toLowerCase().includes(q)
+    );
+  }, [books, query]);
+
+  const cw = cardWidth();
+  const coverHeight = cw * 1.5;
+
   if (loading) {
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -129,6 +161,35 @@ export default function MyBooksScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      {/* Search bar */}
+      <View style={styles.searchRow}>
+        <View
+          style={[
+            styles.searchWrap,
+            { backgroundColor: theme.colors.surfaceContainerHighest },
+          ]}
+        >
+          <MaterialIcons
+            name="search"
+            size={20}
+            color={theme.colors.outline}
+            style={styles.searchIcon}
+          />
+          <TextInput
+            style={[
+              styles.searchInput,
+              { color: theme.colors.onSurface, fontSize: theme.typography.fontSizeBase },
+            ]}
+            value={query}
+            onChangeText={setQuery}
+            placeholder={t('searchPlaceholder')}
+            placeholderTextColor={theme.colors.outline}
+            returnKeyType="search"
+            accessibilityLabel={t('searchA11y')}
+          />
+        </View>
+      </View>
+
       {/* Filter tabs */}
       <ScrollView
         horizontal
@@ -152,7 +213,7 @@ export default function MyBooksScreen() {
                   style={[
                     styles.tabText,
                     {
-                      color: active ? theme.colors.onPrimary : theme.colors.secondary,
+                      color: active ? theme.colors.onPrimary : theme.colors.onSurfaceVariant,
                       fontSize: theme.typography.fontSizeSM,
                     },
                   ]}
@@ -165,7 +226,30 @@ export default function MyBooksScreen() {
         </View>
       </ScrollView>
 
-      {books.length === 0 ? (
+      {/* Section header */}
+      {books.length > 0 && (
+        <View style={styles.sectionHeader}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: theme.colors.onSurface, fontFamily: theme.typography.fontFamilyHeadline },
+            ]}
+          >
+            {t('sectionTitle')}
+          </Text>
+          <Text
+            style={[
+              styles.sectionSubtitle,
+              { color: theme.colors.secondary, fontSize: theme.typography.fontSizeSM },
+            ]}
+          >
+            {t('bookCount', { count: books.length })}
+          </Text>
+        </View>
+      )}
+
+      {/* Book grid */}
+      {filteredBooks.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text
             style={[
@@ -178,9 +262,11 @@ export default function MyBooksScreen() {
         </View>
       ) : (
         <FlatList
-          data={books}
+          data={filteredBooks}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
+          numColumns={NUM_COLUMNS}
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={styles.gridContent}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -191,39 +277,57 @@ export default function MyBooksScreen() {
               tintColor={theme.colors.primary}
             />
           }
-          renderItem={({ item }) => (
-            <Pressable
-              style={[styles.card, { backgroundColor: theme.colors.surfaceContainerLow }]}
-              onPress={() => setSelected(item)}
-              accessibilityRole="button"
-              accessibilityLabel={t('bookCardA11y', {
-                title: item.book.title,
-                status: item.status,
-              })}
-              accessibilityHint={t('bookCardHint')}
-            >
-              {item.book.cover_url ? (
-                <Image
-                  source={{ uri: item.book.cover_url }}
-                  style={styles.cover}
-                  accessibilityLabel={t('coverAlt', { ns: 'common', title: item.book.title })}
-                />
-              ) : (
+          renderItem={({ item }) => {
+            const badge = statusBadgeColors(item.status, theme);
+            return (
+              <Pressable
+                style={[styles.card, { width: cw }]}
+                onPress={() => setSelected(item)}
+                accessibilityRole="button"
+                accessibilityLabel={t('bookCardA11y', {
+                  title: item.book.title,
+                  status: item.status,
+                })}
+                accessibilityHint={t('bookCardHint')}
+              >
+                {/* Cover */}
                 <View
                   style={[
-                    styles.cover,
-                    styles.coverPlaceholder,
-                    { backgroundColor: theme.colors.border },
+                    styles.coverWrap,
+                    { width: cw, height: coverHeight, backgroundColor: theme.colors.surfaceContainerHighest },
                   ]}
-                  accessibilityLabel={t('noCoverAvailable', { ns: 'common' })}
-                />
-              )}
+                >
+                  {item.book.cover_url ? (
+                    <Image
+                      source={{ uri: item.book.cover_url }}
+                      style={StyleSheet.absoluteFill}
+                      resizeMode="cover"
+                      accessibilityLabel={t('coverAlt', { ns: 'common', title: item.book.title })}
+                    />
+                  ) : (
+                    <View
+                      style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.border }]}
+                      accessibilityLabel={t('noCoverAvailable', { ns: 'common' })}
+                    />
+                  )}
+                  {badge.overlay && (
+                    <View style={[styles.badgeOverlay, { backgroundColor: badge.bg }]}>
+                      <Text style={[styles.badgeText, { color: badge.text }]}>
+                        {t(`status.${item.status}`, item.status)}
+                      </Text>
+                    </View>
+                  )}
+                </View>
 
-              <View style={styles.info}>
+                {/* Title + author */}
                 <Text
                   style={[
-                    styles.bookTitle,
-                    { color: theme.colors.text, fontSize: theme.typography.fontSizeBase },
+                    styles.cardTitle,
+                    {
+                      color: theme.colors.onSurface,
+                      fontFamily: theme.typography.fontFamilyHeadline,
+                      fontSize: theme.typography.fontSizeBase,
+                    },
                   ]}
                   numberOfLines={2}
                 >
@@ -231,45 +335,24 @@ export default function MyBooksScreen() {
                 </Text>
                 <Text
                   style={[
-                    { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeSM },
+                    styles.cardAuthor,
+                    { color: theme.colors.secondary, fontSize: theme.typography.fontSizeXS },
                   ]}
                   numberOfLines={1}
                 >
                   {item.book.author}
                 </Text>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    {
-                      backgroundColor:
-                        item.status === 'reading'
-                          ? theme.colors.primary
-                          : item.status === 'read'
-                            ? theme.colors.secondaryContainer
-                            : theme.colors.surfaceContainerHigh,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.statusText,
-                      {
-                        color:
-                          item.status === 'reading'
-                            ? theme.colors.onPrimary
-                            : item.status === 'read'
-                              ? theme.colors.onSecondaryContainer
-                              : theme.colors.onSurfaceVariant,
-                        fontSize: 11,
-                      },
-                    ]}
-                  >
-                    {t(`status.${item.status}`, item.status)}
-                  </Text>
-                </View>
-              </View>
-            </Pressable>
-          )}
+                {/* Status chip for non-overlay statuses */}
+                {!badge.overlay && (
+                  <View style={[styles.statusChip, { backgroundColor: badge.bg }]}>
+                    <Text style={[styles.badgeText, { color: badge.text }]}>
+                      {t(`status.${item.status}`, item.status)}
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+            );
+          }}
         />
       )}
 
@@ -355,7 +438,10 @@ export default function MyBooksScreen() {
                   })}
                 >
                   <Text
-                    style={[styles.sheetButtonText, { fontSize: theme.typography.fontSizeBase, color: theme.colors.onPrimary }]}
+                    style={[
+                      styles.sheetButtonText,
+                      { fontSize: theme.typography.fontSizeBase, color: theme.colors.onPrimary },
+                    ]}
                   >
                     {t('markAs', { status: t(`status.${NEXT_STATUS[selected.status]}`) })}
                   </Text>
@@ -363,7 +449,10 @@ export default function MyBooksScreen() {
               )}
 
               <Pressable
-                style={[styles.sheetButton, { backgroundColor: theme.colors.surfaceContainerHigh }]}
+                style={[
+                  styles.sheetButton,
+                  { backgroundColor: theme.colors.surfaceContainerHigh },
+                ]}
                 onPress={() => handleRemove(selected)}
                 accessibilityRole="button"
                 accessibilityLabel={t('removeBookA11y', { title: selected.book.title })}
@@ -390,7 +479,21 @@ export default function MyBooksScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  tabsContainer: { paddingHorizontal: 16, paddingVertical: 12 },
+
+  // Search
+  searchRow: { paddingHorizontal: SCREEN_PADDING, paddingTop: 12, paddingBottom: 4 },
+  searchWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 48,
+  },
+  searchIcon: { marginRight: 8 },
+  searchInput: { flex: 1, height: '100%' },
+
+  // Filter tabs
+  tabsContainer: { paddingHorizontal: SCREEN_PADDING, paddingVertical: 8 },
   tabsTrack: {
     flexDirection: 'row',
     borderRadius: 12,
@@ -405,27 +508,75 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabText: { fontWeight: '600' },
-  list: { padding: 16, gap: 12 },
-  emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
-  emptyText: { textAlign: 'center' },
-  card: {
-    flexDirection: 'row',
+
+  // Section header
+  sectionHeader: {
+    paddingHorizontal: SCREEN_PADDING,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 32,
+    fontWeight: '700',
+    letterSpacing: -0.5,
+    marginBottom: 2,
+  },
+  sectionSubtitle: { fontWeight: '500', opacity: 0.8 },
+
+  // Grid
+  gridContent: {
+    paddingHorizontal: SCREEN_PADDING,
+    paddingBottom: 32,
+  },
+  row: {
+    gap: COLUMN_GAP,
+    marginBottom: 24,
+  },
+  card: { flexDirection: 'column' },
+
+  // Book card cover
+  coverWrap: {
     borderRadius: 12,
     overflow: 'hidden',
-    minHeight: 44,
+    marginBottom: 10,
   },
-  cover: { width: 72, height: 108 },
-  coverPlaceholder: { opacity: 0.4 },
-  info: { flex: 1, padding: 12, gap: 4 },
-  bookTitle: { fontWeight: '600' },
-  statusBadge: {
-    alignSelf: 'flex-start',
+  badgeOverlay: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginTop: 4,
+    paddingVertical: 4,
+    borderRadius: 6,
   },
-  statusText: { fontWeight: '600' },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  cardTitle: {
+    fontWeight: '700',
+    lineHeight: 22,
+    marginBottom: 2,
+  },
+  cardAuthor: {
+    fontWeight: '500',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  statusChip: {
+    alignSelf: 'flex-start',
+    marginTop: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+
+  // Empty / loading
+  emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
+  emptyText: { textAlign: 'center' },
+
+  // Detail sheet
   sheet: { flex: 1 },
   sheetHeader: {
     flexDirection: 'row',

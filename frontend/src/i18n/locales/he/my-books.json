@@ -25,5 +25,9 @@
   "closeDetail": "סגור פרטים",
   "errorLoadBooks": "לא ניתן לטעון ספרים.",
   "errorUpdateStatus": "לא ניתן לעדכן סטטוס.",
-  "errorRemoveBook": "לא ניתן להסיר ספר."
+  "errorRemoveBook": "לא ניתן להסיר ספר.",
+  "searchPlaceholder": "__NEEDS_TRANSLATION__",
+  "searchA11y": "__NEEDS_TRANSLATION__",
+  "sectionTitle": "__NEEDS_TRANSLATION__",
+  "bookCount": "__NEEDS_TRANSLATION__"
 }
