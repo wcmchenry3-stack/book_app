@@ -41,6 +41,7 @@ function HeaderLogo() {
       <Image
         source={require('../assets/icon.png')}
         style={headerStyles.logo}
+        resizeMode="contain"
         accessibilityLabel="BookshelfAI"
         accessibilityRole="image"
       />
@@ -73,7 +74,7 @@ function InnerStack() {
 
 const headerStyles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logo: { width: 28, height: 28, borderRadius: 6 },
+  logo: { width: 40, height: 40, borderRadius: 8 },
   wordmark: {
     fontSize: 20,
     fontFamily: 'NotoSerif_700Bold',

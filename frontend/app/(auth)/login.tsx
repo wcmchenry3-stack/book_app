@@ -55,6 +55,7 @@ export default function LoginScreen() {
       <Image
         source={require('../../assets/logo.png')}
         style={styles.logo}
+        resizeMode="contain"
         accessibilityLabel="BookshelfAI"
         accessibilityRole="image"
       />
@@ -132,9 +133,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   logo: {
-    width: 96,
-    height: 96,
-    borderRadius: 20,
+    width: 120,
+    height: 120,
+    borderRadius: 24,
     marginBottom: 24,
   },
   title: {
