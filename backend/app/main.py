@@ -1,5 +1,7 @@
+import asyncio
 import hmac
 import logging
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 
 import sentry_sdk
@@ -25,6 +27,7 @@ from app.core.database import AsyncSessionLocal
 from app.core.limiter import limiter
 from app.core.logging import configure_logging, new_request_id, request_id_var
 from app.core.sentry_context import SentryContextMiddleware
+from app.services.token_cleanup import cleanup_expired_tokens
 
 configure_logging()
 
@@ -115,11 +118,34 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
+async def _validate_config() -> None:
+    """Fail fast on misconfigured deployments before any request is served."""
+    if settings.turnstile_required and not settings.turnstile_secret_key:
+        raise RuntimeError(
+            "TURNSTILE_SECRET_KEY must be configured when TURNSTILE_REQUIRED=true. "
+            "Set TURNSTILE_REQUIRED=false to explicitly disable bot protection "
+            "(dev / test environments only)."
+        )
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await _validate_config()
+    cleanup_task = asyncio.create_task(cleanup_expired_tokens())
+    yield
+    cleanup_task.cancel()
+    try:
+        await cleanup_task
+    except asyncio.CancelledError:
+        pass
+
+
 app = FastAPI(
     title="Bookshelf API",
     version="0.1.0",
     docs_url="/docs" if settings.environment != "production" else None,
     redoc_url=None,
+    lifespan=lifespan,
 )
 
 

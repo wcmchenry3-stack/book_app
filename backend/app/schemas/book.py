@@ -4,19 +4,19 @@ import uuid
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class EditionBase(BaseModel):
-    isbn_13: str | None = None
-    isbn_10: str | None = None
-    publisher: str | None = None
+    isbn_13: str | None = Field(None, max_length=13)
+    isbn_10: str | None = Field(None, max_length=10)
+    publisher: str | None = Field(None, max_length=500)
     publish_year: int | None = None
     format: (
         Literal["hardcover", "paperback", "ebook", "audiobook", "unknown"] | None
     ) = None
     page_count: int | None = None
-    open_library_edition_id: str | None = None
+    open_library_edition_id: str | None = Field(None, max_length=50)
 
 
 class EditionRead(EditionBase):
@@ -34,12 +34,12 @@ class EditionPreview(EditionBase):
 
 
 class BookBase(BaseModel):
-    title: str
-    author: str
-    description: str | None = None
-    cover_url: str | None = None
+    title: str = Field(..., min_length=1, max_length=500)
+    author: str = Field(..., min_length=1, max_length=500)
+    description: str | None = Field(None, max_length=5000)
+    cover_url: str | None = Field(None, max_length=2048)
     subjects: list[str] | None = None
-    language: str = "en"
+    language: str = Field("en", max_length=10)
 
 
 class BookRead(BookBase):
@@ -57,12 +57,12 @@ class EnrichedBook(BaseModel):
     """Returned by POST /scan and GET /books/search."""
 
     book_id: uuid.UUID | None = None  # null if not yet in DB
-    open_library_work_id: str | None = None
-    google_books_id: str | None = None
-    title: str
-    author: str
-    description: str | None = None
-    cover_url: str | None = None
+    open_library_work_id: str | None = Field(None, max_length=50)
+    google_books_id: str | None = Field(None, max_length=50)
+    title: str = Field(..., max_length=500)
+    author: str = Field(..., max_length=500)
+    description: str | None = Field(None, max_length=5000)
+    cover_url: str | None = Field(None, max_length=2048)
     subjects: list[str] = []
     confidence: float  # 0–1, from image recognition
     already_in_library: bool = False

@@ -129,9 +129,11 @@ class TestTurnstileProtection:
 
         with patch("app.api.scan.settings") as mock_settings:
             mock_settings.rate_limit_scan = "10/minute"
+            mock_settings.turnstile_required = True
             mock_settings.turnstile_secret_key = (
                 "0x0000000000000000000000000000000000000000"
             )
+            mock_settings.clamav_enabled = False
             yield TestClient(app), mock_settings
 
         app.dependency_overrides.clear()
@@ -169,8 +171,8 @@ class TestTurnstileProtection:
             )
         assert resp.status_code == 200
 
-    def test_skipped_when_secret_key_absent(self):
-        """When TURNSTILE_SECRET_KEY is not set, the check is skipped entirely."""
+    def test_skipped_when_turnstile_disabled(self):
+        """When TURNSTILE_REQUIRED=false, the check is skipped entirely."""
         from app.auth.dependencies import get_current_user
         from app.core.database import get_db
 
@@ -187,7 +189,8 @@ class TestTurnstileProtection:
             patch("app.api.scan.DeduplicationService"),
         ):
             mock_settings.rate_limit_scan = "10/minute"
-            mock_settings.turnstile_secret_key = ""  # key not configured
+            mock_settings.turnstile_required = False  # explicitly disabled
+            mock_settings.clamav_enabled = False
             mock_id_cls.return_value.identify = AsyncMock(return_value=[])
             client = TestClient(app)
             resp = client.post("/scan", files={"file": _image_file()})

@@ -10,6 +10,11 @@ _DUMMY_DB_URL = "postgresql+asyncpg://test:test@localhost/test"
 if not os.environ.get("DATABASE_URL"):
     os.environ["DATABASE_URL"] = _DUMMY_DB_URL
 
+# Disable Turnstile bot-protection in tests. Production deployments must configure
+# TURNSTILE_SECRET_KEY; the startup handler enforces this when TURNSTILE_REQUIRED=true.
+if not os.environ.get("TURNSTILE_REQUIRED"):
+    os.environ["TURNSTILE_REQUIRED"] = "false"
+
 
 def pytest_configure(config):
     """Register the 'integration' marker for DB integration tests."""

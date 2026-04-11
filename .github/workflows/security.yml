@@ -8,6 +8,7 @@ on:
     branches: [dev]
     paths:
       - 'backend/app/**'
+      - 'backend/tests/security/**'
       - 'backend/requirements*.txt'
       - '.github/workflows/security.yml'
       - '.zap/**'
@@ -128,6 +129,8 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
       - name: Run security test suite
+        env:
+          TURNSTILE_REQUIRED: "false"
         run: pytest -m security -v --tb=short
 
   # ── DAST: OWASP ZAP active scan ───────────────────────────────────────────
@@ -148,10 +151,10 @@ jobs:
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-z "-config scanner.attackStrength=LOW"'
           allow_issue_writing: false
-          # Report findings but don't fail — active scans against production
-          # may surface acceptable known issues. Review the artifact and
-          # promote to fail_action: true once a clean baseline is established.
-          fail_action: false
+          # rules.tsv classifies SQLi, XSS, RCE, and path traversal as FAIL.
+          # WARN/IGNORE rules suppress known false positives for a JSON API.
+          # Promoted from false after security hardening pass (PR #234).
+          fail_action: true
           artifact_name: zap-full-scan-report
       - uses: actions/upload-artifact@v7
         if: always()
