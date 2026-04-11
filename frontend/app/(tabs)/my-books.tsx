@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
-  Dimensions,
   FlatList,
   Image,
   Modal,
@@ -15,6 +14,7 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { useTranslation } from 'react-i18next';
 
 import { LoadingSpinner } from '../../components/LoadingSpinner';
@@ -55,37 +55,13 @@ const NEXT_STATUS: Record<string, string> = {
 };
 
 const SCREEN_PADDING = 16;
-const COLUMN_GAP = 12;
-const NUM_COLUMNS = 2;
-
-function cardWidth() {
-  const screenWidth = Dimensions.get('window').width;
-  return (screenWidth - SCREEN_PADDING * 2 - COLUMN_GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
-}
-
-function statusBadgeColors(
-  status: string,
-  theme: ReturnType<typeof import('../../hooks/useTheme').useTheme>['theme']
-) {
-  if (status === 'reading')
-    return { bg: theme.colors.primary, text: theme.colors.onPrimary, overlay: true };
-  if (status === 'read')
-    return {
-      bg: theme.colors.secondaryContainer,
-      text: theme.colors.onSecondaryContainer,
-      overlay: true,
-    };
-  // wishlisted / purchased — subtle chip below author
-  return {
-    bg: theme.colors.surfaceContainerHigh,
-    text: theme.colors.onSurfaceVariant,
-    overlay: false,
-  };
-}
 
 export default function MyBooksScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation('my-books');
+  const headerHeight = useHeaderHeight();
+  // Transparent header only in dark mode — push content below the floating header.
+  const topPad = theme.isDark ? headerHeight : 0;
   // Gold tertiary in dark mode, primary in light mode — active/CTA accent.
   const activeColor = theme.isDark ? theme.colors.tertiary : theme.colors.primary;
   const onActiveColor = theme.isDark ? theme.colors.onTertiary : theme.colors.onPrimary;
@@ -163,9 +139,6 @@ export default function MyBooksScreen() {
     );
   }, [books, query]);
 
-  const cw = cardWidth();
-  const coverHeight = cw * 1.5;
-
   if (loading) {
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -174,10 +147,49 @@ export default function MyBooksScreen() {
     );
   }
 
+  const listHeader = (
+    <View style={styles.listHeader}>
+      <Text
+        style={[
+          styles.heroTitle,
+          {
+            color: theme.colors.text,
+            fontFamily: theme.typography.fontFamilyHeadline,
+            fontSize: theme.typography.fontSizeH1,
+          },
+        ]}
+      >
+        {t('sectionTitle')}
+      </Text>
+      <Text
+        style={[
+          styles.heroSubtitle,
+          { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeSM },
+        ]}
+      >
+        {t('heroSubtitle')}
+      </Text>
+
+      {/* Archive summary card */}
+      <View style={[styles.summaryCard, { backgroundColor: theme.colors.surfaceContainerHigh }]}>
+        <View style={[styles.summaryAccent, { backgroundColor: activeColor }]} />
+        <Text style={[styles.summaryCount, { color: theme.colors.text }]}>{books.length}</Text>
+        <Text
+          style={[
+            styles.summaryLabel,
+            { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeSM },
+          ]}
+        >
+          {t('archiveSummary')}
+        </Text>
+      </View>
+    </View>
+  );
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Search bar */}
-      <View style={styles.searchRow}>
+      {/* Search bar — paddingTop offsets for transparent floating header in dark mode */}
+      <View style={[styles.searchRow, { paddingTop: 12 + topPad }]}>
         <View
           style={[styles.searchWrap, { backgroundColor: theme.colors.surfaceContainerHighest }]}
         >
@@ -238,29 +250,7 @@ export default function MyBooksScreen() {
         </View>
       </ScrollView>
 
-      {/* Section header */}
-      {books.length > 0 && (
-        <View style={styles.sectionHeader}>
-          <Text
-            style={[
-              styles.sectionTitle,
-              { color: theme.colors.onSurface, fontFamily: theme.typography.fontFamilyHeadline },
-            ]}
-          >
-            {t('sectionTitle')}
-          </Text>
-          <Text
-            style={[
-              styles.sectionSubtitle,
-              { color: theme.colors.secondary, fontSize: theme.typography.fontSizeSM },
-            ]}
-          >
-            {t('bookCount', { count: books.length })}
-          </Text>
-        </View>
-      )}
-
-      {/* Book grid */}
+      {/* Bento list */}
       {filteredBooks.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text
@@ -276,9 +266,8 @@ export default function MyBooksScreen() {
         <FlatList
           data={filteredBooks}
           keyExtractor={(item) => item.id}
-          numColumns={NUM_COLUMNS}
-          columnWrapperStyle={styles.row}
-          contentContainerStyle={styles.gridContent}
+          contentContainerStyle={styles.list}
+          ListHeaderComponent={listHeader}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -290,10 +279,16 @@ export default function MyBooksScreen() {
             />
           }
           renderItem={({ item }) => {
-            const badge = statusBadgeColors(item.status, theme);
+            const nextStatus = NEXT_STATUS[item.status];
             return (
               <Pressable
-                style={[styles.card, { width: cw }]}
+                style={[
+                  styles.card,
+                  {
+                    backgroundColor: theme.colors.surfaceContainerLow,
+                    borderLeftColor: activeColor,
+                  },
+                ]}
                 onPress={() => setSelected(item)}
                 accessibilityRole="button"
                 accessibilityLabel={t('bookCardA11y', {
@@ -303,76 +298,119 @@ export default function MyBooksScreen() {
                 accessibilityHint={t('bookCardHint')}
               >
                 {/* Cover */}
-                <View
-                  style={[
-                    styles.coverWrap,
-                    {
-                      width: cw,
-                      height: coverHeight,
-                      backgroundColor: theme.colors.surfaceContainerHighest,
-                    },
-                  ]}
-                >
-                  {item.book.cover_url ? (
-                    <Image
-                      source={{ uri: item.book.cover_url }}
-                      style={StyleSheet.absoluteFill}
-                      resizeMode="cover"
-                      accessibilityLabel={t('coverAlt', { ns: 'common', title: item.book.title })}
-                    />
-                  ) : (
-                    <View
-                      style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.border }]}
-                      accessibilityLabel={t('noCoverAvailable', { ns: 'common' })}
-                    />
-                  )}
-                  {badge.overlay && (
-                    <View style={[styles.badgeOverlay, { backgroundColor: badge.bg }]}>
-                      <Text style={[styles.badgeText, { color: badge.text }]}>
-                        {t(`status.${item.status}`, item.status)}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-
-                {/* Title + author */}
-                <Text
-                  style={[
-                    styles.cardTitle,
-                    {
-                      color: theme.colors.onSurface,
-                      fontFamily: theme.typography.fontFamilyHeadline,
-                      fontSize: theme.typography.fontSizeBase,
-                    },
-                  ]}
-                  numberOfLines={2}
-                >
-                  {item.book.title}
-                </Text>
-                <Text
-                  style={[
-                    styles.cardAuthor,
-                    { color: theme.colors.secondary, fontSize: theme.typography.fontSizeXS },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {item.book.author}
-                </Text>
-                {/* Status chip for non-overlay statuses */}
-                {!badge.overlay && (
-                  <View style={[styles.statusChip, { backgroundColor: badge.bg }]}>
-                    <Text style={[styles.badgeText, { color: badge.text }]}>
-                      {t(`status.${item.status}`, item.status)}
-                    </Text>
-                  </View>
+                {item.book.cover_url ? (
+                  <Image
+                    source={{ uri: item.book.cover_url }}
+                    style={styles.cover}
+                    resizeMode="cover"
+                    accessibilityLabel={t('coverAlt', { ns: 'common', title: item.book.title })}
+                  />
+                ) : (
+                  <View
+                    style={[
+                      styles.cover,
+                      styles.coverPlaceholder,
+                      { backgroundColor: theme.colors.border },
+                    ]}
+                    accessibilityLabel={t('noCoverAvailable', { ns: 'common' })}
+                  />
                 )}
+
+                {/* Content */}
+                <View style={styles.content}>
+                  <Text
+                    style={[
+                      styles.categoryLabel,
+                      { color: activeColor, fontSize: theme.typography.fontSizeXS },
+                    ]}
+                  >
+                    {t(`status.${item.status}`)}
+                  </Text>
+
+                  <Text
+                    style={[
+                      styles.bookTitle,
+                      { color: theme.colors.text, fontSize: theme.typography.fontSizeBase },
+                    ]}
+                    numberOfLines={2}
+                  >
+                    {item.book.title}
+                  </Text>
+
+                  <Text
+                    style={[
+                      styles.bookAuthor,
+                      { color: theme.colors.textSecondary, fontSize: theme.typography.fontSizeSM },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {item.book.author}
+                  </Text>
+
+                  {item.edition?.publish_year ? (
+                    <Text
+                      style={[
+                        styles.bookYear,
+                        {
+                          color: theme.colors.textSecondary,
+                          fontSize: theme.typography.fontSizeXS,
+                        },
+                      ]}
+                    >
+                      {item.edition.publish_year}
+                    </Text>
+                  ) : null}
+
+                  <View style={styles.actions}>
+                    {nextStatus && (
+                      <Pressable
+                        style={[styles.actionButton, { backgroundColor: activeColor }]}
+                        onPress={() => handleAdvanceStatus(item)}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('markAsA11y', {
+                          status: t(`status.${nextStatus}`),
+                        })}
+                      >
+                        <Text
+                          style={[
+                            styles.actionText,
+                            { fontSize: theme.typography.fontSizeXS, color: onActiveColor },
+                          ]}
+                        >
+                          {t('markAs', { status: t(`status.${nextStatus}`) })}
+                        </Text>
+                      </Pressable>
+                    )}
+                    <Pressable
+                      style={[
+                        styles.actionButton,
+                        { backgroundColor: theme.colors.secondaryContainer },
+                      ]}
+                      onPress={() => handleRemove(item)}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('removeBookA11y', { title: item.book.title })}
+                    >
+                      <Text
+                        style={[
+                          styles.actionText,
+                          {
+                            color: theme.colors.onSecondaryContainer,
+                            fontSize: theme.typography.fontSizeXS,
+                          },
+                        ]}
+                      >
+                        {t('removeFromList')}
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
               </Pressable>
             );
           }}
         />
       )}
 
-      {/* Detail sheet */}
+      {/* Detail sheet — full book info, advance status, remove */}
       <Modal
         visible={!!selected}
         animationType="slide"
@@ -492,7 +530,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
 
   // Search
-  searchRow: { paddingHorizontal: SCREEN_PADDING, paddingTop: 12, paddingBottom: 4 },
+  searchRow: { paddingHorizontal: SCREEN_PADDING, paddingBottom: 4 },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -520,70 +558,62 @@ const styles = StyleSheet.create({
   },
   tabText: { fontWeight: '600' },
 
-  // Section header
-  sectionHeader: {
-    paddingHorizontal: SCREEN_PADDING,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 32,
+  // Bento list
+  list: { paddingHorizontal: SCREEN_PADDING, paddingBottom: 32, gap: 12 },
+
+  // Hero + summary
+  listHeader: { marginBottom: 8, gap: 6 },
+  heroTitle: {
     fontWeight: '700',
+    lineHeight: 48,
     letterSpacing: -0.5,
-    marginBottom: 2,
   },
-  sectionSubtitle: { fontWeight: '500', opacity: 0.8 },
-
-  // Grid
-  gridContent: {
-    paddingHorizontal: SCREEN_PADDING,
-    paddingBottom: 32,
-  },
-  row: {
-    gap: COLUMN_GAP,
-    marginBottom: 24,
-  },
-  card: { flexDirection: 'column' },
-
-  // Book card cover
-  coverWrap: {
+  heroSubtitle: { lineHeight: 20, marginBottom: 4 },
+  summaryCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderRadius: 12,
     overflow: 'hidden',
-    marginBottom: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+    marginTop: 4,
   },
-  badgeOverlay: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+  summaryAccent: { width: 3, height: 32, borderRadius: 2 },
+  summaryCount: { fontSize: 28, fontWeight: '700', lineHeight: 32 },
+  summaryLabel: { flex: 1, lineHeight: 18 },
+
+  // Bento card
+  card: {
+    flexDirection: 'row',
+    borderRadius: 12,
+    overflow: 'hidden',
+    minHeight: 120,
+    borderLeftWidth: 4,
   },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: '700',
+  cover: { width: 110, alignSelf: 'stretch' },
+  coverPlaceholder: { opacity: 0.4 },
+  content: { flex: 1, padding: 12, gap: 4 },
+  categoryLabel: {
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  cardTitle: {
+    letterSpacing: 1,
     fontWeight: '700',
-    lineHeight: 22,
     marginBottom: 2,
   },
-  cardAuthor: {
-    fontWeight: '500',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-  },
-  statusChip: {
-    alignSelf: 'flex-start',
-    marginTop: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+  bookTitle: { fontWeight: '600', lineHeight: 22 },
+  bookAuthor: { lineHeight: 18 },
+  bookYear: { lineHeight: 16 },
+  actions: { flexDirection: 'row', gap: 8, marginTop: 8, flexWrap: 'wrap' },
+  actionButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 6,
+    minHeight: 32,
+    justifyContent: 'center',
   },
+  actionText: { fontWeight: '600' },
 
-  // Empty / loading
+  // Empty
   emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
   emptyText: { textAlign: 'center' },
 
