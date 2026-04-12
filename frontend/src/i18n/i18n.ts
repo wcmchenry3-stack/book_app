@@ -31,6 +31,7 @@ import en_scan from './locales/en/scan.json';
 import en_settings from './locales/en/settings.json';
 import en_wishlist from './locales/en/wishlist.json';
 import en_components from './locales/en/components.json';
+import en_feedback from './locales/en/feedback.json';
 
 type ImportFn = () => Promise<Record<string, unknown>>;
 
@@ -49,6 +50,7 @@ export const importMap: Record<string, Record<string, ImportFn>> = {
     settings: () => import('./locales/fr-CA/settings.json'),
     wishlist: () => import('./locales/fr-CA/wishlist.json'),
     components: () => import('./locales/fr-CA/components.json'),
+    feedback: () => import('./locales/fr-CA/feedback.json'),
   },
   es: {
     common: () => import('./locales/es/common.json'),
@@ -59,6 +61,7 @@ export const importMap: Record<string, Record<string, ImportFn>> = {
     settings: () => import('./locales/es/settings.json'),
     wishlist: () => import('./locales/es/wishlist.json'),
     components: () => import('./locales/es/components.json'),
+    feedback: () => import('./locales/es/feedback.json'),
   },
   hi: {
     common: () => import('./locales/hi/common.json'),
@@ -69,6 +72,7 @@ export const importMap: Record<string, Record<string, ImportFn>> = {
     settings: () => import('./locales/hi/settings.json'),
     wishlist: () => import('./locales/hi/wishlist.json'),
     components: () => import('./locales/hi/components.json'),
+    feedback: () => import('./locales/hi/feedback.json'),
   },
   zh: {
     common: () => import('./locales/zh/common.json'),
@@ -79,6 +83,7 @@ export const importMap: Record<string, Record<string, ImportFn>> = {
     settings: () => import('./locales/zh/settings.json'),
     wishlist: () => import('./locales/zh/wishlist.json'),
     components: () => import('./locales/zh/components.json'),
+    feedback: () => import('./locales/zh/feedback.json'),
   },
   ja: {
     common: () => import('./locales/ja/common.json'),
@@ -89,6 +94,7 @@ export const importMap: Record<string, Record<string, ImportFn>> = {
     settings: () => import('./locales/ja/settings.json'),
     wishlist: () => import('./locales/ja/wishlist.json'),
     components: () => import('./locales/ja/components.json'),
+    feedback: () => import('./locales/ja/feedback.json'),
   },
   ko: {
     common: () => import('./locales/ko/common.json'),
@@ -99,6 +105,7 @@ export const importMap: Record<string, Record<string, ImportFn>> = {
     settings: () => import('./locales/ko/settings.json'),
     wishlist: () => import('./locales/ko/wishlist.json'),
     components: () => import('./locales/ko/components.json'),
+    feedback: () => import('./locales/ko/feedback.json'),
   },
   pt: {
     common: () => import('./locales/pt/common.json'),
@@ -109,6 +116,7 @@ export const importMap: Record<string, Record<string, ImportFn>> = {
     settings: () => import('./locales/pt/settings.json'),
     wishlist: () => import('./locales/pt/wishlist.json'),
     components: () => import('./locales/pt/components.json'),
+    feedback: () => import('./locales/pt/feedback.json'),
   },
   de: {
     common: () => import('./locales/de/common.json'),
@@ -119,6 +127,7 @@ export const importMap: Record<string, Record<string, ImportFn>> = {
     settings: () => import('./locales/de/settings.json'),
     wishlist: () => import('./locales/de/wishlist.json'),
     components: () => import('./locales/de/components.json'),
+    feedback: () => import('./locales/de/feedback.json'),
   },
   nl: {
     common: () => import('./locales/nl/common.json'),
@@ -129,6 +138,7 @@ export const importMap: Record<string, Record<string, ImportFn>> = {
     settings: () => import('./locales/nl/settings.json'),
     wishlist: () => import('./locales/nl/wishlist.json'),
     components: () => import('./locales/nl/components.json'),
+    feedback: () => import('./locales/nl/feedback.json'),
   },
   ru: {
     common: () => import('./locales/ru/common.json'),
@@ -139,6 +149,7 @@ export const importMap: Record<string, Record<string, ImportFn>> = {
     settings: () => import('./locales/ru/settings.json'),
     wishlist: () => import('./locales/ru/wishlist.json'),
     components: () => import('./locales/ru/components.json'),
+    feedback: () => import('./locales/ru/feedback.json'),
   },
 };
 
@@ -162,12 +173,13 @@ export const i18nReady = i18n
         settings: en_settings,
         wishlist: en_wishlist,
         components: en_components,
+        feedback: en_feedback,
       },
     },
     lng: 'en',
     fallbackLng: 'en',
     supportedLngs: LOCALES.map((l) => l.code),
-    ns: ['common', 'auth', 'tabs', 'my-books', 'scan', 'settings', 'wishlist', 'components'],
+    ns: ['common', 'auth', 'tabs', 'my-books', 'scan', 'settings', 'wishlist', 'components', 'feedback'],
     defaultNS: 'common',
     interpolation: {
       escapeValue: false,
