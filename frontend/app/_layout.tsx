@@ -4,6 +4,7 @@ import { Sentry } from '../lib/sentry';
 
 // Record that the root layout module has evaluated — helps diagnose
 // crashes that happen between Sentry init and first render.
+SessionLogger.init();
 Sentry.addBreadcrumb({
   category: 'app.lifecycle',
   message: 'Root layout module evaluated',
@@ -33,6 +34,8 @@ import { ScanJobProvider } from '../contexts/ScanJobContext';
 import { useScanJobs } from '../hooks/useScanJobs';
 import { useTheme } from '../hooks/useTheme';
 import { ThemeProvider } from '../theme';
+import { FeedbackButton } from '../components/FeedbackWidget/FeedbackButton';
+import { SessionLogger } from '../components/FeedbackWidget/SessionLogger';
 
 function HeaderLogo() {
   const { theme } = useTheme();
@@ -120,6 +123,7 @@ function RootLayout() {
               <InAppBanner />
               <InnerStack />
               <GlobalBookPicker />
+              <FeedbackButton />
             </ScanJobProvider>
           </AuthProvider>
         </BannerProvider>
