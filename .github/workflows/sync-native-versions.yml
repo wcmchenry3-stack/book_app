@@ -1,0 +1,93 @@
+name: Sync Native Versions
+
+# Fires when release-please publishes a GitHub Release.
+# Reads the new semver from frontend/package.json, increments the build
+# number (versionCode / buildNumber / CURRENT_PROJECT_VERSION), and
+# patches the three native version files so all platforms stay in sync.
+#
+# Commit uses "chore:" prefix — release-please ignores it (no bump).
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  sync-native-versions:
+    name: Sync iOS & Android versions
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          # Use default GITHUB_TOKEN — contents:write is enough for a direct push
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve new semver and build number
+        id: ver
+        run: |
+          SEMVER=$(jq -r '.version' frontend/package.json)
+          CURRENT_BUILD=$(jq -r '.expo.android.versionCode' frontend/app.json)
+          BUILD=$(( CURRENT_BUILD + 1 ))
+          echo "semver=$SEMVER"   >> "$GITHUB_OUTPUT"
+          echo "build=$BUILD"     >> "$GITHUB_OUTPUT"
+
+      - name: Patch frontend/app.json
+        env:
+          SEMVER: ${{ steps.ver.outputs.semver }}
+          BUILD:  ${{ steps.ver.outputs.build }}
+        run: |
+          python3 - << 'PYEOF'
+          import json, os
+          path = 'frontend/app.json'
+          with open(path) as f:
+              data = json.load(f)
+          data['expo']['version']                  = os.environ['SEMVER']
+          data['expo']['ios']['buildNumber']        = os.environ['BUILD']
+          data['expo']['android']['versionCode']    = int(os.environ['BUILD'])
+          with open(path, 'w') as f:
+              json.dump(data, f, indent=2)
+              f.write('\n')
+          PYEOF
+
+      - name: Patch frontend/android/app/build.gradle
+        env:
+          SEMVER: ${{ steps.ver.outputs.semver }}
+          BUILD:  ${{ steps.ver.outputs.build }}
+        run: |
+          sed -i \
+            -e "s/versionCode [0-9]\+/versionCode $BUILD/" \
+            -e "s/versionName \"[^\"]*\"/versionName \"$SEMVER\"/" \
+            frontend/android/app/build.gradle
+
+      - name: Patch frontend/ios/BookShelfAI.xcodeproj/project.pbxproj
+        env:
+          SEMVER: ${{ steps.ver.outputs.semver }}
+          BUILD:  ${{ steps.ver.outputs.build }}
+        run: |
+          sed -i \
+            -e "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = $BUILD;/g" \
+            -e "s/MARKETING_VERSION = [^;]*;/MARKETING_VERSION = $SEMVER;/g" \
+            frontend/ios/BookShelfAI.xcodeproj/project.pbxproj
+
+      - name: Commit and push
+        env:
+          SEMVER: ${{ steps.ver.outputs.semver }}
+          BUILD:  ${{ steps.ver.outputs.build }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add \
+            frontend/app.json \
+            frontend/android/app/build.gradle \
+            "frontend/ios/BookShelfAI.xcodeproj/project.pbxproj"
+          # Only commit if anything actually changed
+          if git diff --cached --quiet; then
+            echo "No version changes to commit."
+          else
+            git commit -m "chore: sync native versions to v$SEMVER (build $BUILD)"
+            git push
+          fi
