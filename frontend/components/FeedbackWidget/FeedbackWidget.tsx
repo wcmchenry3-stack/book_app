@@ -25,7 +25,7 @@ const styles = makeBookStyles();
 export function FeedbackWidget({ visible, onClose }: Props) {
   const { t } = useTranslation('feedback');
   const { theme } = useTheme();
-  const { colors, typography, spacing } = theme;
+  const { colors } = theme;
   const { status, result, error, submit, reset } = useFeedbackSubmit();
 
   const [title, setTitle] = useState('');
@@ -67,7 +67,6 @@ export function FeedbackWidget({ visible, onClose }: Props) {
   }
 
   const isSubmitting = status === 'submitting';
-  
 
   return (
     <Modal
@@ -151,8 +150,7 @@ export function FeedbackWidget({ visible, onClose }: Props) {
                       style={[
                         styles.typeChip,
                         {
-                          backgroundColor:
-                            type === ft ? colors.primary : colors.surface,
+                          backgroundColor: type === ft ? colors.primary : colors.surface,
                           borderColor: type === ft ? colors.primary : colors.outline,
                         },
                       ]}
@@ -201,7 +199,10 @@ export function FeedbackWidget({ visible, onClose }: Props) {
                   accessibilityRequired
                 />
                 {titleError ? (
-                  <Text style={[styles.fieldError, { color: colors.error }]} accessibilityRole="alert">
+                  <Text
+                    style={[styles.fieldError, { color: colors.error }]}
+                    accessibilityRole="alert"
+                  >
                     {titleError}
                   </Text>
                 ) : (
@@ -238,7 +239,10 @@ export function FeedbackWidget({ visible, onClose }: Props) {
                   accessibilityRequired
                 />
                 {descError ? (
-                  <Text style={[styles.fieldError, { color: colors.error }]} accessibilityRole="alert">
+                  <Text
+                    style={[styles.fieldError, { color: colors.error }]}
+                    accessibilityRole="alert"
+                  >
                     {descError}
                   </Text>
                 ) : (
@@ -278,28 +282,47 @@ export function FeedbackWidget({ visible, onClose }: Props) {
 
 function makeBookStyles() {
   return StyleSheet.create({
-    overlay: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.55)" },
-    sheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: "90%" },
-    header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: StyleSheet.hairlineWidth },
-    heading: { fontWeight: "600" },
+    overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.55)' },
+    sheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '90%' },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+    },
+    heading: { fontWeight: '600' },
     closeBtn: { padding: 6, borderRadius: 16 },
     closeBtnText: { fontSize: 16 },
     body: { flex: 1 },
     bodyContent: { padding: 20, paddingBottom: 36 },
-    label: { fontWeight: "500", marginTop: 12, marginBottom: 4 },
-    typeRow: { flexDirection: "row", gap: 10, marginBottom: 4 },
+    label: { fontWeight: '500', marginTop: 12, marginBottom: 4 },
+    typeRow: { flexDirection: 'row', gap: 10, marginBottom: 4 },
     typeChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
-    typeChipText: { fontWeight: "500" },
+    typeChipText: { fontWeight: '500' },
     input: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10 },
-    textarea: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, minHeight: 120 },
-    charCount: { textAlign: "right" },
+    textarea: {
+      borderWidth: 1,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      minHeight: 120,
+    },
+    charCount: { textAlign: 'right' },
     fieldError: {},
     errorBanner: { borderWidth: 1, borderRadius: 8, padding: 12, marginBottom: 4 },
     errorBannerText: {},
-    primaryBtn: { marginTop: 20, paddingVertical: 14, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-    primaryBtnText: { fontWeight: "600" },
-    successContainer: { alignItems: "center", paddingVertical: 24, gap: 12 },
-    successTitle: { fontWeight: "600", textAlign: "center" },
-    successSub: { textAlign: "center" },
+    primaryBtn: {
+      marginTop: 20,
+      paddingVertical: 14,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    primaryBtnText: { fontWeight: '600' },
+    successContainer: { alignItems: 'center', paddingVertical: 24, gap: 12 },
+    successTitle: { fontWeight: '600', textAlign: 'center' },
+    successSub: { textAlign: 'center' },
   });
 }

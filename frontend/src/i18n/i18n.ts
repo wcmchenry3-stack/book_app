@@ -179,7 +179,17 @@ export const i18nReady = i18n
     lng: 'en',
     fallbackLng: 'en',
     supportedLngs: LOCALES.map((l) => l.code),
-    ns: ['common', 'auth', 'tabs', 'my-books', 'scan', 'settings', 'wishlist', 'components', 'feedback'],
+    ns: [
+      'common',
+      'auth',
+      'tabs',
+      'my-books',
+      'scan',
+      'settings',
+      'wishlist',
+      'components',
+      'feedback',
+    ],
     defaultNS: 'common',
     interpolation: {
       escapeValue: false,

@@ -39,7 +39,9 @@ export function useFeedbackSubmit(): UseFeedbackSubmit {
     const workerUrl = process.env.EXPO_PUBLIC_FEEDBACK_WORKER_URL ?? '';
     if (!workerUrl) {
       // Worker URL not configured — silently no-op in production builds
-      console.warn('[FeedbackWidget] EXPO_PUBLIC_FEEDBACK_WORKER_URL is not set — feedback disabled');
+      console.warn(
+        '[FeedbackWidget] EXPO_PUBLIC_FEEDBACK_WORKER_URL is not set — feedback disabled'
+      );
       return;
     }
 

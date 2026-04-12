@@ -68,7 +68,9 @@ describe('FeedbackWidget', () => {
     it('renders title and description placeholders', () => {
       const { getByPlaceholderText } = renderWidget();
       expect(getByPlaceholderText('Brief summary of the issue or idea')).toBeTruthy();
-      expect(getByPlaceholderText("Describe what happened, or what you'd like to see...")).toBeTruthy();
+      expect(
+        getByPlaceholderText("Describe what happened, or what you'd like to see...")
+      ).toBeTruthy();
     });
 
     it('renders the Submit button', () => {
@@ -89,7 +91,9 @@ describe('FeedbackWidget', () => {
   describe('validation', () => {
     it('shows title error when submitting empty form', async () => {
       const { getByText } = renderWidget();
-      await act(async () => { fireEvent.press(getByText('Submit')); });
+      await act(async () => {
+        fireEvent.press(getByText('Submit'));
+      });
       expect(getByText('Title is required.')).toBeTruthy();
       expect(mockFetch).not.toHaveBeenCalled();
     });
@@ -97,7 +101,9 @@ describe('FeedbackWidget', () => {
     it('shows description error when title filled but description empty', async () => {
       const { getByText, getByPlaceholderText } = renderWidget();
       fireEvent.changeText(getByPlaceholderText('Brief summary of the issue or idea'), 'A title');
-      await act(async () => { fireEvent.press(getByText('Submit')); });
+      await act(async () => {
+        fireEvent.press(getByText('Submit'));
+      });
       expect(getByText('Description is required.')).toBeTruthy();
       expect(mockFetch).not.toHaveBeenCalled();
     });
@@ -117,8 +123,12 @@ describe('FeedbackWidget', () => {
         getByPlaceholderText("Describe what happened, or what you'd like to see..."),
         'My description'
       );
-      await act(async () => { fireEvent.press(getByText('Submit')); });
-      await waitFor(() => { expect(getByText('Thanks for your feedback!')).toBeTruthy(); });
+      await act(async () => {
+        fireEvent.press(getByText('Submit'));
+      });
+      await waitFor(() => {
+        expect(getByText('Thanks for your feedback!')).toBeTruthy();
+      });
       expect(getByText('Your report was filed as issue #12.')).toBeTruthy();
     });
   });
@@ -127,7 +137,7 @@ describe('FeedbackWidget', () => {
     it('shows rate limit message on 429', async () => {
       mockFetch.mockResolvedValueOnce({
         status: 429,
-        headers: { get: (h: string) => h === 'Retry-After' ? '60' : null },
+        headers: { get: (h: string) => (h === 'Retry-After' ? '60' : null) },
         json: async () => ({}),
       } as unknown as Response);
 
@@ -137,8 +147,12 @@ describe('FeedbackWidget', () => {
         getByPlaceholderText("Describe what happened, or what you'd like to see..."),
         'Description'
       );
-      await act(async () => { fireEvent.press(getByText('Submit')); });
-      await waitFor(() => { expect(getByText(/Too many submissions/)).toBeTruthy(); });
+      await act(async () => {
+        fireEvent.press(getByText('Submit'));
+      });
+      await waitFor(() => {
+        expect(getByText(/Too many submissions/)).toBeTruthy();
+      });
     });
   });
 

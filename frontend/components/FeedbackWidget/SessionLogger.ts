@@ -23,11 +23,7 @@ let originalError: typeof console.error | null = null;
 function push(level: LogEntry['level'], args: unknown[]): void {
   const msg = args
     .map((a) =>
-      typeof a === 'string'
-        ? a
-        : a instanceof Error
-          ? `${a.name}: ${a.message}`
-          : JSON.stringify(a),
+      typeof a === 'string' ? a : a instanceof Error ? `${a.name}: ${a.message}` : JSON.stringify(a)
     )
     .join(' ');
 
