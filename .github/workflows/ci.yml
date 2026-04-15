@@ -76,6 +76,11 @@ jobs:
     uses: wcmchenry3-stack/.github/.github/workflows/called-openai-policy.yml@main
     secrets: inherit
 
+  provenance-coverage:
+    needs: [lint-python, lint-frontend, secret-scan]
+    uses: wcmchenry3-stack/.github/.github/workflows/called-provenance-coverage.yml@main
+    secrets: inherit
+
   test-python:
     needs: [lint-python, lint-frontend, secret-scan]
     uses: wcmchenry3-stack/.github/.github/workflows/called-test-python.yml@main
