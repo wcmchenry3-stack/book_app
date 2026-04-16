@@ -117,59 +117,58 @@ jobs:
 
           if [ "$EXIT_CODE" = "0" ]; then
             TITLE="Expo SDK upgrade ready: $CURRENT → $LATEST"
-            BODY="$(cat <<EOBODY
-## All blockers cleared — upgrade is ready
-
-Every installed package is compatible with Expo SDK **$LATEST**.
-
-| | |
-|---|---|
-| Current | \`$CURRENT\` |
-| Target | \`$LATEST\` |
-
-### Steps to upgrade
-1. In \`frontend/package.json\` set \`"expo": "^$LATEST"\`
-2. Run \`npx expo install --fix\` — this re-pins all managed dependencies to the new SDK range
-3. Run \`npm install\` and commit the updated \`package-lock.json\`
-4. Run \`expo prebuild --platform android\` and commit any \`android/\` changes
-5. Open a PR targeting \`dev\` — CI will validate everything
-
-_Checked automatically · $DATE_
-EOBODY
-)"
+            # Build body with printf to keep YAML valid (no unindented heredoc body)
+            printf '%s\n' \
+              "## All blockers cleared — upgrade is ready" \
+              "" \
+              "Every installed package is compatible with Expo SDK **${LATEST}**." \
+              "" \
+              "| | |" \
+              "|---|---|" \
+              "| Current | \`${CURRENT}\` |" \
+              "| Target | \`${LATEST}\` |" \
+              "" \
+              "### Steps to upgrade" \
+              "1. In \`frontend/package.json\` set \`\"expo\": \"^${LATEST}\"\`" \
+              "2. Run \`npx expo install --fix\` — this re-pins all managed dependencies to the new SDK range" \
+              "3. Run \`npm install\` and commit the updated \`package-lock.json\`" \
+              "4. Run \`expo prebuild --platform android\` and commit any \`android/\` changes" \
+              "5. Open a PR targeting \`dev\` — CI will validate everything" \
+              "" \
+              "_Checked automatically · ${DATE}_" \
+              > /tmp/issue-body.md
           else
             TITLE="Expo SDK upgrade blocked: $CURRENT → $LATEST"
-            BODY="$(cat <<EOBODY
-## Upgrade to Expo SDK $LATEST is not yet ready
-
-The following packages need new versions before the SDK can be bumped:
-
-\`\`\`
-$BLOCKERS
-\`\`\`
-
-This issue updates automatically every Monday. No action needed until all blockers clear.
-
-| | |
-|---|---|
-| Current | \`$CURRENT\` |
-| Target | \`$LATEST\` |
-
-_Last checked: $DATE_
-EOBODY
-)"
+            printf '%s\n' \
+              "## Upgrade to Expo SDK ${LATEST} is not yet ready" \
+              "" \
+              "The following packages need new versions before the SDK can be bumped:" \
+              "" \
+              "\`\`\`" \
+              "${BLOCKERS}" \
+              "\`\`\`" \
+              "" \
+              "This issue updates automatically every Monday. No action needed until all blockers clear." \
+              "" \
+              "| | |" \
+              "|---|---|" \
+              "| Current | \`${CURRENT}\` |" \
+              "| Target | \`${LATEST}\` |" \
+              "" \
+              "_Last checked: ${DATE}_" \
+              > /tmp/issue-body.md
           fi
 
           if [ -n "$EXISTING" ]; then
             gh issue edit "$EXISTING" \
               --title "$TITLE" \
-              --body "$BODY" \
+              --body-file /tmp/issue-body.md \
               --repo "$REPO"
             echo "Updated issue #$EXISTING"
           else
             gh issue create \
               --title "$TITLE" \
-              --body "$BODY" \
+              --body-file /tmp/issue-body.md \
               --label "$LABEL" \
               --repo "$REPO"
             echo "Created new tracking issue"
