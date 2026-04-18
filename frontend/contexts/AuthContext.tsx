@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useEffect, useState } from 'react';
 import { useRouter, useSegments } from 'expo-router';
 
-import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, api } from '../lib/api';
+import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, api, setAuthFailureCallback } from '../lib/api';
 import * as storage from '../lib/storage';
 
 interface AuthContextValue {
@@ -33,6 +33,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     });
   }, []);
+
+  // Register logout as the auth-failure callback so api.ts can signal session expiry
+  useEffect(() => {
+    setAuthFailureCallback(logout);
+  }, [logout]);
 
   // Redirect based on auth state
   useEffect(() => {
