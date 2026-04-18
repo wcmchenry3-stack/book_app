@@ -105,7 +105,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Run Trivy in filesystem mode
-        uses: aquasecurity/trivy-action@0.35.0 # 57a97c7e7821a5776cebc9bb87c984fa69cba8f1
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -145,7 +145,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: ZAP Full Scan
-        uses: zaproxy/action-full-scan@v0.13.0
+        uses: zaproxy/action-full-scan@3c58388149901b9a03b7718852c5ba889646c27c # v0.13.0
         with:
           target: 'https://bookshelfapi.buffingchi.com'
           rules_file_name: '.zap/rules.tsv'
