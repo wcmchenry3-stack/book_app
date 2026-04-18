@@ -32,6 +32,14 @@ jobs:
           SEMVER=$(jq -r '.version' frontend/package.json)
           CURRENT_BUILD=$(jq -r '.expo.android.versionCode' frontend/app.json)
           BUILD=$(( CURRENT_BUILD + 1 ))
+          if ! [[ "$SEMVER" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "ERROR: semver '$SEMVER' is not a valid x.y.z version" >&2
+            exit 1
+          fi
+          if ! [[ "$BUILD" =~ ^[0-9]+$ ]]; then
+            echo "ERROR: build '$BUILD' is not a valid integer" >&2
+            exit 1
+          fi
           echo "semver=$SEMVER"   >> "$GITHUB_OUTPUT"
           echo "build=$BUILD"     >> "$GITHUB_OUTPUT"
 
