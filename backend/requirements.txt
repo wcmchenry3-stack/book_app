@@ -7,7 +7,7 @@ asyncpg==0.31.0
 aiosqlite==0.22.1
 pydantic==2.13.1
 pydantic-settings==2.13.1
-authlib==1.6.10
+authlib==1.6.11
 PyJWT[cryptography]==2.12.1
 httpx==0.28.1
 slowapi==0.1.9
