@@ -9,6 +9,7 @@ jest.mock('../../lib/api', () => ({
   api: { post: (...args: unknown[]) => mockPost(...args) },
   ACCESS_TOKEN_KEY: 'bookshelf_access_token',
   REFRESH_TOKEN_KEY: 'bookshelf_refresh_token',
+  setAuthFailureCallback: jest.fn(),
 }));
 
 const mockGetItem = jest.fn();
