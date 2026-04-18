@@ -54,7 +54,8 @@ Thumbs.db
 *.pfx
 secrets/
 
-# Render
+# Render deployment config (contains infrastructure details — use render.yaml.example)
+render.yaml
 .render-buildpacks.json
 
 # Local Claude Code files
