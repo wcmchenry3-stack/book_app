@@ -58,11 +58,12 @@ jobs:
           API_ID: ${{ steps.svc.outputs.api_id }}
           DSN: ${{ inputs.sentry_dsn_backend }}
         run: |
+          PAYLOAD=$(jq -n --arg key "SENTRY_DSN" --arg val "$DSN" '[{key: $key, value: $val}]')
           curl -sf -X POST \
             -H "Authorization: Bearer $RENDER_API_KEY" \
             -H "Content-Type: application/json" \
             "https://api.render.com/v1/services/$API_ID/env-vars" \
-            -d "[{\"key\":\"SENTRY_DSN\",\"value\":\"$DSN\"}]"
+            -d "$PAYLOAD"
           echo "SENTRY_DSN set on bookshelf-api"
 
       - name: Set EXPO_PUBLIC_SENTRY_DSN on frontend (POST — does not touch other vars)
@@ -71,9 +72,10 @@ jobs:
           WEB_ID: ${{ steps.svc.outputs.web_id }}
           DSN: ${{ inputs.sentry_dsn_frontend }}
         run: |
+          PAYLOAD=$(jq -n --arg key "EXPO_PUBLIC_SENTRY_DSN" --arg val "$DSN" '[{key: $key, value: $val}]')
           curl -sf -X POST \
             -H "Authorization: Bearer $RENDER_API_KEY" \
             -H "Content-Type: application/json" \
             "https://api.render.com/v1/services/$WEB_ID/env-vars" \
-            -d "[{\"key\":\"EXPO_PUBLIC_SENTRY_DSN\",\"value\":\"$DSN\"}]"
+            -d "$PAYLOAD"
           echo "EXPO_PUBLIC_SENTRY_DSN set on bookshelf-web"
