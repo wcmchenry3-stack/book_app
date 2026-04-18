@@ -8,6 +8,13 @@ const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8001';
 export const ACCESS_TOKEN_KEY = 'bookshelf_access_token';
 export const REFRESH_TOKEN_KEY = 'bookshelf_refresh_token';
 
+let onAuthFailure: (() => void) | null = null;
+
+// AuthProvider registers its logout function here on mount to avoid circular imports.
+export function setAuthFailureCallback(cb: () => void) {
+  onAuthFailure = cb;
+}
+
 export const api = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
@@ -47,6 +54,7 @@ api.interceptors.response.use(
         } catch {
           await storage.deleteItem(ACCESS_TOKEN_KEY);
           await storage.deleteItem(REFRESH_TOKEN_KEY);
+          onAuthFailure?.();
         }
       }
     }
